@@ -4,18 +4,16 @@ import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
 import {
-  ShoppingBag,
   ChefHat,
-  Scale,
-  ArrowUpRight,
-  Flame,
-  TrendingUp,
-  Loader2,
-  FileText,
+  Package,
   Layers,
+  Scale,
+  ArrowRight,
+  TrendingDown,
+  AlertTriangle,
 } from "lucide-react";
 
-function greeting(): string {
+function getGreeting(): string {
   const h = new Date().getHours();
   if (h < 11) return "Selamat pagi";
   if (h < 15) return "Selamat siang";
@@ -28,211 +26,293 @@ export const DashboardPage: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [costs, setCosts] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    fetchDashboardData();
+    Promise.all([
+      apiClient.get<{ success: boolean; data: Recipe[] }>("/api/recipes"),
+      apiClient.get<{ success: boolean; data: Ingredient[] }>("/api/ingredients"),
+    ])
+      .then(async ([r, i]) => {
+        if (r.data.success) setRecipes(r.data.data);
+        if (i.data.success) setIngredients(i.data.data);
+        // fetch per-recipe HPP (backend /cost)
+        if (r.data.success) {
+          const list = r.data.data;
+          const entries = await Promise.all(
+            list.map(async (rc) => {
+              try {
+                const c = await apiClient.get<{ success: boolean; data: { totalCost: number } }>(
+                  `/api/recipes/${rc.id}/cost`
+                );
+                return [rc.id, c.data.success ? c.data.data.totalCost : 0] as const;
+              } catch {
+                return [rc.id, 0] as const;
+              }
+            })
+          );
+          setCosts(Object.fromEntries(entries));
+        }
+      })
+      .catch((err) => console.error("Gagal memuat data dasbor:", err))
+      .finally(() => setLoading(false));
   }, []);
 
-  const fetchDashboardData = async () => {
-    setLoading(true);
-    try {
-      const [recRes, ingRes] = await Promise.all([
-        apiClient.get<{ success: boolean; data: { recipes: Recipe[] } }>("/api/recipes"),
-        apiClient.get<{ success: boolean; data: { ingredients: Ingredient[] } }>("/api/ingredients"),
-      ]);
-      if (recRes.data.success) setRecipes(recRes.data.data.recipes);
-      if (ingRes.data.success) setIngredients(ingRes.data.data.ingredients);
-    } catch (err) {
-      console.error("Gagal memuat data dashboard:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ---- Signals (no fabricated margin — derived from available data) ----
+  const baseRecipes = recipes.filter((r) => r.isBaseRecipe);
+  const menuRecipes = recipes.filter((r) => !r.isBaseRecipe);
 
-  const baseRecipesCount = recipes.filter((r) => r.isBaseRecipe).length;
-  const menuRecipesCount = recipes.filter((r) => !r.isBaseRecipe).length;
+  // Ingredient with highest purchase price (proxy cost-risk)
+  const topIngredient = [...ingredients].sort(
+    (a, b) => (b.pricePerUnit || 0) - (a.pricePerUnit || 0)
+  )[0];
 
-  // Most expensive ingredients -> proxy for price-fluctuation risk (honest signal, no fake margin)
-  const topIngredients = [...ingredients]
-    .sort((a, b) => b.pricePerUnit - a.pricePerUnit)
-    .slice(0, 5);
-  const maxPrice = topIngredients[0]?.pricePerUnit ?? 1;
+  // Recipe with most components = most complex to manage
+  const complexRecipes = [...menuRecipes]
+    .sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0))
+    .slice(0, 4);
 
-  // Recipes by component count (proxy: complexity / cost-leverage)
-  const heaviestRecipes = [...recipes]
-    .sort((a, b) => b.items.length - a.items.length)
-    .slice(0, 3);
+  // Average component count per recipe (rough "HPP complexity" dial)
+  const avgComponents =
+    recipes.length > 0
+      ? recipes.reduce((s, r) => s + (r.items?.length || 0), 0) / recipes.length
+      : 0;
+  const complexityDial = Math.min(100, Math.round((avgComponents / 12) * 100));
+
+  // Ingredient count dial (inventory coverage)
+  const invDial = Math.min(100, Math.round((ingredients.length / 30) * 100));
+
+  // Recipe count dial
+  const recipeDial = Math.min(100, Math.round((recipes.length / 20) * 100));
+
+  if (loading) {
+    return (
+      <div className="py-24 grid place-items-center text-slate-500">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-2 border-brand-500 border-t-transparent animate-spin" />
+          <p className="text-sm">Menyusun dasbor...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {loading ? (
-        <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
-          <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-          <span className="text-sm">Memuat ringkasan bisnis Anda...</span>
+      {/* ===== Cost Flow hero ===== */}
+      <section className="rounded-2xl border border-surface-700/60 bg-surface-900/40 p-5 sm:p-7">
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-400">
+              Alur Biaya HPP
+            </p>
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-100 tracking-tight mt-1">
+              {getGreeting()}, pantau dapur Anda
+            </h1>
+          </div>
+          <button
+            onClick={() => navigate("/recipes")}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-full transition-all hover:shadow-brand active:scale-[0.98] cursor-pointer text-sm"
+          >
+            <ChefHat className="w-4 h-4" />
+            Racik Resep
+          </button>
         </div>
-      ) : (
-        <>
-          {/* ── Bento grid ───────────────────────────── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Hero greeting panel (2 cols) */}
-            <div className="lg:col-span-2 relative overflow-hidden p-7 rounded-2xl bg-gradient-to-br from-brand-600/20 via-surface-900 to-surface-900 border border-surface-700/60">
-              <div className="absolute -top-16 -right-10 w-56 h-56 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="relative">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">
-                  Ringkasan Bisnis
-                </p>
-                <h1 className="mt-2 text-2xl md:text-3xl font-extrabold text-slate-100 tracking-tight">
-                  {greeting()},{" "}
-                  <span className="text-brand-400">pantau HPP Anda</span>
-                </h1>
-                <p className="mt-2 text-sm text-slate-400 max-w-md leading-relaxed">
-                  Total {recipes.length} resep terkalulasi dan {ingredients.length} bahan baku aktif.
-                  Pantau bahan termahal dan resep paling kompleks untuk menjaga margin tetap sehat.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-2.5">
-                  <button
-                    onClick={() => navigate("/recipes")}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all hover:shadow-brand active:scale-[0.98] cursor-pointer text-sm"
-                  >
-                    <ChefHat className="w-4 h-4" />
-                    Kelola Resep
-                  </button>
-                  <button
-                    onClick={() => navigate("/ingredients")}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-surface-800 hover:bg-surface-700 text-slate-200 font-semibold rounded-xl border border-surface-700 transition-all active:scale-[0.98] cursor-pointer text-sm"
-                  >
-                    <ShoppingBag className="w-4 h-4" />
-                    Atur Bahan
-                  </button>
-                </div>
-              </div>
-            </div>
 
-            {/* Stat stack (1 col) */}
-            <div className="lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-4">
-              <StatCard icon={ShoppingBag} label="Bahan Baku" value={ingredients.length} tone="brand" />
-              <StatCard icon={Layers} label="Bumbu Dasar" value={baseRecipesCount} tone="brand" />
-              <StatCard icon={Scale} label="Menu Akhir" value={menuRecipesCount} tone="brand" />
-            </div>
+        {/* Flow nodes */}
+        <div className="flex items-stretch gap-2 sm:gap-3 overflow-x-auto pb-2">
+          <FlowNode
+            icon={<Package className="w-5 h-5" />}
+            label="Bahan"
+            value={String(ingredients.length)}
+            tone="brand"
+          />
+          <FlowArrow />
+          <FlowNode
+            icon={<Layers className="w-5 h-5" />}
+            label="Bumbu Dasar"
+            value={String(baseRecipes.length)}
+            tone="violet"
+          />
+          <FlowArrow />
+          <FlowNode
+            icon={<ChefHat className="w-5 h-5" />}
+            label="Resep Jadi"
+            value={String(menuRecipes.length)}
+            tone="warm"
+          />
+          <FlowArrow />
+          <FlowNode
+            icon={<Scale className="w-5 h-5" />}
+            label="HPP / Resep"
+            value={formatRupiah(
+              recipes.reduce((s, r) => s + (costs[r.id] || 0), 0) /
+                (recipes.length || 1)
+            )}
+            tone="brand"
+            big
+          />
+        </div>
+      </section>
+
+      {/* ===== HPP Dials ===== */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <DialCard
+          label="Kerumitan Rata-rata"
+          sub="komponen / resep"
+          value={avgComponents.toFixed(1)}
+          dial={complexityDial}
+          color="#10b981"
+        />
+        <DialCard
+          label="Stok Bahan"
+          sub={`${ingredients.length} item terdaftar`}
+          value={String(ingredients.length)}
+          dial={invDial}
+          color="#f59e0b"
+        />
+        <DialCard
+          label="Library Resep"
+          sub={`${recipes.length} resep total`}
+          value={String(recipes.length)}
+          dial={recipeDial}
+          color="#34d399"
+        />
+      </section>
+
+      {/* ===== Watchlist: resep butuh perhatian ===== */}
+      <section className="rounded-2xl border border-surface-700/60 bg-surface-900/40 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-surface-700/60">
+          <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4 text-warm-500" />
+            Resep butuh perhatian
+          </h2>
+          <span className="text-[10px] text-slate-500">
+            paling banyak komponen
+          </span>
+        </div>
+
+        {complexRecipes.length === 0 ? (
+          <div className="px-4 py-10 text-center text-slate-500 text-sm">
+            Belum ada resep. Racik pertama Anda untuk mulai memantau HPP.
           </div>
-
-          {/* ── Lower grid: composition + watchlist ───── */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Cost composition (replaces random-color bar chart) */}
-            <div className="lg:col-span-2 p-6 rounded-2xl border border-surface-700/60 bg-surface-900/50 space-y-5">
-              <div>
-                <h3 className="font-bold text-slate-200 text-sm flex items-center gap-1.5">
-                  <Flame className="w-4 h-4 text-brand-400" />
-                  Bahan Termahal
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Lima bahan dengan harga per unit tertinggi, berisiko fluktuasi HPP terbesar.
-                </p>
-              </div>
-
-              {topIngredients.length === 0 ? (
-                <div className="py-10 text-center text-slate-500 text-xs">
-                  Tambahkan bahan baku di menu Bahan Baku untuk melihat komposisi biaya.
-                </div>
-              ) : (
-                <div className="space-y-3.5">
-                  {topIngredients.map((ing) => {
-                    const pct = Math.round((ing.pricePerUnit / maxPrice) * 100);
-                    return (
-                      <div key={ing.id} className="space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-medium text-slate-300 truncate">{ing.name}</span>
-                          <span className="nums text-slate-400 shrink-0 ml-3">
-                            {formatRupiah(ing.pricePerUnit)}
-                            <span className="text-slate-600">/{ing.unit}</span>
-                          </span>
-                        </div>
-                        <div className="h-2 rounded-full bg-surface-800 overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Watchlist: heaviest recipes (proxy for margin attention) */}
-            <div className="lg:col-span-1 p-6 rounded-2xl border border-surface-700/60 bg-surface-900/50 flex flex-col justify-between space-y-4">
-              <div className="space-y-3">
-                <h3 className="font-bold text-slate-200 text-sm flex items-center gap-1.5">
-                  <TrendingUp className="w-4 h-4 text-brand-400" />
-                  Resep Paling Kompleks
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Banyak komponen artinya leverage biaya tinggi, pantau saat harga bahan naik.
-                </p>
-                {heaviestRecipes.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-6 text-center">Belum ada resep.</p>
-                ) : (
-                  <ul className="space-y-2.5">
-                    {heaviestRecipes.map((r) => (
-                      <li
-                        key={r.id}
-                        className="flex items-center justify-between gap-2 p-3 rounded-xl bg-surface-950/40 border border-surface-700/50"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-200 truncate">{r.name}</p>
-                          <p className="text-[10px] text-slate-500">{r.items.length} komponen</p>
-                        </div>
-                        <ArrowUpRight className="w-4 h-4 text-slate-600 shrink-0" />
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              <button
+        ) : (
+          <div>
+            {complexRecipes.map((r) => (
+              <div
+                key={r.id}
                 onClick={() => navigate("/recipes")}
-                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-surface-800 hover:bg-surface-700 text-slate-300 text-xs font-semibold border border-surface-700 transition-all active:scale-[0.98] cursor-pointer"
+                className="ledger-row grid-cols-[1fr_auto] sm:grid-cols-[1fr_auto_auto]"
               >
-                <FileText className="w-3.5 h-3.5" />
-                Buka Kalkulator HPP
-              </button>
-            </div>
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="w-8 h-8 grid place-items-center rounded-lg bg-brand-500/10 text-brand-400 font-extrabold text-sm shrink-0">
+                    {r.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="ledger-name font-semibold text-slate-200 truncate">
+                    {r.name}
+                  </span>
+                </div>
+                <span className="hidden sm:block text-xs text-slate-500">
+                  {r.items?.length || 0} komponen
+                </span>
+                <span className="nums text-sm text-slate-300">
+                  {formatRupiah(costs[r.id] || 0)}
+                </span>
+              </div>
+            ))}
           </div>
-        </>
+        )}
+      </section>
+
+      {/* ===== Top ingredient cost-risk hint ===== */}
+      {topIngredient && (
+        <section className="flex items-center gap-3 rounded-2xl border border-warm-500/20 bg-warm-500/5 p-4">
+          <div className="p-2.5 bg-warm-500/10 text-warm-400 rounded-xl">
+            <TrendingDown className="w-5 h-5" />
+          </div>
+          <p className="text-sm text-slate-300">
+            Bahan dengan harga tertinggi:{" "}
+            <span className="font-semibold text-slate-100">
+              {topIngredient.name}
+            </span>{" "}
+            —{" "}
+            <span className="nums text-warm-400">
+              {formatRupiah(topIngredient.pricePerUnit || 0)}
+            </span>{" "}
+            per {topIngredient.unit}. Fluktuasi bahan ini paling berdampak ke HPP.
+          </p>
+        </section>
       )}
     </div>
   );
 };
 
-type Tone = "brand" | "amber" | "blue" | "rose";
+/* ---------------- sub-components ---------------- */
 
-function StatCard({
-  icon: Icon,
+type Tone = "brand" | "warm" | "violet";
+const TONE: Record<Tone, string> = {
+  brand: "bg-brand-500/10 text-brand-400 border-brand-500/20",
+  warm: "bg-warm-500/10 text-warm-400 border-warm-500/20",
+  violet: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+};
+
+function FlowNode({
+  icon,
   label,
   value,
   tone,
+  big,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ReactNode;
   label: string;
-  value: number;
+  value: string;
   tone: Tone;
+  big?: boolean;
 }) {
-  const toneMap: Record<Tone, string> = {
-    brand: "bg-brand-500/10 text-brand-400 border-brand-500/20",
-    amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    blue: "bg-sky-500/10 text-sky-400 border-sky-500/20",
-    rose: "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  };
   return (
-    <div className="p-5 rounded-2xl bg-surface-900/50 border border-surface-700/60 flex items-center gap-4">
-      <div className={`p-3 rounded-xl border ${toneMap[tone]}`}>
-        <Icon className="w-5 h-5" />
+    <div
+      className={`shrink-0 min-w-[120px] rounded-xl border p-4 flex flex-col gap-2 ${TONE[tone]}`}
+    >
+      <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider opacity-80">
+        {icon}
+        {label}
       </div>
-      <div className="min-w-0">
-        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{label}</p>
-        <p className="nums text-xl font-black text-slate-200 mt-1">{value}</p>
+      <p className={`nums font-extrabold text-slate-100 ${big ? "text-lg" : "text-2xl"}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function FlowArrow() {
+  return (
+    <div className="shrink-0 self-center text-surface-600">
+      <ArrowRight className="w-5 h-5" />
+    </div>
+  );
+}
+
+function DialCard({
+  label,
+  sub,
+  value,
+  dial,
+  color,
+}: {
+  label: string;
+  sub: string;
+  value: string;
+  dial: number;
+  color: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-surface-700/60 bg-surface-900/40 p-4 flex flex-col items-center">
+      <div className="gauge" style={{ ["--val" as any]: dial, ["--gauge-color" as any]: color }}>
+        <div className="gauge-needle" style={{ ["--val" as any]: dial }} />
+        <div className="gauge-hub" />
       </div>
+      <p className="nums text-2xl font-extrabold text-slate-100 -mt-2">{value}</p>
+      <p className="text-sm font-semibold text-slate-300 mt-1 text-center">{label}</p>
+      <p className="text-[11px] text-slate-500 text-center">{sub}</p>
     </div>
   );
 }
