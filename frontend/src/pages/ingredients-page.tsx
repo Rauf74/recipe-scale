@@ -359,7 +359,7 @@ export const IngredientsPage: React.FC = () => {
                       placeholder="Contoh: Bawang Merah, Daging Sapi, Tepung Terigu"
                       value={form.name}
                       onChange={e => setField("name", e.target.value)}
-                      className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                      className="input"
                     />
                   </div>
 
@@ -379,7 +379,7 @@ export const IngredientsPage: React.FC = () => {
                           purchaseUnit: PURCHASE_UNIT_OPTIONS[newUnit][0],
                         }));
                       }}
-                      className="w-full px-3 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
+                      className="select"
                     >
                       <option value="g">g — Gram (untuk berat kecil)</option>
                       <option value="kg">kg — Kilogram</option>
@@ -411,7 +411,7 @@ export const IngredientsPage: React.FC = () => {
                       placeholder="Contoh: 75000"
                       value={form.purchasePrice}
                       onChange={e => setField("purchasePrice", e.target.value)}
-                      className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                      className="input"
                     />
                     <p className="mt-1 text-[10px] text-slate-600">Harga total satu kemasan saat dibeli.</p>
                   </div>
@@ -430,7 +430,7 @@ export const IngredientsPage: React.FC = () => {
                         placeholder={`Contoh: 5000`}
                         value={form.purchaseQuantity}
                         onChange={e => setField("purchaseQuantity", e.target.value)}
-                        className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                        className="input"
                       />
                     </div>
                     <div>
@@ -440,7 +440,7 @@ export const IngredientsPage: React.FC = () => {
                       <select
                         value={form.purchaseUnit}
                         onChange={e => setField("purchaseUnit", e.target.value)}
-                        className="w-full px-3 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
+                        className="select"
                       >
                         {PURCHASE_UNIT_OPTIONS[form.unit].map(u => (
                           <option key={u} value={u}>{u}</option>

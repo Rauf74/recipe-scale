@@ -30,6 +30,9 @@ type IngredientRequest struct {
 	PurchaseQuantity float64 `json:"purchaseQuantity"` // isi kemasan dalam satuan unit resep
 	PurchaseUnit     string  `json:"purchaseUnit"`     // label kemasan bebas: "kg", "pack", "ikat"
 	UsableYield      float64 `json:"usableYield"`      // % bahan terpakai, 1–100 (opsional, default 100)
+
+	// Stok
+	ReorderPoint float64 `json:"reorderPoint"` // batas minimum stok untuk alert (opsional, default 0)
 }
 
 // Alias agar handler yang pakai tipe lama tetap compile (backward-compat).
@@ -160,6 +163,9 @@ func (s *IngredientService) UpdateIngredient(id string, workspaceID string, req 
 	ing.UsableYield = yield
 	ing.CostPerRecipeUnit = newCost
 	ing.PricePerUnit = newCost // alias untuk backward-compat recipe_service
+	if req.ReorderPoint >= 0 {
+		ing.ReorderPoint = req.ReorderPoint
+	}
 	ing.UpdatedAt = time.Now()
 
 	if err := s.ingredientRepo.Update(ing); err != nil {
