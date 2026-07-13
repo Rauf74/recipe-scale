@@ -45,11 +45,13 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	ingredients := api.Group("/ingredients", middleware.RequireAuth)
 	ingredients.Get("/", ingredientHandler.List)
 	ingredients.Post("/", ingredientHandler.Create)
+	// PENTING: route statis (/stock-movements) harus didaftarkan SEBELUM route dengan
+	// parameter (/:id) agar Fiber tidak menangkap "stock-movements" sebagai nilai :id.
+	ingredients.Get("/stock-movements", ingredientHandler.ListStockMovements)
 	ingredients.Put("/:id", ingredientHandler.Update)
 	ingredients.Delete("/:id", ingredientHandler.Delete)
 	ingredients.Get("/:id/history", ingredientHandler.GetPriceHistory)
 	ingredients.Post("/:id/stock-adjustments", ingredientHandler.AdjustStock)
-	ingredients.Get("/stock-movements", ingredientHandler.ListStockMovements)
 
 	// 7. Recipe Routes (Protected)
 	recipes := api.Group("/recipes", middleware.RequireAuth)

@@ -32,7 +32,9 @@ type IngredientRequest struct {
 	UsableYield      float64 `json:"usableYield"`      // % bahan terpakai, 1–100 (opsional, default 100)
 
 	// Stok
-	ReorderPoint float64 `json:"reorderPoint"` // batas minimum stok untuk alert (opsional, default 0)
+	// Gunakan pointer agar bisa membedakan "tidak dikirim" (nil) dengan "sengaja di-set 0".
+	// Jika nil (tidak dikirim dari form bahan), reorderPoint TIDAK diubah.
+	ReorderPoint *float64 `json:"reorderPoint"`
 }
 
 // Alias agar handler yang pakai tipe lama tetap compile (backward-compat).
@@ -163,8 +165,8 @@ func (s *IngredientService) UpdateIngredient(id string, workspaceID string, req 
 	ing.UsableYield = yield
 	ing.CostPerRecipeUnit = newCost
 	ing.PricePerUnit = newCost // alias untuk backward-compat recipe_service
-	if req.ReorderPoint >= 0 {
-		ing.ReorderPoint = req.ReorderPoint
+	if req.ReorderPoint != nil {
+		ing.ReorderPoint = *req.ReorderPoint
 	}
 	ing.UpdatedAt = time.Now()
 
