@@ -1,1 +1,99 @@
 @import "tailwindcss";
+@import "@fontsource-variable/geist";
+
+/* ============================================================
+   RecipeScale — Design Tokens (Tailwind v4 @theme)
+   Signature: emerald access, dark-only lock, single radius scale
+   ============================================================ */
+@theme {
+  /* Font */
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand signature — emerald family (locked, no purple/blue/amber drift) */
+  --color-brand-50:  #ecfdf5;
+  --color-brand-100: #d1fae5;
+  --color-brand-200: #a7f3d0;
+  --color-brand-300: #6ee7b7;
+  --color-brand-400: #34d399;
+  --color-brand-500: #10b981;
+  --color-brand-600: #059669;
+  --color-brand-700: #047857;
+  --color-brand-800: #065f46;
+  --color-brand-900: #064e3b;
+
+  /* Neutral surface ramp (cool slate, consistent hue) */
+  --color-surface-950: #070b0f;
+  --color-surface-900: #0b1116;
+  --color-surface-850: #0e151b;
+  --color-surface-800: #131c24;
+  --color-surface-700: #1c2730;
+  --color-surface-600: #2a3742;
+
+  /* Single radius scale (shape consistency lock) */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+
+  /* Tinted shadows (never pure black) */
+  --shadow-brand: 0 10px 40px -12px rgb(16 185 129 / 0.35);
+  --shadow-soft: 0 8px 30px -10px rgb(0 0 0 / 0.5);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-surface-950 text-slate-200 font-sans antialiased;
+    font-feature-settings: "cv01", "cv03", "ss01";
+  }
+  /* Tabular figures for money/numbers */
+  .nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================
+   Ambient depth — fixed, pointer-events-none, never on scroll
+   ============================================================ */
+.app-glow {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 15% 0%, rgb(16 185 129 / 0.10), transparent 60%),
+    radial-gradient(50% 45% at 100% 100%, rgb(16 185 129 / 0.06), transparent 55%);
+}
+.app-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Custom scrollbar — subtle, on-brand */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-700);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-surface-600); }
+
+/* Honor reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
