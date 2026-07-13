@@ -445,7 +445,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                         name: item.ingredient
                           ? item.ingredient.name
                           : (item.subRecipe ? item.subRecipe.name : "Komponen"),
-                        value: selectedCost.itemCosts[item.id] || 0,
+                        value: selectedCost.itemCosts?.[item.id] || 0,
                       }))
                       .filter((d) => d.value > 0)
                       .sort((a, b) => b.value - a.value);

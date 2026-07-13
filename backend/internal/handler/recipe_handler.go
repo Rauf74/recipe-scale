@@ -190,6 +190,7 @@ func (h *RecipeHandler) GetCost(c *fiber.Ctx) error {
 			"recipe":    costRes.Recipe,
 			"totalCost": costRes.TotalCost,
 			"unitCost":  costRes.UnitCost,
+			"itemCosts": costRes.ItemCosts,
 		},
 	})
 }
