@@ -4,6 +4,7 @@ import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
 import {
   ChefHat,
+  AlertTriangle,
   Plus,
   Trash2,
   Edit2,
@@ -566,7 +567,7 @@ export const RecipesPage: React.FC = () => {
                               <div className="text-right">
                                 <strong className="text-slate-200 block font-extrabold">{formatRupiah(activeSellingPrice)}</strong>
                                 <span className={`text-[9px] font-bold ${isDanger ? "text-red-400" : "text-brand-400"}`}>
-                                  FC Aktual: {actualFoodCostPercent.toFixed(0)}% {isDanger && "⚠️"}
+                                  FC Aktual: {actualFoodCostPercent.toFixed(0)}% {isDanger && <AlertTriangle className="w-3 h-3 inline text-red-400" />}
                                 </span>
                               </div>
                             </div>
