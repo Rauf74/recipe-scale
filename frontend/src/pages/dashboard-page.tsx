@@ -154,27 +154,27 @@ export const DashboardPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ===== HPP Dials ===== */}
+      {/* ===== HPP Stats ===== */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <DialCard
+        <StatCard
           label="Kerumitan Rata-rata"
           sub="komponen / resep"
           value={avgComponents.toFixed(1)}
-          dial={complexityDial}
+          pct={complexityDial}
           color="#10b981"
         />
-        <DialCard
+        <StatCard
           label="Stok Bahan"
           sub={`${ingredients.length} item terdaftar`}
           value={String(ingredients.length)}
-          dial={invDial}
+          pct={invDial}
           color="#f59e0b"
         />
-        <DialCard
+        <StatCard
           label="Library Resep"
           sub={`${recipes.length} resep total`}
           value={String(recipes.length)}
-          dial={recipeDial}
+          pct={recipeDial}
           color="#34d399"
         />
       </section>
@@ -291,28 +291,40 @@ function FlowArrow() {
   );
 }
 
-function DialCard({
+function StatCard({
   label,
   sub,
   value,
-  dial,
+  pct,
   color,
 }: {
   label: string;
   sub: string;
   value: string;
-  dial: number;
+  pct: number;
   color: string;
 }) {
   return (
-    <div className="rounded-2xl border border-surface-700/60 bg-surface-900/40 p-4 flex flex-col items-center">
-      <div className="gauge" style={{ ["--val" as any]: dial, ["--gauge-color" as any]: color }}>
-        <div className="gauge-needle" style={{ ["--val" as any]: dial }} />
-        <div className="gauge-hub" />
+    <div className="rounded-2xl border border-surface-700/60 bg-surface-900/40 p-5 flex flex-col gap-3">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+          {label}
+        </p>
+        <span
+          className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+          style={{ color, backgroundColor: color + "1a" }}
+        >
+          {pct}%
+        </span>
       </div>
-      <p className="nums text-2xl font-extrabold text-slate-100 -mt-2">{value}</p>
-      <p className="text-sm font-semibold text-slate-300 mt-1 text-center">{label}</p>
-      <p className="text-[11px] text-slate-500 text-center">{sub}</p>
+      <p className="nums text-3xl font-extrabold text-slate-100 leading-none">{value}</p>
+      <div className="h-1.5 rounded-full bg-surface-800 overflow-hidden">
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${pct}%`, background: color }}
+        />
+      </div>
+      <p className="text-[11px] text-slate-500">{sub}</p>
     </div>
   );
 }

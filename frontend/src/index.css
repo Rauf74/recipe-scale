@@ -93,40 +93,7 @@
 /* ============================================================
    Gauge / Dial — HPP dial hero (timbangan dapur vibe)
    ============================================================ */
-.gauge {
-  --val: 0;            /* 0..100 */
-  --gauge-color: #10b981;
-  width: 100%;
-  aspect-ratio: 2 / 1;
-  border-radius: 9999px 9999px 0 0;
-  /* fill maps 0..100 -> 0..180deg, starting at 9 o'clock (left) sweeping
-     clockwise through top to 3 o'clock (right) — matches the visible dome */
-  background:
-    conic-gradient(from 270deg,
-      var(--gauge-color) 0deg,
-      var(--gauge-color) calc(var(--val) * 1.8deg),
-      rgb(255 255 255 / 0.07) calc(var(--val) * 1.8deg),
-      rgb(255 255 255 / 0.07) 180deg,
-      transparent 180deg);
-  -webkit-mask: radial-gradient(circle at 50% 100%, transparent 55%, #000 56%);
-  mask: radial-gradient(circle at 50% 100%, transparent 55%, #000 56%);
-  position: relative;
-}
-.gauge-needle {
-  position: absolute; left: 50%; bottom: 0;
-  width: 2px; height: 44%;
-  background: #f8fafc;
-  transform-origin: bottom center;
-  /* val=0 -> points left (-90deg), val=50 -> up (0), val=100 -> right (+90) */
-  transform: translateX(-50%) rotate(calc((var(--val) - 50) * 1.8deg));
-  border-radius: 2px;
-  box-shadow: 0 0 8px rgb(255 255 255 / 0.4);
-}
-.gauge-hub {
-  position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%);
-  width: 12px; height: 12px; border-radius: 9999px;
-  background: #f8fafc; box-shadow: 0 0 8px rgb(255 255 255 / 0.3);
-}
+
 
 /* Cost-flow node connector */
 .flow-arrow { color: var(--color-surface-600); }
