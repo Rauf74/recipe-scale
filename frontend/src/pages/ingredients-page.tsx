@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
@@ -11,39 +11,67 @@ import {
   X,
   Loader2,
   ShoppingBag,
-  Info
+  Calculator,
+  PackageOpen,
+  Scissors,
 } from "lucide-react";
+
+// Satuan resep yang didukung oleh sistem konversi backend
+const RECIPE_UNITS = ["g", "kg", "ml", "L", "pcs"] as const;
+type RecipeUnit = typeof RECIPE_UNITS[number];
+
+// Form state yang mencerminkan cara input belanja nyata
+interface IngredientForm {
+  name: string;
+  unit: RecipeUnit;           // satuan resep
+  purchasePrice: string;      // harga kemasan (Rp) — string untuk input bebas
+  purchaseQuantity: string;   // isi kemasan dalam satuan resep — string untuk input bebas
+  purchaseUnit: string;       // label kemasan bebas: "kg", "pack", "ikat"
+  usableYield: string;        // susut/trim %, default "100"
+}
+
+const EMPTY_FORM: IngredientForm = {
+  name: "",
+  unit: "kg",
+  purchasePrice: "",
+  purchaseQuantity: "",
+  purchaseUnit: "",
+  usableYield: "100",
+};
 
 export const IngredientsPage: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  // Form states
+  // Panel form state
   const [panelOpen, setPanelOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [unit, setUnit] = useState<"g" | "kg" | "ml" | "L" | "pcs">("kg");
-  const [pricePerUnit, setPricePerUnit] = useState("");
+  const [form, setForm] = useState<IngredientForm>(EMPTY_FORM);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Delete confirmation modal state (replaces window.confirm / alert)
+  // Delete confirmation
   const [pendingDelete, setPendingDelete] = useState<Ingredient | null>(null);
 
-  const [priceHistory, setPriceHistory] = useState<{ id: string; pricePerUnit: number; recordedAt: string }[]>([]);
+  // Price history untuk ditampilkan saat edit
+  const [priceHistory, setPriceHistory] = useState<{
+    id: string;
+    pricePerUnit: number;
+    purchasePrice: number;
+    purchaseQuantity: number;
+    purchaseUnit: string;
+    usableYield: number;
+    recordedAt: string;
+  }[]>([]);
 
-  useEffect(() => {
-    fetchIngredients();
-  }, []);
+  useEffect(() => { fetchIngredients(); }, []);
 
   const fetchIngredients = async () => {
     setLoading(true);
     try {
       const res = await apiClient.get<{ success: boolean; data: { ingredients: Ingredient[] } }>("/api/ingredients");
-      if (res.data.success) {
-        setIngredients(res.data.data.ingredients);
-      }
+      if (res.data.success) setIngredients(res.data.data.ingredients);
     } catch (err) {
       console.error("Gagal memuat bahan baku:", err);
     } finally {
@@ -53,32 +81,45 @@ export const IngredientsPage: React.FC = () => {
 
   const fetchPriceHistory = async (id: string) => {
     try {
-      const res = await apiClient.get<{ success: boolean; data: { histories: any[] } }>(`/api/ingredients/${id}/history`);
-      if (res.data.success) {
-        setPriceHistory(res.data.data.histories);
-      }
+      const res = await apiClient.get<{ success: boolean; data: { histories: typeof priceHistory } }>(`/api/ingredients/${id}/history`);
+      if (res.data.success) setPriceHistory(res.data.data.histories);
     } catch (err) {
       console.error("Gagal memuat riwayat harga:", err);
     }
   };
 
-  const handleEditClick = (ing: Ingredient) => {
-    setEditingId(ing.id);
-    setName(ing.name);
-    setUnit(ing.unit);
-    setPricePerUnit(ing.pricePerUnit.toString());
+  // --- Live preview: hitung costPerRecipeUnit langsung di client untuk feedback instan ---
+  const previewCost = useMemo<number | null>(() => {
+    const price = parseFloat(form.purchasePrice);
+    const qty = parseFloat(form.purchaseQuantity);
+    const yield_ = parseFloat(form.usableYield) || 100;
+    if (!isFinite(price) || price < 0) return null;
+    if (!isFinite(qty) || qty <= 0) return null;
+    const raw = price / qty;
+    return raw / (yield_ / 100);
+  }, [form.purchasePrice, form.purchaseQuantity, form.usableYield]);
+
+  // --- Handlers ---
+  const openAddNew = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
     setPriceHistory([]);
-    fetchPriceHistory(ing.id);
     setError("");
     setPanelOpen(true);
   };
 
-  const handleAddNewClick = () => {
-    setEditingId(null);
-    setName("");
-    setUnit("kg");
-    setPricePerUnit("");
+  const openEdit = (ing: Ingredient) => {
+    setEditingId(ing.id);
+    setForm({
+      name: ing.name,
+      unit: ing.unit,
+      purchasePrice: ing.purchasePrice > 0 ? ing.purchasePrice.toString() : "",
+      purchaseQuantity: ing.purchaseQuantity > 0 ? ing.purchaseQuantity.toString() : "",
+      purchaseUnit: ing.purchaseUnit || "",
+      usableYield: ing.usableYield > 0 ? ing.usableYield.toString() : "100",
+    });
     setPriceHistory([]);
+    fetchPriceHistory(ing.id);
     setError("");
     setPanelOpen(true);
   };
@@ -88,85 +129,90 @@ export const IngredientsPage: React.FC = () => {
     setError("");
     setActionLoading(true);
 
-    const price = parseFloat(pricePerUnit);
-    if (isNaN(price) || price < 0) {
-      setError("Harga unit tidak valid");
+    const purchasePrice = parseFloat(form.purchasePrice);
+    const purchaseQuantity = parseFloat(form.purchaseQuantity);
+    const usableYield = parseFloat(form.usableYield) || 100;
+
+    if (!isFinite(purchasePrice) || purchasePrice < 0) {
+      setError("Harga beli tidak valid");
+      setActionLoading(false);
+      return;
+    }
+    if (!isFinite(purchaseQuantity) || purchaseQuantity <= 0) {
+      setError("Jumlah kemasan harus lebih dari nol");
       setActionLoading(false);
       return;
     }
 
+    const payload = {
+      name: form.name.trim(),
+      unit: form.unit,
+      purchasePrice,
+      purchaseQuantity,
+      purchaseUnit: form.purchaseUnit.trim() || form.unit,
+      usableYield,
+    };
+
     try {
       if (editingId) {
-        // Edit Mode
-        const res = await apiClient.put<{ success: boolean; data: { ingredient: Ingredient } }>(`/api/ingredients/${editingId}`, {
-          name,
-          unit,
-          pricePerUnit: price,
-        });
+        const res = await apiClient.put<{ success: boolean; data: { ingredient: Ingredient } }>(`/api/ingredients/${editingId}`, payload);
         if (res.data.success) {
-          setIngredients(ingredients.map((ing) => (ing.id === editingId ? res.data.data.ingredient : ing)));
+          setIngredients(prev => prev.map(i => i.id === editingId ? res.data.data.ingredient : i));
           setPanelOpen(false);
         }
       } else {
-        // Create Mode
-        const res = await apiClient.post<{ success: boolean; data: { ingredient: Ingredient } }>("/api/ingredients", {
-          name,
-          unit,
-          pricePerUnit: price,
-        });
+        const res = await apiClient.post<{ success: boolean; data: { ingredient: Ingredient } }>("/api/ingredients", payload);
         if (res.data.success) {
-          setIngredients([res.data.data.ingredient, ...ingredients]);
+          setIngredients(prev => [res.data.data.ingredient, ...prev]);
           setPanelOpen(false);
         }
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Gagal menyimpan data bahan");
+    } catch (err: unknown) {
+      const message = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      setError(message || "Gagal menyimpan data bahan baku");
     } finally {
       setActionLoading(false);
     }
   };
 
-  const handleDeleteClick = (ing: Ingredient) => {
-    setPendingDelete(ing);
-  };
+  const handleDeleteClick = (ing: Ingredient) => setPendingDelete(ing);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
-    const id = pendingDelete.id;
     try {
-      await apiClient.delete(`/api/ingredients/${id}`);
-      setIngredients(ingredients.filter((ing) => ing.id !== id));
+      await apiClient.delete(`/api/ingredients/${pendingDelete.id}`);
+      setIngredients(prev => prev.filter(i => i.id !== pendingDelete.id));
     } catch (err) {
-      console.error("Gagal menghapus bahan baku:", err);
+      console.error("Gagal menghapus:", err);
       setError("Gagal menghapus bahan baku. Pastikan bahan ini tidak sedang digunakan di dalam resep.");
     } finally {
       setPendingDelete(null);
     }
   };
 
-  const filteredIngredients = ingredients.filter((ing) =>
+  const setField = <K extends keyof IngredientForm>(key: K, value: IngredientForm[K]) =>
+    setForm(prev => ({ ...prev, [key]: value }));
+
+  const filteredIngredients = ingredients.filter(ing =>
     ing.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="space-y-6">
-      {/* Top Banner Toolbar */}
+      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
-        {/* Search */}
         <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
           <input
             type="text"
             placeholder="Cari bahan baku..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={e => setSearch(e.target.value)}
             className="w-full pl-11 pr-4 py-2 bg-surface-900 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-500 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
           />
         </div>
-
-        {/* Add Trigger */}
         <button
-          onClick={handleAddNewClick}
+          onClick={openAddNew}
           className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-brand active:scale-[0.98] cursor-pointer text-sm shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -174,9 +220,9 @@ export const IngredientsPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Main Layout (Table & Panel overlay) */}
+      {/* Main Layout: Table + Slide-out Panel */}
       <div className="relative flex items-start gap-6">
-        {/* Ingredients Table Container */}
+        {/* Ingredient Table */}
         <div className="flex-1 overflow-x-auto rounded-2xl bg-surface-900/40 border border-surface-700/60">
           {loading ? (
             <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
@@ -190,11 +236,13 @@ export const IngredientsPage: React.FC = () => {
               </div>
               <h3 className="text-lg font-bold text-slate-300">Belum ada bahan baku</h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                {search ? "Pencarian tidak menemukan hasil." : "Tambahkan bahan baku dapur Anda (seperti Tepung, Gula, Bawang, Daging) beserta harga terbarunya."}
+                {search
+                  ? "Pencarian tidak menemukan hasil."
+                  : "Tambahkan bahan baku dapur Anda (seperti Tepung, Gula, Bawang, Daging) beserta cara belinya."}
               </p>
               {!search && (
                 <button
-                  onClick={handleAddNewClick}
+                  onClick={openAddNew}
                   className="mt-4 px-4 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/25 font-bold rounded-xl text-xs transition-all cursor-pointer"
                 >
                   Buat Bahan Pertama
@@ -206,24 +254,38 @@ export const IngredientsPage: React.FC = () => {
               <thead>
                 <tr className="border-b border-surface-700/80 text-slate-400 font-semibold tracking-wide text-xs bg-surface-900/50 uppercase">
                   <th className="py-3.5 px-6">Nama Bahan</th>
-                  <th className="py-3.5 px-6">Harga / Unit</th>
+                  <th className="py-3.5 px-6">Cara Beli</th>
+                  <th className="py-3.5 px-6">Biaya / Satuan Resep</th>
                   <th className="py-3.5 px-6 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-700/40">
-                {filteredIngredients.map((ing) => (
+                {filteredIngredients.map(ing => (
                   <tr key={ing.id} className="hover:bg-surface-900/20 transition-all group">
                     <td className="py-4 px-6 font-semibold text-slate-200">{ing.name}</td>
-                    <td className="py-4 px-6 text-slate-300">
-                      <span className="font-bold text-brand-400">{formatRupiah(ing.pricePerUnit)}</span>
+                    <td className="py-4 px-6 text-slate-400 text-xs">
+                      {ing.purchasePrice > 0 ? (
+                        <span>
+                          {formatRupiah(ing.purchasePrice)}{" "}
+                          <span className="text-slate-500">
+                            / {ing.purchaseQuantity} {ing.purchaseUnit || ing.unit}
+                            {ing.usableYield < 100 && ` · susut ${100 - ing.usableYield}%`}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className="text-slate-600 italic">—</span>
+                      )}
+                    </td>
+                    <td className="py-4 px-6">
+                      <span className="font-bold text-brand-400">{formatRupiah(ing.costPerRecipeUnit || ing.pricePerUnit)}</span>
                       <span className="text-slate-500 text-xs font-normal"> / {ing.unit}</span>
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                         <button
-                          onClick={() => handleEditClick(ing)}
+                          onClick={() => openEdit(ing)}
                           className="p-2 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-brand-500/10"
-                          title="Edit Harga"
+                          title="Edit Bahan"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
@@ -243,11 +305,12 @@ export const IngredientsPage: React.FC = () => {
           )}
         </div>
 
-        {/* Slide-out Sidebar Form Panel */}
+        {/* Slide-out Form Panel */}
         {panelOpen && (
-          <div className="w-full max-w-sm shrink-0 border border-surface-700 bg-surface-900/50 backdrop-blur-md rounded-2xl p-6 space-y-4 shadow-xl">
-            <div className="flex items-center justify-between border-b border-surface-700/80 pb-3">
-              <h3 className="font-bold text-slate-200 text-base">
+          <div className="w-full max-w-sm shrink-0 border border-surface-700 bg-surface-900/60 backdrop-blur-md rounded-2xl shadow-xl overflow-hidden">
+            {/* Panel Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700/80">
+              <h3 className="font-bold text-slate-200 text-sm">
                 {editingId ? "Ubah Bahan Baku" : "Bahan Baku Baru"}
               </h3>
               <button
@@ -258,72 +321,230 @@ export const IngredientsPage: React.FC = () => {
               </button>
             </div>
 
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
-                {error}
-              </div>
-            )}
+            <div className="p-5 space-y-5 overflow-y-auto max-h-[calc(100vh-180px)]">
+              {error && (
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
+                  {error}
+                </div>
+              )}
 
-            <form onSubmit={handleSave} className="space-y-4">
-              <div>
-                <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                  Nama Bahan Baku
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: Bawang Merah, Daging Sapi"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
-                />
-              </div>
+              <form onSubmit={handleSave} className="space-y-5" id="ingredient-form">
+                {/* ── Section 1: Identitas ── */}
+                <section className="space-y-3">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Identitas Bahan</p>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                    Satuan Unit
-                  </label>
-                  <select
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value as any)}
-                    className="w-full px-3 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
-                  >
-                    <option value="kg" className="bg-slate-950">kg (Kilogram)</option>
-                    <option value="g" className="bg-slate-950">g (Gram)</option>
-                    <option value="L" className="bg-slate-950">L (Liter)</option>
-                    <option value="ml" className="bg-slate-950">ml (Mililiter)</option>
-                    <option value="pcs" className="bg-slate-950">pcs (Butir/Biji)</option>
-                  </select>
+                  <div>
+                    <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                      Nama Bahan Baku
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Contoh: Bawang Merah, Daging Sapi, Tepung Terigu"
+                      value={form.name}
+                      onChange={e => setField("name", e.target.value)}
+                      className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                      Satuan Resep
+                    </label>
+                    <select
+                      value={form.unit}
+                      onChange={e => setField("unit", e.target.value as RecipeUnit)}
+                      className="w-full px-3 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
+                    >
+                      <option value="g">g — Gram (untuk berat kecil)</option>
+                      <option value="kg">kg — Kilogram</option>
+                      <option value="ml">ml — Mililiter (untuk cairan kecil)</option>
+                      <option value="L">L — Liter</option>
+                      <option value="pcs">pcs — Butir / Biji / Buah</option>
+                    </select>
+                    <p className="mt-1 text-[10px] text-slate-600">Satuan ini dipakai di form resep nanti.</p>
+                  </div>
+                </section>
+
+                {/* ── Section 2: Cara Beli ── */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <PackageOpen className="w-3.5 h-3.5 text-brand-400" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Cara Beli (Kemasan)</p>
+                  </div>
+
+                  {/* Harga beli */}
+                  <div>
+                    <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                      Harga Beli (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="any"
+                      placeholder="Contoh: 75000"
+                      value={form.purchasePrice}
+                      onChange={e => setField("purchasePrice", e.target.value)}
+                      className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                    />
+                    <p className="mt-1 text-[10px] text-slate-600">Harga total satu kemasan saat dibeli.</p>
+                  </div>
+
+                  {/* Isi kemasan */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                        Isi Kemasan
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        min="0.0001"
+                        step="any"
+                        placeholder={`Contoh: 5000`}
+                        value={form.purchaseQuantity}
+                        onChange={e => setField("purchaseQuantity", e.target.value)}
+                        className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                        Satuan Kemasan
+                      </label>
+                      <input
+                        type="text"
+                        placeholder={`Contoh: ${form.unit}`}
+                        value={form.purchaseUnit}
+                        onChange={e => setField("purchaseUnit", e.target.value)}
+                        className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                      />
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-600 leading-relaxed">
+                    Isi kemasan dalam satuan resep ({form.unit}).{" "}
+                    Contoh: beli 5 kg tepung, satuan resep gram → isi <span className="text-slate-400 font-bold">5000</span>, satuan kemasan <span className="text-slate-400 font-bold">kg</span>.
+                  </p>
+                </section>
+
+                {/* ── Section 3: Susut ── */}
+                <section className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Scissors className="w-3.5 h-3.5 text-warm-400" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Susut / Trim (Opsional)</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                      Usable Yield (%)
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="1"
+                        max="100"
+                        step="1"
+                        value={form.usableYield}
+                        onChange={e => setField("usableYield", e.target.value)}
+                        className="flex-1 accent-brand-500 cursor-pointer"
+                      />
+                      <div className="w-14 shrink-0">
+                        <input
+                          type="number"
+                          min="1"
+                          max="100"
+                          step="1"
+                          value={form.usableYield}
+                          onChange={e => setField("usableYield", e.target.value)}
+                          className="w-full px-2 py-1.5 bg-surface-950/40 border border-surface-700 rounded-lg text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm text-center font-bold"
+                        />
+                      </div>
+                    </div>
+                    <p className="mt-1 text-[10px] text-slate-600">
+                      Default 100% (tidak ada susut). Contoh: bawang dikupas → 80%.
+                    </p>
+                  </div>
+                </section>
+              </form>
+
+              {/* ── Live Preview Card ── */}
+              <div className={`rounded-xl border p-4 space-y-2 transition-all ${
+                previewCost !== null
+                  ? "border-brand-500/30 bg-brand-500/5"
+                  : "border-surface-700/60 bg-surface-900/30"
+              }`}>
+                <div className="flex items-center gap-2">
+                  <Calculator className="w-3.5 h-3.5 text-brand-400" />
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-brand-400">
+                    Preview Biaya
+                  </p>
                 </div>
 
-                <div>
-                  <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                    Harga / Unit (Rp)
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min="0"
-                    placeholder="Contoh: 15000"
-                    value={pricePerUnit}
-                    onChange={(e) => setPricePerUnit(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
-                  />
+                {previewCost !== null ? (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between items-baseline">
+                      <span className="text-xs text-slate-500">Biaya per satuan resep</span>
+                      <span className="font-extrabold text-lg text-slate-100">
+                        {formatRupiah(previewCost)}
+                        <span className="text-xs font-normal text-slate-400"> / {form.unit}</span>
+                      </span>
+                    </div>
+                    {parseFloat(form.usableYield) < 100 && (
+                      <p className="text-[10px] text-slate-500">
+                        Sudah memperhitungkan susut {100 - parseFloat(form.usableYield)}%
+                      </p>
+                    )}
+                    <p className="text-[10px] text-slate-500 pt-1 border-t border-surface-700/50">
+                      Nilai ini dipakai untuk menghitung HPP di semua resep yang memakai bahan ini.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-xs text-slate-600">
+                    Isi harga beli dan isi kemasan di atas untuk melihat biaya aktual per {form.unit}.
+                  </p>
+                )}
+              </div>
+
+              {/* Price History */}
+              {editingId && priceHistory.length > 0 && (
+                <div className="pt-1 border-t border-surface-700/60 space-y-2">
+                  <h4 className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                    📈 Riwayat Perubahan Biaya
+                  </h4>
+                  <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                    {priceHistory.map(h => (
+                      <div key={h.id} className="flex justify-between items-center text-xs p-2 rounded-xl bg-surface-950/40 border border-surface-700/60">
+                        <div className="space-y-0.5">
+                          <span className="text-brand-400 font-extrabold block">
+                            {formatRupiah(h.pricePerUnit)} / {form.unit}
+                          </span>
+                          {h.purchasePrice > 0 && (
+                            <span className="text-[9px] text-slate-600">
+                              {formatRupiah(h.purchasePrice)} / {h.purchaseQuantity} {h.purchaseUnit}
+                              {h.usableYield < 100 && ` · yield ${h.usableYield}%`}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[9px] text-slate-500 font-semibold shrink-0 ml-2">
+                          {new Date(h.recordedAt).toLocaleDateString("id-ID", {
+                            day: "2-digit",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="p-3 bg-surface-950/30 rounded-xl border border-surface-700 flex items-start gap-2.5 text-xs text-slate-500">
-                <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  Perubahan harga bahan baku akan langsung memicu penghitungan ulang modal HPP untuk seluruh resep dasar (bumbu) dan resep akhir yang menggunakan bahan ini.
-                </p>
-              </div>
-
+              {/* Submit button */}
               <button
                 type="submit"
+                form="ingredient-form"
                 disabled={actionLoading}
-                className="w-full py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 hover:shadow-lg hover:shadow-brand"
+                className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 hover:shadow-lg hover:shadow-brand text-sm"
               >
                 {actionLoading ? (
                   <>
@@ -334,33 +555,7 @@ export const IngredientsPage: React.FC = () => {
                   "Simpan Bahan"
                 )}
               </button>
-            </form>
-
-            {/* Price History Timeline */}
-            {editingId && priceHistory.length > 0 && (
-              <div className="pt-4 border-t border-surface-700/80 space-y-2">
-                <h4 className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                  📈 Riwayat Perubahan Harga
-                </h4>
-                <div className="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
-                  {priceHistory.map((h) => (
-                    <div key={h.id} className="flex justify-between items-center text-xs p-2 rounded-xl bg-surface-950/40 border border-surface-700/60">
-                      <span className="text-brand-400 font-extrabold">
-                        {formatRupiah(h.pricePerUnit)}
-                      </span>
-                      <span className="text-[9px] text-slate-500 font-semibold">
-                        {new Date(h.recordedAt).toLocaleDateString("id-ID", {
-                          day: "2-digit",
-                          month: "short",
-                          hour: "2-digit",
-                          minute: "2-digit"
-                        })}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         )}
       </div>

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,50 +19,112 @@ func NewIngredientService(ingredientRepo *repository.IngredientRepository) *Ingr
 	return &IngredientService{ingredientRepo: ingredientRepo}
 }
 
-type CreateIngredientRequest struct {
-	Name         string  `json:"name"`
-	Unit         string  `json:"unit"`
-	PricePerUnit float64 `json:"pricePerUnit"`
+// IngredientRequest digunakan untuk create maupun update.
+// User menginput cara belanja nyata (kemasan), bukan harga per satuan resep langsung.
+type IngredientRequest struct {
+	Name string `json:"name"`
+	Unit string `json:"unit"` // satuan resep: g, kg, ml, L, pcs
+
+	// Cara beli
+	PurchasePrice    float64 `json:"purchasePrice"`    // harga total kemasan (Rp)
+	PurchaseQuantity float64 `json:"purchaseQuantity"` // isi kemasan dalam satuan unit resep
+	PurchaseUnit     string  `json:"purchaseUnit"`     // label kemasan bebas: "kg", "pack", "ikat"
+	UsableYield      float64 `json:"usableYield"`      // % bahan terpakai, 1–100 (opsional, default 100)
 }
 
-type UpdateIngredientRequest struct {
-	Name         string  `json:"name"`
-	Unit         string  `json:"unit"`
-	PricePerUnit float64 `json:"pricePerUnit"`
-}
+// Alias agar handler yang pakai tipe lama tetap compile (backward-compat).
+type CreateIngredientRequest = IngredientRequest
+type UpdateIngredientRequest = IngredientRequest
 
 type AdjustStockRequest struct {
 	Quantity float64 `json:"quantity"`
 	Note     string  `json:"note"`
 }
 
-func (s *IngredientService) CreateIngredient(workspaceID string, req CreateIngredientRequest) (*domain.Ingredient, error) {
-	if req.Name == "" || req.Unit == "" || req.PricePerUnit < 0 {
-		return nil, errors.New("invalid ingredient payload: name, unit, and non-negative price are required")
+// calculateCostPerRecipeUnit menghitung biaya aktual per satuan resep dari data pembelian.
+//
+// Formula:
+//
+//	rawCost = purchasePrice / purchaseQuantity
+//	costPerRecipeUnit = rawCost / (usableYield / 100)
+//
+// Catatan: purchaseQuantity sudah dalam satuan resep (user mengonversi kemasan ke satuan resep di frontend).
+// Contoh: Beras 5 kg, satuan resep g → purchaseQuantity = 5000, purchasePrice = 75000
+//
+//	rawCost = 75000 / 5000 = 15 Rp/g
+//	usableYield 80% → costPerRecipeUnit = 15 / 0.8 = 18.75 Rp/g
+func calculateCostPerRecipeUnit(purchasePrice, purchaseQuantity, usableYield float64) float64 {
+	if purchaseQuantity <= 0 {
+		return 0
+	}
+	yield := usableYield
+	if yield <= 0 || yield > 100 {
+		yield = 100
+	}
+	rawCost := purchasePrice / purchaseQuantity
+	return rawCost / (yield / 100)
+}
+
+func validateIngredientRequest(req IngredientRequest) error {
+	if strings.TrimSpace(req.Name) == "" {
+		return errors.New("nama bahan baku tidak boleh kosong")
+	}
+	if strings.TrimSpace(req.Unit) == "" {
+		return errors.New("satuan resep tidak boleh kosong")
+	}
+	if req.PurchasePrice < 0 {
+		return errors.New("harga beli tidak boleh negatif")
+	}
+	if req.PurchaseQuantity <= 0 {
+		return errors.New("jumlah kemasan harus lebih dari nol")
+	}
+	if req.UsableYield != 0 && (req.UsableYield < 1 || req.UsableYield > 100) {
+		return errors.New("persentase susut (usable yield) harus antara 1 dan 100")
+	}
+	return nil
+}
+
+func (s *IngredientService) CreateIngredient(workspaceID string, req IngredientRequest) (*domain.Ingredient, error) {
+	if err := validateIngredientRequest(req); err != nil {
+		return nil, err
 	}
 
+	yield := req.UsableYield
+	if yield <= 0 {
+		yield = 100
+	}
+	cost := calculateCostPerRecipeUnit(req.PurchasePrice, req.PurchaseQuantity, yield)
+
 	ing := &domain.Ingredient{
-		ID:           uuid.New().String(),
-		Name:         req.Name,
-		Unit:         req.Unit,
-		PricePerUnit: req.PricePerUnit,
-		WorkspaceID:  workspaceID,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:                uuid.New().String(),
+		Name:              strings.TrimSpace(req.Name),
+		Unit:              strings.TrimSpace(req.Unit),
+		PurchasePrice:     req.PurchasePrice,
+		PurchaseQuantity:  req.PurchaseQuantity,
+		PurchaseUnit:      strings.TrimSpace(req.PurchaseUnit),
+		UsableYield:       yield,
+		CostPerRecipeUnit: cost,
+		PricePerUnit:      cost, // alias untuk backward-compat recipe_service
+		WorkspaceID:       workspaceID,
+		CreatedAt:         time.Now(),
+		UpdatedAt:         time.Now(),
 	}
 
 	if err := s.ingredientRepo.Create(ing); err != nil {
 		return nil, err
 	}
 
-	// Log initial price in history
-	ph := &domain.PriceHistory{
-		ID:           uuid.New().String(),
-		IngredientID: ing.ID,
-		PricePerUnit: ing.PricePerUnit,
-		RecordedAt:   time.Now(),
-	}
-	_ = s.ingredientRepo.CreatePriceHistory(ph)
+	// Catat harga awal ke price history
+	_ = s.ingredientRepo.CreatePriceHistory(&domain.PriceHistory{
+		ID:               uuid.New().String(),
+		IngredientID:     ing.ID,
+		PricePerUnit:     cost,
+		PurchasePrice:    ing.PurchasePrice,
+		PurchaseQuantity: ing.PurchaseQuantity,
+		PurchaseUnit:     ing.PurchaseUnit,
+		UsableYield:      ing.UsableYield,
+		RecordedAt:       time.Now(),
+	})
 
 	return ing, nil
 }
@@ -70,37 +133,50 @@ func (s *IngredientService) ListIngredients(workspaceID string) ([]domain.Ingred
 	return s.ingredientRepo.List(workspaceID)
 }
 
-func (s *IngredientService) UpdateIngredient(id string, workspaceID string, req UpdateIngredientRequest) (*domain.Ingredient, error) {
+func (s *IngredientService) UpdateIngredient(id string, workspaceID string, req IngredientRequest) (*domain.Ingredient, error) {
+	if err := validateIngredientRequest(req); err != nil {
+		return nil, err
+	}
+
 	ing, err := s.ingredientRepo.GetByID(id, workspaceID)
 	if err != nil {
-		return nil, errors.New("ingredient not found")
+		return nil, errors.New("bahan baku tidak ditemukan")
 	}
 
-	priceChanged := req.PricePerUnit >= 0 && req.PricePerUnit != ing.PricePerUnit
+	yield := req.UsableYield
+	if yield <= 0 {
+		yield = 100
+	}
+	newCost := calculateCostPerRecipeUnit(req.PurchasePrice, req.PurchaseQuantity, yield)
 
-	if req.Name != "" {
-		ing.Name = req.Name
-	}
-	if req.Unit != "" {
-		ing.Unit = req.Unit
-	}
-	if req.PricePerUnit >= 0 {
-		ing.PricePerUnit = req.PricePerUnit
-	}
+	// Catat ke price history hanya jika cost per resep berubah
+	costChanged := newCost != ing.CostPerRecipeUnit
+
+	ing.Name = strings.TrimSpace(req.Name)
+	ing.Unit = strings.TrimSpace(req.Unit)
+	ing.PurchasePrice = req.PurchasePrice
+	ing.PurchaseQuantity = req.PurchaseQuantity
+	ing.PurchaseUnit = strings.TrimSpace(req.PurchaseUnit)
+	ing.UsableYield = yield
+	ing.CostPerRecipeUnit = newCost
+	ing.PricePerUnit = newCost // alias untuk backward-compat recipe_service
 	ing.UpdatedAt = time.Now()
 
 	if err := s.ingredientRepo.Update(ing); err != nil {
 		return nil, err
 	}
 
-	if priceChanged {
-		ph := &domain.PriceHistory{
-			ID:           uuid.New().String(),
-			IngredientID: ing.ID,
-			PricePerUnit: ing.PricePerUnit,
-			RecordedAt:   time.Now(),
-		}
-		_ = s.ingredientRepo.CreatePriceHistory(ph)
+	if costChanged {
+		_ = s.ingredientRepo.CreatePriceHistory(&domain.PriceHistory{
+			ID:               uuid.New().String(),
+			IngredientID:     ing.ID,
+			PricePerUnit:     newCost,
+			PurchasePrice:    ing.PurchasePrice,
+			PurchaseQuantity: ing.PurchaseQuantity,
+			PurchaseUnit:     ing.PurchaseUnit,
+			UsableYield:      ing.UsableYield,
+			RecordedAt:       time.Now(),
+		})
 	}
 
 	return ing, nil
@@ -109,22 +185,22 @@ func (s *IngredientService) UpdateIngredient(id string, workspaceID string, req 
 func (s *IngredientService) GetIngredientPriceHistory(id string, workspaceID string) ([]domain.PriceHistory, error) {
 	_, err := s.ingredientRepo.GetByID(id, workspaceID)
 	if err != nil {
-		return nil, errors.New("ingredient not found")
+		return nil, errors.New("bahan baku tidak ditemukan")
 	}
 	return s.ingredientRepo.GetPriceHistory(id)
 }
 
 func (s *IngredientService) AdjustStock(id string, workspaceID string, req AdjustStockRequest) (*domain.Ingredient, error) {
 	if req.Quantity == 0 {
-		return nil, errors.New("stock adjustment quantity cannot be zero")
+		return nil, errors.New("jumlah penyesuaian stok tidak boleh nol")
 	}
 
 	ing, err := s.ingredientRepo.GetByID(id, workspaceID)
 	if err != nil {
-		return nil, errors.New("ingredient not found")
+		return nil, errors.New("bahan baku tidak ditemukan")
 	}
 	if ing.CurrentStock+req.Quantity < 0 {
-		return nil, errors.New("stock cannot become negative")
+		return nil, errors.New("stok tidak boleh menjadi negatif")
 	}
 
 	ing.CurrentStock += req.Quantity
@@ -158,7 +234,7 @@ func (s *IngredientService) DeleteIngredient(id string, workspaceID string) erro
 		return err
 	}
 	if used {
-		return errors.New("cannot delete ingredient because it is currently used in one or more recipes")
+		return errors.New("bahan baku tidak bisa dihapus karena masih digunakan di satu atau lebih resep")
 	}
 	return s.ingredientRepo.Delete(id, workspaceID)
 }

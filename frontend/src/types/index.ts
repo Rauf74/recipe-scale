@@ -18,13 +18,26 @@ export interface Workspace {
 export interface Ingredient {
   id: string;
   name: string;
-  unit: "g" | "kg" | "ml" | "L" | "pcs";
-  pricePerUnit: number;
-  currentStock: number;
-  reorderPoint: number;
   workspaceId: string;
   createdAt: string;
   updatedAt: string;
+
+  // Satuan resep (dipakai saat menyusun resep)
+  unit: "g" | "kg" | "ml" | "L" | "pcs";
+
+  // Model harga pembelian (cara beli nyata di pasar)
+  purchasePrice: number;        // harga total kemasan (Rp)
+  purchaseQuantity: number;     // isi kemasan dalam satuan resep
+  purchaseUnit: string;         // label kemasan: "kg", "pack", "ikat", dll.
+  usableYield: number;          // % bahan terpakai setelah susut (1–100)
+  costPerRecipeUnit: number;    // dihitung server-side: biaya aktual per satuan resep
+
+  // Alias backward-compat (= costPerRecipeUnit)
+  pricePerUnit: number;
+
+  // Stok (diisi via StockPage)
+  currentStock: number;
+  reorderPoint: number;
 }
 
 export interface Recipe {
