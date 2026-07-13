@@ -20,6 +20,8 @@ export interface Ingredient {
   name: string;
   unit: "g" | "kg" | "ml" | "L" | "pcs";
   pricePerUnit: number;
+  currentStock: number;
+  reorderPoint: number;
   workspaceId: string;
   createdAt: string;
   updatedAt: string;
@@ -30,6 +32,7 @@ export interface Recipe {
   name: string;
   yieldQuantity: number;
   yieldUnit: "portions" | "kg" | "grams";
+  recipeType: "PREP" | "MENU";
   isBaseRecipe: boolean;
   sellingPrice: number;
   targetFoodCost: number;

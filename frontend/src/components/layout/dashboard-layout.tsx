@@ -6,14 +6,22 @@ import {
   LayoutDashboard,
   BookOpen,
   Package,
+  Warehouse,
+  Layers,
+  ClipboardList,
+  TrendingUp,
   Plus,
   LogOut,
 } from "lucide-react";
 
 const NAV = [
   { to: "/", label: "Dasbor", icon: LayoutDashboard, end: true },
-  { to: "/recipes", label: "Resep", icon: BookOpen, end: false },
   { to: "/ingredients", label: "Bahan", icon: Package, end: false },
+  { to: "/stock", label: "Stok", icon: Warehouse, end: false },
+  { to: "/preps", label: "Prep", icon: Layers, end: false },
+  { to: "/recipes", label: "Resep", icon: BookOpen, end: false },
+  { to: "/production", label: "Produksi", icon: ClipboardList, end: false },
+  { to: "/analysis", label: "Analisis", icon: TrendingUp, end: false },
 ];
 
 export const DashboardLayout: React.FC = () => {
@@ -49,7 +57,7 @@ export const DashboardLayout: React.FC = () => {
           </Link>
 
           {/* Center pill nav */}
-          <nav className="hidden sm:flex items-center gap-1 p-1 rounded-full bg-surface-900/60 border border-surface-700/60">
+          <nav className="hidden lg:flex items-center gap-1 p-1 rounded-full bg-surface-900/60 border border-surface-700/60">
             {NAV.map((item) => {
               const active = isActive(item.to, item.end);
               const Icon = item.icon;
@@ -57,7 +65,7 @@ export const DashboardLayout: React.FC = () => {
                 <Link
                   key={item.to}
                   to={item.to}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-semibold transition-all ${
                     active
                       ? "bg-brand-500 text-surface-950 shadow-brand"
                       : "text-slate-400 hover:text-slate-200 hover:bg-surface-800/60"
@@ -74,7 +82,7 @@ export const DashboardLayout: React.FC = () => {
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => navigate("/recipes")}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-warm-500 hover:bg-warm-400 text-surface-950 font-bold rounded-full transition-all hover:shadow-warm active:scale-[0.98] cursor-pointer text-sm"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-warm-500 hover:bg-warm-400 text-surface-950 font-bold rounded-full transition-all hover:shadow-warm active:scale-[0.98] cursor-pointer text-sm"
             >
               <Plus className="w-4 h-4" />
               Racik
@@ -95,13 +103,13 @@ export const DashboardLayout: React.FC = () => {
       </header>
 
       {/* ============ MAIN ============ */}
-      <main className="relative z-10 mx-auto max-w-6xl px-4 py-6 pb-24 sm:pb-6">
+      <main className="relative z-10 mx-auto max-w-6xl px-4 py-6 pb-24 lg:pb-6">
         <Outlet />
       </main>
 
       {/* ============ MOBILE: bottom tab bar ============ */}
-      <nav className="sm:hidden fixed bottom-0 inset-x-0 z-30 border-t border-surface-700/60 bg-surface-950/90 backdrop-blur-md">
-        <div className="grid grid-cols-3">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-surface-700/60 bg-surface-950/90 backdrop-blur-md">
+        <div className="flex overflow-x-auto px-1">
           {NAV.map((item) => {
             const active = isActive(item.to, item.end);
             const Icon = item.icon;
@@ -109,7 +117,7 @@ export const DashboardLayout: React.FC = () => {
               <Link
                 key={item.to}
                 to={item.to}
-                className={`flex flex-col items-center gap-1 py-3 text-[11px] font-semibold transition-colors ${
+                className={`min-w-[68px] flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-semibold transition-colors ${
                   active ? "text-brand-400" : "text-slate-500"
                 }`}
               >

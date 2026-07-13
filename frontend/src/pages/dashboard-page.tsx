@@ -6,6 +6,7 @@ import { formatRupiah } from "../lib/utils";
 import {
   ChefHat,
   Package,
+  Warehouse,
   Layers,
   Scale,
   ArrowRight,
@@ -72,18 +73,11 @@ export const DashboardPage: React.FC = () => {
     .sort((a, b) => (b.items?.length || 0) - (a.items?.length || 0))
     .slice(0, 4);
 
-  // Average component count per recipe (rough "HPP complexity" dial)
+  // Average component count per recipe
   const avgComponents =
     recipes.length > 0
       ? recipes.reduce((s, r) => s + (r.items?.length || 0), 0) / recipes.length
       : 0;
-  const complexityDial = Math.min(100, Math.round((avgComponents / 12) * 100));
-
-  // Ingredient count dial (inventory coverage)
-  const invDial = Math.min(100, Math.round((ingredients.length / 30) * 100));
-
-  // Recipe count dial
-  const recipeDial = Math.min(100, Math.round((recipes.length / 20) * 100));
 
   if (loading) {
     return (
@@ -110,7 +104,7 @@ export const DashboardPage: React.FC = () => {
             </h1>
           </div>
           <button
-            onClick={() => navigate("/recipes")}
+            onClick={() => navigate(ingredients.length === 0 ? "/ingredients" : "/recipes")}
             className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-full transition-all hover:shadow-brand active:scale-[0.98] cursor-pointer text-sm"
           >
             <ChefHat className="w-4 h-4" />
@@ -125,6 +119,15 @@ export const DashboardPage: React.FC = () => {
             label="Bahan"
             value={String(ingredients.length)}
             tone="brand"
+            onClick={() => navigate("/ingredients")}
+          />
+          <FlowArrow />
+          <FlowNode
+            icon={<Warehouse className="w-5 h-5" />}
+            label="Stok"
+            value={`${ingredients.reduce((total, ingredient) => total + ingredient.currentStock, 0).toLocaleString("id-ID", { maximumFractionDigits: 1 })}`}
+            tone="brand"
+            onClick={() => navigate("/stock")}
           />
           <FlowArrow />
           <FlowNode
@@ -132,6 +135,7 @@ export const DashboardPage: React.FC = () => {
             label="Bumbu Dasar"
             value={String(baseRecipes.length)}
             tone="violet"
+            onClick={() => navigate("/preps")}
           />
           <FlowArrow />
           <FlowNode
@@ -139,43 +143,48 @@ export const DashboardPage: React.FC = () => {
             label="Resep Jadi"
             value={String(menuRecipes.length)}
             tone="warm"
+            onClick={() => navigate("/recipes")}
           />
           <FlowArrow />
           <FlowNode
             icon={<Scale className="w-5 h-5" />}
-            label="HPP / Resep"
+            label="Analisis HPP"
             value={formatRupiah(
-              recipes.reduce((s, r) => s + (costs[r.id] || 0), 0) /
-                (recipes.length || 1)
+              menuRecipes.reduce((s, r) => s + (costs[r.id] || 0), 0) /
+                (menuRecipes.length || 1)
             )}
             tone="brand"
             big
+            onClick={() => navigate("/analysis")}
           />
         </div>
       </section>
 
-      {/* ===== HPP Dials ===== */}
+      {/* ===== Kitchen KPIs ===== */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <DialCard
+        <MetricCard
           label="Kerumitan Rata-rata"
-          sub="komponen / resep"
+          sub="komponen per resep"
           value={avgComponents.toFixed(1)}
-          dial={complexityDial}
-          color="#10b981"
+          icon={<Layers className="w-5 h-5" />}
+          tone="brand"
+          status={recipes.length > 0 ? `${recipes.length} resep dianalisis` : "Belum ada data resep"}
         />
-        <DialCard
-          label="Stok Bahan"
+        <MetricCard
+          label="Bahan Terdaftar"
           sub={`${ingredients.length} item terdaftar`}
           value={String(ingredients.length)}
-          dial={invDial}
-          color="#f59e0b"
+          icon={<Package className="w-5 h-5" />}
+          tone="warm"
+          status={ingredients.length > 0 ? "Siap dipakai di resep" : "Tambahkan bahan pertama"}
         />
-        <DialCard
-          label="Library Resep"
-          sub={`${recipes.length} resep total`}
-          value={String(recipes.length)}
-          dial={recipeDial}
-          color="#34d399"
+        <MetricCard
+          label="Resep Menu"
+          sub={`${menuRecipes.length} menu siap dihitung`}
+          value={String(menuRecipes.length)}
+          icon={<ChefHat className="w-5 h-5" />}
+          tone="violet"
+          status={menuRecipes.length > 0 ? "Formula menu tersimpan" : "Mulai dari bahan atau prep"}
         />
       </section>
 
@@ -261,16 +270,20 @@ function FlowNode({
   value,
   tone,
   big,
+  onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   tone: Tone;
   big?: boolean;
+  onClick: () => void;
 }) {
   return (
-    <div
-      className={`shrink-0 min-w-[120px] rounded-xl border p-4 flex flex-col gap-2 ${TONE[tone]}`}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`shrink-0 min-w-[120px] rounded-xl border p-4 text-left flex flex-col gap-2 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 ${TONE[tone]}`}
     >
       <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider opacity-80">
         {icon}
@@ -279,7 +292,7 @@ function FlowNode({
       <p className={`nums font-extrabold text-slate-100 ${big ? "text-lg" : "text-2xl"}`}>
         {value}
       </p>
-    </div>
+    </button>
   );
 }
 
@@ -291,28 +304,50 @@ function FlowArrow() {
   );
 }
 
-function DialCard({
+function MetricCard({
   label,
   sub,
   value,
-  dial,
-  color,
+  icon,
+  tone,
+  status,
 }: {
   label: string;
   sub: string;
   value: string;
-  dial: number;
-  color: string;
+  icon: React.ReactNode;
+  tone: Tone;
+  status: string;
 }) {
+  const accent = {
+    brand: "bg-brand-500/10 text-brand-400 border-brand-500/20",
+    warm: "bg-warm-500/10 text-warm-400 border-warm-500/20",
+    violet: "bg-violet-500/10 text-violet-400 border-violet-500/20",
+  }[tone];
+  const topAccent = {
+    brand: "bg-brand-500",
+    warm: "bg-warm-500",
+    violet: "bg-violet-500",
+  }[tone];
+
   return (
-    <div className="rounded-2xl border border-surface-700/60 bg-surface-900/40 p-4 flex flex-col items-center">
-      <div className="gauge" style={{ ["--val" as any]: dial, ["--gauge-color" as any]: color }}>
-        <div className="gauge-needle" style={{ ["--val" as any]: dial }} />
-        <div className="gauge-hub" />
+    <div className="relative overflow-hidden rounded-2xl border border-surface-700/60 bg-surface-900/40 p-5">
+      <div className={`absolute inset-x-0 top-0 h-px ${topAccent}`} />
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-slate-300">{label}</p>
+          <p className="mt-1 text-[11px] text-slate-500">{sub}</p>
+        </div>
+        <div className={`grid h-10 w-10 place-items-center rounded-xl border ${accent}`}>
+          {icon}
+        </div>
       </div>
-      <p className="nums text-2xl font-extrabold text-slate-100 -mt-2">{value}</p>
-      <p className="text-sm font-semibold text-slate-300 mt-1 text-center">{label}</p>
-      <p className="text-[11px] text-slate-500 text-center">{sub}</p>
+      <p className="nums mt-6 text-4xl font-extrabold tracking-tight text-slate-100">{value}</p>
+      <div className="mt-5 border-t border-surface-700/50 pt-3">
+        <span className="inline-flex rounded-full bg-surface-800 px-2.5 py-1 text-[10px] font-medium text-slate-400">
+          {status}
+        </span>
+      </div>
     </div>
   );
 }

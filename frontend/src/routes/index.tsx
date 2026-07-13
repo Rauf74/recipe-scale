@@ -6,6 +6,9 @@ import { RegisterPage } from "../pages/register-page";
 import { DashboardPage } from "../pages/dashboard-page";
 import { IngredientsPage } from "../pages/ingredients-page";
 import { RecipesPage } from "../pages/recipes-page";
+import { ProductionPage } from "../pages/production-page";
+import { AnalysisPage } from "../pages/analysis-page";
+import { StockPage } from "../pages/stock-page";
 import { DashboardLayout } from "../components/layout/dashboard-layout";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
@@ -80,7 +83,11 @@ export const AppRoutes = () => {
         >
           <Route index element={<DashboardPage />} />
           <Route path="ingredients" element={<IngredientsPage />} />
-          <Route path="recipes" element={<RecipesPage />} />
+          <Route path="stock" element={<StockPage />} />
+          <Route path="preps" element={<RecipesPage mode="prep" />} />
+          <Route path="recipes" element={<RecipesPage mode="menu" />} />
+          <Route path="production" element={<ProductionPage />} />
+          <Route path="analysis" element={<AnalysisPage />} />
         </Route>
 
         {/* Catch All Redirect */}

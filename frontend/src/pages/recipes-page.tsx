@@ -24,7 +24,13 @@ interface RecipeCostData {
   itemCosts: Record<string, number>;
 }
 
-export const RecipesPage: React.FC = () => {
+type RecipeMode = "prep" | "menu";
+
+interface RecipesPageProps {
+  mode?: RecipeMode;
+}
+
+export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,6 +66,15 @@ export const RecipesPage: React.FC = () => {
 
   // Delete confirmation modal state (replaces window.confirm / alert)
   const [pendingDelete, setPendingDelete] = useState<Recipe | null>(null);
+
+  const isPrepMode = mode === "prep";
+  const pageTitle = isPrepMode ? "Bumbu Dasar & Prep" : "Resep Menu";
+  const pageDescription = isPrepMode
+    ? "Kelola komponen reusable seperti kaldu, sambal, sauce, dan adonan."
+    : "Susun menu akhir dari bahan baku dan bumbu dasar yang sudah tersedia.";
+  const visibleRecipes = recipes.filter((recipe) =>
+    recipe.recipeType ? recipe.recipeType === (isPrepMode ? "PREP" : "MENU") : recipe.isBaseRecipe === isPrepMode,
+  );
 
   // Deterministic per-recipe accent (on-brand palette, no random color drift)
   const ACCENTS = ["brand", "sky", "violet", "amber", "rose", "teal"] as const;
@@ -124,7 +139,7 @@ export const RecipesPage: React.FC = () => {
     setName("");
     setYieldQuantity("1");
     setYieldUnit("portions");
-    setIsBaseRecipe(false);
+    setIsBaseRecipe(isPrepMode);
     setSellingPrice("0");
     setTargetFoodCost(30);
     setItems([{ type: "ingredient", id: "", quantity: 1, unit: "g" }]);
@@ -210,6 +225,7 @@ export const RecipesPage: React.FC = () => {
           yieldQuantity: yieldQty,
           yieldUnit,
           isBaseRecipe,
+          recipeType: isPrepMode ? "PREP" : "MENU",
           sellingPrice: parseFloat(sellingPrice) || 0,
           targetFoodCost: parseFloat(targetFoodCost.toString()) || 30,
           items: payloadItems
@@ -228,6 +244,7 @@ export const RecipesPage: React.FC = () => {
           yieldQuantity: yieldQty,
           yieldUnit,
           isBaseRecipe,
+          recipeType: isPrepMode ? "PREP" : "MENU",
           sellingPrice: parseFloat(sellingPrice) || 0,
           targetFoodCost: parseFloat(targetFoodCost.toString()) || 30,
           items: payloadItems
@@ -272,14 +289,21 @@ export const RecipesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Action Toolbar */}
-      <div className="flex justify-end">
+      {/* Page header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-brand-400">
+            Formulasi Dapur
+          </p>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-100">{pageTitle}</h1>
+          <p className="mt-1 text-sm text-slate-500">{pageDescription}</p>
+        </div>
         <button
           onClick={handleAddNew}
           className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98] cursor-pointer text-sm shrink-0"
         >
           <Plus className="w-4 h-4" />
-          Racik Resep Baru
+          {isPrepMode ? "Buat Bumbu Dasar" : "Racik Resep Menu"}
         </button>
       </div>
 
@@ -292,12 +316,16 @@ export const RecipesPage: React.FC = () => {
               <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
               <span className="text-sm">Memuat daftar resep...</span>
             </div>
-          ) : recipes.length === 0 ? (
+          ) : visibleRecipes.length === 0 ? (
             <div className="py-20 bg-slate-900/10 border border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-500 text-center px-4">
               <ChefHat className="w-12 h-12 text-slate-700 mb-3" />
-              <h3 className="text-lg font-bold text-slate-300">Belum ada resep</h3>
+              <h3 className="text-lg font-bold text-slate-300">
+                {isPrepMode ? "Belum ada bumbu dasar" : "Belum ada resep menu"}
+              </h3>
               <p className="text-xs text-slate-500 mt-1 max-w-sm">
-                Mulailah meracik formula bumbu dasar atau menu akhir dengan menekan tombol &quot;Racik Resep Baru&quot;.
+                {isPrepMode
+                  ? "Buat prep pertama Anda agar dapat digunakan ulang pada beberapa resep menu."
+                  : "Racik menu akhir dari bahan baku dan bumbu dasar yang sudah tersimpan."}
               </p>
             </div>
           ) : (
@@ -309,7 +337,7 @@ export const RecipesPage: React.FC = () => {
                 <span className="text-right">Tipe</span>
                 <span className="text-right">Aksi</span>
               </div>
-              {recipes.map(recipe => {
+              {visibleRecipes.map(recipe => {
                 const isSelected = selectedRecipe?.id === recipe.id;
                 return (
                   <div
@@ -631,7 +659,7 @@ export const RecipesPage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
               <h3 className="font-extrabold text-slate-200 text-lg tracking-tight flex items-center gap-2">
                 <ChefHat className="w-5 h-5 text-brand-400" />
-                {editingId ? "Ubah Formula Resep" : "Racik Formula Resep Baru"}
+                {editingId ? `Ubah ${pageTitle}` : `Buat ${pageTitle}`}
               </h3>
               <button
                 onClick={() => setFormOpen(false)}
@@ -652,12 +680,12 @@ export const RecipesPage: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                    Nama Resep / Menu
+                    {isPrepMode ? "Nama Bumbu Dasar / Prep" : "Nama Resep Menu"}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Contoh: Rendang Daging, Bumbu Dasar Merah"
+                    placeholder={isPrepMode ? "Contoh: Bumbu Dasar Merah, Kaldu Ayam" : "Contoh: Rendang Daging, Nasi Goreng"}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full px-3.5 py-2 bg-slate-950/40 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
@@ -665,17 +693,16 @@ export const RecipesPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                    Tipe Resep
-                  </label>
-                  <select
-                    value={isBaseRecipe ? "true" : "false"}
-                    onChange={(e) => setIsBaseRecipe(e.target.value === "true")}
-                    className="w-full px-3 py-2.5 bg-slate-950/40 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
-                  >
-                    <option value="false" className="bg-slate-950">Menu Utama (Akhir)</option>
-                    <option value="true" className="bg-slate-950">Bumbu Dasar (Sub-Resep)</option>
-                  </select>
+                  <p className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                    Tipe Formula
+                  </p>
+                  <div className={`rounded-xl border px-3 py-2.5 text-sm font-semibold ${
+                    isPrepMode
+                      ? "border-violet-500/20 bg-violet-500/10 text-violet-400"
+                      : "border-sky-500/20 bg-sky-500/10 text-sky-400"
+                  }`}>
+                    {isPrepMode ? "Bumbu Dasar / Prep" : "Menu Akhir"}
+                  </div>
                 </div>
               </div>
 
