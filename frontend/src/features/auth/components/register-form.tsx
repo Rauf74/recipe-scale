@@ -29,9 +29,9 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-md p-8 rounded-2xl bg-slate-900/40 border border-slate-800 backdrop-blur-md shadow-2xl">
+    <div className="w-full max-w-md p-8 rounded-2xl bg-surface-900/40 border border-surface-700 backdrop-blur-md shadow-2xl">
       <div className="flex flex-col items-center mb-6">
-        <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl mb-3 border border-emerald-500/20">
+        <div className="p-3 bg-brand-500/10 text-brand-400 rounded-xl mb-3 border border-brand-500/20">
           <ChefHat className="w-8 h-8" />
         </div>
         <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Daftar Workspace</h2>
@@ -52,14 +52,14 @@ export const RegisterForm: React.FC = () => {
             Nama Bisnis / Restoran
           </label>
           <div className="relative">
-            <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
             <input
               type="text"
               required
               placeholder="Contoh: RM Padang Sederhana, Lim Bakery"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
             />
           </div>
         </div>
@@ -69,14 +69,14 @@ export const RegisterForm: React.FC = () => {
             Nama Lengkap Anda
           </label>
           <div className="relative">
-            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
             <input
               type="text"
               required
               placeholder="Contoh: Abdur Rauf"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
             />
           </div>
         </div>
@@ -86,14 +86,14 @@ export const RegisterForm: React.FC = () => {
             Email Bisnis
           </label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
             <input
               type="email"
               required
               placeholder="nama@perusahaan.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
             />
           </div>
         </div>
@@ -103,14 +103,14 @@ export const RegisterForm: React.FC = () => {
             Kata Sandi
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
             <input
               type="password"
               required
               placeholder="Minimal 6 karakter"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-slate-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
             />
           </div>
         </div>
@@ -118,7 +118,7 @@ export const RegisterForm: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-500/25 active:scale-98 cursor-pointer disabled:opacity-50"
+          className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand active:scale-[0.98] cursor-pointer disabled:opacity-50"
         >
           {loading ? (
             <>
@@ -133,7 +133,7 @@ export const RegisterForm: React.FC = () => {
 
       <div className="mt-6 text-center text-slate-400 text-xs">
         Sudah punya akun workspace?{" "}
-        <Link to="/login" className="text-emerald-400 hover:underline font-semibold transition-all">
+        <Link to="/login" className="text-brand-400 hover:underline font-semibold transition-all">
           Masuk Sekarang
         </Link>
       </div>
