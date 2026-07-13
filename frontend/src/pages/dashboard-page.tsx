@@ -30,15 +30,15 @@ export const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     Promise.all([
-      apiClient.get<{ success: boolean; data: Recipe[] }>("/api/recipes"),
-      apiClient.get<{ success: boolean; data: Ingredient[] }>("/api/ingredients"),
+      apiClient.get<{ success: boolean; data: { recipes: Recipe[] } }>("/api/recipes"),
+      apiClient.get<{ success: boolean; data: { ingredients: Ingredient[] } }>("/api/ingredients"),
     ])
       .then(async ([r, i]) => {
-        if (r.data.success) setRecipes(r.data.data);
-        if (i.data.success) setIngredients(i.data.data);
+        if (r.data.success) setRecipes(r.data.data.recipes);
+        if (i.data.success) setIngredients(i.data.data.ingredients);
         // fetch per-recipe HPP (backend /cost)
         if (r.data.success) {
-          const list = r.data.data;
+          const list = r.data.data.recipes;
           const entries = await Promise.all(
             list.map(async (rc) => {
               try {
