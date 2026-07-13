@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
@@ -6,25 +7,26 @@ import {
   ShoppingBag,
   ChefHat,
   Scale,
+  ArrowUpRight,
+  Flame,
   TrendingUp,
   Loader2,
-  FileText
+  FileText,
+  Layers,
 } from "lucide-react";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell
-} from "recharts";
+
+function greeting(): string {
+  const h = new Date().getHours();
+  if (h < 11) return "Selamat pagi";
+  if (h < 15) return "Selamat siang";
+  if (h < 19) return "Selamat sore";
+  return "Selamat malam";
+}
 
 export const DashboardPage: React.FC = () => {
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  const [priceAlerts, setPriceAlerts] = useState<{ ingredientId: string; name: string; currentPrice: number; previousPrice: number; changePercent: number; updatedAt: string }[]>([]);
-  const [marginAlerts, setMarginAlerts] = useState<{ recipeId: string; name: string; unitCost: number; sellingPrice: number; currentFoodCostPercent: number; targetFoodCostPercent: number; status: "danger" | "warning" }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,17 +36,12 @@ export const DashboardPage: React.FC = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [recRes, ingRes, alertRes] = await Promise.all([
+      const [recRes, ingRes] = await Promise.all([
         apiClient.get<{ success: boolean; data: { recipes: Recipe[] } }>("/api/recipes"),
         apiClient.get<{ success: boolean; data: { ingredients: Ingredient[] } }>("/api/ingredients"),
-        apiClient.get<{ success: boolean; data: { priceAlerts: any[]; marginAlerts: any[] } }>("/api/dashboard/alerts")
       ]);
       if (recRes.data.success) setRecipes(recRes.data.data.recipes);
       if (ingRes.data.success) setIngredients(ingRes.data.data.ingredients);
-      if (alertRes.data.success) {
-        setPriceAlerts(alertRes.data.data.priceAlerts);
-        setMarginAlerts(alertRes.data.data.marginAlerts);
-      }
     } catch (err) {
       console.error("Gagal memuat data dashboard:", err);
     } finally {
@@ -52,185 +49,154 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const baseRecipesCount = recipes.filter(r => r.isBaseRecipe).length;
-  const menuRecipesCount = recipes.filter(r => !r.isBaseRecipe).length;
+  const baseRecipesCount = recipes.filter((r) => r.isBaseRecipe).length;
+  const menuRecipesCount = recipes.filter((r) => !r.isBaseRecipe).length;
 
-  // Prepare chart data (ingredients by price)
-  const chartData = ingredients
-    .slice(0, 5) // Show top 5 ingredients
-    .map(ing => ({
-      name: ing.name,
-      price: ing.pricePerUnit
-    }));
+  // Most expensive ingredients -> proxy for price-fluctuation risk (honest signal, no fake margin)
+  const topIngredients = [...ingredients]
+    .sort((a, b) => b.pricePerUnit - a.pricePerUnit)
+    .slice(0, 5);
+  const maxPrice = topIngredients[0]?.pricePerUnit ?? 1;
 
-  const COLORS = ["#10b981", "#6366f1", "#a855f7", "#f59e0b", "#ef4444"];
+  // Recipes by component count (proxy: complexity / cost-leverage)
+  const heaviestRecipes = [...recipes]
+    .sort((a, b) => b.items.length - a.items.length)
+    .slice(0, 3);
 
   return (
     <div className="space-y-6">
-      {/* Loading State */}
       {loading ? (
         <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+          <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
           <span className="text-sm">Memuat ringkasan bisnis Anda...</span>
         </div>
       ) : (
         <>
-          {/* Stats Cards Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex items-center gap-4">
-              <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/15">
-                <ShoppingBag className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Bahan Baku</p>
-                <p className="text-xl font-black text-slate-200 mt-1">{ingredients.length}</p>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex items-center gap-4">
-              <div className="p-3 bg-purple-500/10 text-purple-400 rounded-xl border border-purple-500/15">
-                <ChefHat className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Bumbu Dasar</p>
-                <p className="text-xl font-black text-slate-200 mt-1">{baseRecipesCount}</p>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex items-center gap-4">
-              <div className="p-3 bg-blue-500/10 text-blue-400 rounded-xl border border-blue-500/15">
-                <Scale className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Menu Akhir</p>
-                <p className="text-xl font-black text-slate-200 mt-1">{menuRecipesCount}</p>
-              </div>
-            </div>
-
-            <div className="p-5 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex items-center gap-4">
-              <div className="p-3 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/15">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Status HPP</p>
-                <p className="text-sm font-bold text-slate-200 mt-1.5 flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  Semua Terkalkulasi
+          {/* ── Bento grid ───────────────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Hero greeting panel (2 cols) */}
+            <div className="lg:col-span-2 relative overflow-hidden p-7 rounded-2xl bg-gradient-to-br from-brand-600/20 via-surface-900 to-surface-900 border border-surface-700/60">
+              <div className="absolute -top-16 -right-10 w-56 h-56 bg-brand-500/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="relative">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">
+                  Ringkasan Bisnis
                 </p>
+                <h1 className="mt-2 text-2xl md:text-3xl font-extrabold text-slate-100 tracking-tight">
+                  {greeting()},{" "}
+                  <span className="text-brand-400">pantau HPP Anda</span>
+                </h1>
+                <p className="mt-2 text-sm text-slate-400 max-w-md leading-relaxed">
+                  Total {recipes.length} resep terkalulasi dan {ingredients.length} bahan baku aktif.
+                  Pantau bahan termahal dan resep paling kompleks untuk menjaga margin tetap sehat.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-2.5">
+                  <button
+                    onClick={() => navigate("/recipes")}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all hover:shadow-brand active:scale-[0.98] cursor-pointer text-sm"
+                  >
+                    <ChefHat className="w-4 h-4" />
+                    Kelola Resep
+                  </button>
+                  <button
+                    onClick={() => navigate("/ingredients")}
+                    className="flex items-center gap-1.5 px-4 py-2 bg-surface-800 hover:bg-surface-700 text-slate-200 font-semibold rounded-xl border border-surface-700 transition-all active:scale-[0.98] cursor-pointer text-sm"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Atur Bahan
+                  </button>
+                </div>
               </div>
+            </div>
+
+            {/* Stat stack (1 col) */}
+            <div className="lg:col-span-1 grid grid-cols-2 lg:grid-cols-1 gap-4">
+              <StatCard icon={ShoppingBag} label="Bahan Baku" value={ingredients.length} tone="brand" />
+              <StatCard icon={Layers} label="Bumbu Dasar" value={baseRecipesCount} tone="brand" />
+              <StatCard icon={Scale} label="Menu Akhir" value={menuRecipesCount} tone="brand" />
             </div>
           </div>
 
-          {/* Alerts and Warnings Row */}
-          {(priceAlerts.length > 0 || marginAlerts.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Price Alerts Card */}
-              {priceAlerts.length > 0 && (
-                <div className="p-5 rounded-2xl border border-amber-500/20 bg-amber-500/5 space-y-3">
-                  <h3 className="font-bold text-amber-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    ⚠️ Kenaikan Harga Bahan Baku
-                  </h3>
-                  <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                    {priceAlerts.map((alert) => (
-                      <div key={alert.ingredientId} className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/60">
-                        <span className="font-semibold text-slate-300">{alert.name}</span>
-                        <div className="text-right">
-                          <span className="text-red-400 font-bold block">+{alert.changePercent}%</span>
-                          <span className="text-[10px] text-slate-500">
-                            {formatRupiah(alert.previousPrice)} → {formatRupiah(alert.currentPrice)}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Margin Alerts Card */}
-              {marginAlerts.length > 0 && (
-                <div className="p-5 rounded-2xl border border-red-500/20 bg-red-500/5 space-y-3">
-                  <h3 className="font-bold text-red-400 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    🚨 Margin Menu Utama Terancam
-                  </h3>
-                  <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                    {marginAlerts.map((alert) => (
-                      <div key={alert.recipeId} className="flex justify-between items-center text-xs p-2.5 rounded-xl bg-slate-950/40 border border-slate-800/60">
-                        <span className="font-semibold text-slate-300">{alert.name}</span>
-                        <div className="text-right">
-                          <span className="text-red-400 font-black block">FC: {alert.currentFoodCostPercent.toFixed(0)}%</span>
-                          <span className="text-[9px] text-slate-500">
-                            Target FC: {alert.targetFoodCostPercent}% (Harga Jual: {alert.sellingPrice > 0 ? formatRupiah(alert.sellingPrice) : "Belum Set"})
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Double Column Section (Chart + Quick Tutorial) */}
+          {/* ── Lower grid: composition + watchlist ───── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Chart Area */}
-            <div className="lg:col-span-2 p-6 rounded-2xl border border-slate-800 bg-slate-900/30 space-y-4">
+            {/* Cost composition (replaces random-color bar chart) */}
+            <div className="lg:col-span-2 p-6 rounded-2xl border border-surface-700/60 bg-surface-900/50 space-y-5">
               <div>
-                <h3 className="font-bold text-slate-200 text-sm uppercase tracking-wider">5 Bahan Baku Termahal</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Membandingkan harga bahan per unit dasar</p>
+                <h3 className="font-bold text-slate-200 text-sm flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-brand-400" />
+                  Bahan Termahal
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Lima bahan dengan harga per unit tertinggi, berisiko fluktuasi HPP terbesar.
+                </p>
               </div>
 
-              {chartData.length === 0 ? (
-                <div className="h-64 flex items-center justify-center text-slate-500 text-xs">
-                  Tambahkan beberapa bahan baku di tab Bahan Baku untuk melihat visualisasi.
+              {topIngredients.length === 0 ? (
+                <div className="py-10 text-center text-slate-500 text-xs">
+                  Tambahkan bahan baku di menu Bahan Baku untuk melihat komposisi biaya.
                 </div>
               ) : (
-                <div className="h-64">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
-                      <XAxis dataKey="name" stroke="#64748b" fontSize={11} tickLine={false} />
-                      <YAxis stroke="#64748b" fontSize={10} tickLine={false} tickFormatter={(v) => `Rp ${v}`} />
-                      <Tooltip
-                        contentStyle={{ backgroundColor: "#0f172a", borderColor: "#1e293b", borderRadius: "12px" }}
-                        labelStyle={{ fontWeight: "bold", color: "#f1f5f9" }}
-                        formatter={(value: any) => [formatRupiah(value), "Harga per Unit"]}
-                      />
-                      <Bar dataKey="price" radius={[8, 8, 0, 0]}>
-                        {chartData.map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="space-y-3.5">
+                  {topIngredients.map((ing) => {
+                    const pct = Math.round((ing.pricePerUnit / maxPrice) * 100);
+                    return (
+                      <div key={ing.id} className="space-y-1.5">
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-medium text-slate-300 truncate">{ing.name}</span>
+                          <span className="nums text-slate-400 shrink-0 ml-3">
+                            {formatRupiah(ing.pricePerUnit)}
+                            <span className="text-slate-600">/{ing.unit}</span>
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-surface-800 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-brand-600 to-brand-400"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
 
-            {/* Quick Walkthrough Widget */}
-            <div className="lg:col-span-1 p-6 rounded-2xl border border-slate-800 bg-slate-900/30 flex flex-col justify-between space-y-4">
+            {/* Watchlist: heaviest recipes (proxy for margin attention) */}
+            <div className="lg:col-span-1 p-6 rounded-2xl border border-surface-700/60 bg-surface-900/50 flex flex-col justify-between space-y-4">
               <div className="space-y-3">
-                <h3 className="font-bold text-slate-200 text-sm uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-emerald-400" />
-                  Alur Penggunaan Portofolio
+                <h3 className="font-bold text-slate-200 text-sm flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-brand-400" />
+                  Resep Paling Kompleks
                 </h3>
-                <ol className="space-y-3 text-xs text-slate-400 list-decimal pl-4 leading-relaxed">
-                  <li>
-                    Masuk ke menu <strong className="text-slate-300">Bahan Baku</strong> untuk memasukkan bahan baku dasar Anda beserta harga pasar terkininya.
-                  </li>
-                  <li>
-                    Buat <strong className="text-slate-300">Bumbu Dasar</strong> (Base Recipe) terlebih dahulu jika menu masakan Anda menggunakan racikan pasta/bumbu bersama.
-                  </li>
-                  <li>
-                    Racik <strong className="text-slate-300">Resep Menu Utama</strong>, lalu masukkan bumbu dasar dan bahan mentah lainnya ke dalam list komponen resep.
-                  </li>
-                  <li>
-                    Gunakan penggeser <strong className="text-slate-300">Skala Porsi</strong> di sebelah kanan detail resep untuk mensimulasikan takaran saji dan memantau fluktuasi modal HPP secara instan.
-                  </li>
-                </ol>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Banyak komponen artinya leverage biaya tinggi, pantau saat harga bahan naik.
+                </p>
+                {heaviestRecipes.length === 0 ? (
+                  <p className="text-xs text-slate-500 py-6 text-center">Belum ada resep.</p>
+                ) : (
+                  <ul className="space-y-2.5">
+                    {heaviestRecipes.map((r) => (
+                      <li
+                        key={r.id}
+                        className="flex items-center justify-between gap-2 p-3 rounded-xl bg-surface-950/40 border border-surface-700/50"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-200 truncate">{r.name}</p>
+                          <p className="text-[10px] text-slate-500">{r.items.length} komponen</p>
+                        </div>
+                        <ArrowUpRight className="w-4 h-4 text-slate-600 shrink-0" />
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
-              <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[10px] text-slate-500 leading-relaxed">
-                🚀 Proyek portofolio ini dibangun menggunakan stack modern: **Golang (Fiber + GORM MySQL)** di backend dan **React + TypeScript (Vite 8 + Tailwind CSS v4)** di frontend.
-              </div>
+              <button
+                onClick={() => navigate("/recipes")}
+                className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-surface-800 hover:bg-surface-700 text-slate-300 text-xs font-semibold border border-surface-700 transition-all active:scale-[0.98] cursor-pointer"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Buka Kalkulator HPP
+              </button>
             </div>
           </div>
         </>
@@ -238,3 +204,35 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
+
+type Tone = "brand" | "amber" | "blue" | "rose";
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  tone: Tone;
+}) {
+  const toneMap: Record<Tone, string> = {
+    brand: "bg-brand-500/10 text-brand-400 border-brand-500/20",
+    amber: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+    blue: "bg-sky-500/10 text-sky-400 border-sky-500/20",
+    rose: "bg-rose-500/10 text-rose-400 border-rose-500/20",
+  };
+  return (
+    <div className="p-5 rounded-2xl bg-surface-900/50 border border-surface-700/60 flex items-center gap-4">
+      <div className={`p-3 rounded-xl border ${toneMap[tone]}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{label}</p>
+        <p className="nums text-xl font-black text-slate-200 mt-1">{value}</p>
+      </div>
+    </div>
+  );
+}
