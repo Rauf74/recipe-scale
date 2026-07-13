@@ -38,6 +38,8 @@ type CreateRecipeRequest struct {
 	RecipeType     string              `json:"recipeType"`
 	SellingPrice   float64             `json:"sellingPrice"`
 	TargetFoodCost float64             `json:"targetFoodCost"`
+	PackagingCost  float64             `json:"packagingCost"`
+	OverheadCost   float64             `json:"overheadCost"`
 	Items          []RecipeItemRequest `json:"items"`
 }
 
@@ -154,6 +156,8 @@ func (s *RecipeService) CreateRecipe(workspaceID string, req CreateRecipeRequest
 		IsBaseRecipe:   recipeType == "PREP",
 		SellingPrice:   req.SellingPrice,
 		TargetFoodCost: req.TargetFoodCost,
+		PackagingCost:  req.PackagingCost,
+		OverheadCost:   req.OverheadCost,
 		WorkspaceID:    workspaceID,
 		Items:          items,
 		CreatedAt:      time.Now(),
@@ -198,6 +202,8 @@ func (s *RecipeService) UpdateRecipe(id string, workspaceID string, req CreateRe
 	recipe.IsBaseRecipe = recipeType == "PREP"
 	recipe.SellingPrice = req.SellingPrice
 	recipe.TargetFoodCost = req.TargetFoodCost
+	recipe.PackagingCost = req.PackagingCost
+	recipe.OverheadCost = req.OverheadCost
 	recipe.UpdatedAt = time.Now()
 
 	newItems := make([]domain.RecipeItem, len(req.Items))
@@ -239,7 +245,11 @@ func (s *RecipeService) GetRecipeCost(id string, workspaceID string) (*RecipeCos
 	}
 
 	itemCosts := make(map[string]float64)
-	totalCost := s.calculateCostRecursiveWithBreakdown(recipe, workspaceID, itemCosts)
+	materialCost := s.calculateCostRecursiveWithBreakdown(recipe, workspaceID, itemCosts)
+	
+	// Total cost includes raw material costs + packaging cost + overhead cost
+	totalCost := materialCost + recipe.PackagingCost + recipe.OverheadCost
+	
 	unitCost := 0.0
 	if recipe.YieldQuantity > 0 {
 		unitCost = totalCost / recipe.YieldQuantity
@@ -307,11 +317,19 @@ func (s *RecipeService) calculateCostRecursiveWithBreakdown(recipe *domain.Recip
 func convertQuantity(qty float64, fromUnit, toUnit string) float64 {
 	from := strings.ToLower(strings.TrimSpace(fromUnit))
 	to := strings.ToLower(strings.TrimSpace(toUnit))
+	
+	// Normalize Indonesian and English units to consistent tokens
 	if from == "grams" || from == "gram" {
 		from = "g"
 	}
 	if to == "grams" || to == "gram" {
 		to = "g"
+	}
+	if from == "portions" || from == "porsi" {
+		from = "porsi"
+	}
+	if to == "portions" || to == "porsi" {
+		to = "porsi"
 	}
 
 	if from == to {

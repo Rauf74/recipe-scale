@@ -44,11 +44,13 @@ export interface Recipe {
   id: string;
   name: string;
   yieldQuantity: number;
-  yieldUnit: "portions" | "kg" | "grams";
+  yieldUnit: "porsi" | "kg" | "gram" | "portions" | "grams"; // fallback to English for backward compatibility with old data
   recipeType: "PREP" | "MENU";
   isBaseRecipe: boolean;
   sellingPrice: number;
   targetFoodCost: number;
+  packagingCost: number; // biaya kemasan per batch
+  overheadCost: number;  // biaya overhead per batch
   workspaceId: string;
   items: RecipeItem[];
   createdAt: string;

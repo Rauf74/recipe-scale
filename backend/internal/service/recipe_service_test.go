@@ -20,6 +20,8 @@ func TestConvertQuantity(t *testing.T) {
 		{"L to ml", 2.0, "L", "ml", 2000.0},
 		{"Incompatible unit g to ml", 100.0, "g", "ml", 100.0}, // returns qty as fallback
 		{"Case insensitive Gram to KG", 500.0, "Gram", "KG", 0.5},
+		{"Portions to porsi", 5.0, "portions", "porsi", 5.0},
+		{"Porsi to portions", 10.0, "porsi", "portions", 10.0},
 	}
 
 	for _, tt := range tests {

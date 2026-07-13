@@ -52,9 +52,11 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [yieldQuantity, setYieldQuantity] = useState("1");
-  const [yieldUnit, setYieldUnit] = useState<"portions" | "kg" | "grams">("portions");
+  const [yieldUnit, setYieldUnit] = useState<"porsi" | "kg" | "gram" | "portions" | "grams">("porsi");
   const [isBaseRecipe, setIsBaseRecipe] = useState(false);
   const [sellingPrice, setSellingPrice] = useState("0");
+  const [packagingCost, setPackagingCost] = useState("0");
+  const [overheadCost, setOverheadCost] = useState("0");
   const [items, setItems] = useState<{
     type: "ingredient" | "sub-recipe";
     id: string;
@@ -139,9 +141,11 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
     setEditingId(null);
     setName("");
     setYieldQuantity("1");
-    setYieldUnit("portions");
+    setYieldUnit("porsi");
     setIsBaseRecipe(isPrepMode);
     setSellingPrice("0");
+    setPackagingCost("0");
+    setOverheadCost("0");
     setTargetFoodCost(30);
     setItems([{ type: "ingredient", id: "", quantity: 1, unit: "g" }]);
     setError("");
@@ -156,6 +160,8 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
     setYieldUnit(recipe.yieldUnit);
     setIsBaseRecipe(recipe.isBaseRecipe);
     setSellingPrice(recipe.sellingPrice.toString());
+    setPackagingCost(recipe.packagingCost ? recipe.packagingCost.toString() : "0");
+    setOverheadCost(recipe.overheadCost ? recipe.overheadCost.toString() : "0");
     setTargetFoodCost(recipe.targetFoodCost || 30);
     setItems(recipe.items.map(item => ({
       type: item.ingredientId ? "ingredient" : "sub-recipe",
@@ -229,6 +235,8 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
           recipeType: isPrepMode ? "PREP" : "MENU",
           sellingPrice: parseFloat(sellingPrice) || 0,
           targetFoodCost: parseFloat(targetFoodCost.toString()) || 30,
+          packagingCost: parseFloat(packagingCost) || 0,
+          overheadCost: parseFloat(overheadCost) || 0,
           items: payloadItems
         });
         if (res.data.success) {
@@ -248,6 +256,8 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
           recipeType: isPrepMode ? "PREP" : "MENU",
           sellingPrice: parseFloat(sellingPrice) || 0,
           targetFoodCost: parseFloat(targetFoodCost.toString()) || 30,
+          packagingCost: parseFloat(packagingCost) || 0,
+          overheadCost: parseFloat(overheadCost) || 0,
           items: payloadItems
         });
         if (res.data.success) {
@@ -357,7 +367,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       </span>
                     </div>
                     <span className="nums text-right text-sm text-slate-300">
-                      {recipe.yieldQuantity} {recipe.yieldUnit}
+                      {recipe.yieldQuantity} {recipe.yieldUnit === "portions" ? "porsi" : (recipe.yieldUnit === "grams" ? "gram" : recipe.yieldUnit)}
                     </span>
                     <span className="nums text-right text-sm text-slate-400">
                       {recipe.items.length}
@@ -412,7 +422,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                 <p className="text-xs text-slate-500 mt-0.5">{selectedRecipe.name}</p>
               </div>
 
-              {costLoading || !selectedCost ? (
+               {costLoading || !selectedCost ? (
                 <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
                   <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
                   <span className="text-xs">Menghitung biaya resep...</span>
@@ -426,7 +436,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       <p className="text-base font-black text-brand-400 mt-1 leading-none">
                         {formatRupiah(selectedCost.totalCost)}
                       </p>
-                      <p className="text-[9px] text-slate-500 mt-1 leading-none">porsi asal ({selectedRecipe.yieldQuantity} {selectedRecipe.yieldUnit})</p>
+                      <p className="text-[9px] text-slate-500 mt-1 leading-none">porsi asal ({selectedRecipe.yieldQuantity} {selectedRecipe.yieldUnit === "portions" ? "porsi" : (selectedRecipe.yieldUnit === "grams" ? "gram" : selectedRecipe.yieldUnit)})</p>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 text-left">
@@ -434,9 +444,29 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       <p className="text-base font-black text-brand-400 mt-1 leading-none">
                         {formatRupiah(selectedCost.unitCost)}
                       </p>
-                      <p className="text-[9px] text-slate-500 mt-1 leading-none">per {selectedRecipe.yieldUnit.slice(0, -1) || "unit"}</p>
+                      <p className="text-[9px] text-slate-500 mt-1 leading-none">per {selectedRecipe.yieldUnit === "portions" ? "porsi" : (selectedRecipe.yieldUnit === "grams" ? "gram" : (selectedRecipe.yieldUnit.slice(0, -1) || "unit"))}</p>
                     </div>
                   </div>
+
+                  {/* Cost Breakdown Details */}
+                  {!selectedRecipe.isBaseRecipe && (
+                    <div className="p-4 rounded-xl bg-slate-950/30 border border-slate-800/80 space-y-2 text-xs text-left">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Biaya Bahan Baku:</span>
+                        <span className="font-semibold text-slate-300">
+                          {formatRupiah(selectedCost.totalCost - (selectedRecipe.packagingCost || 0) - (selectedRecipe.overheadCost || 0))}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Biaya Kemasan:</span>
+                        <span className="font-semibold text-slate-300">{formatRupiah(selectedRecipe.packagingCost || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Biaya Overhead:</span>
+                        <span className="font-semibold text-slate-300">{formatRupiah(selectedRecipe.overheadCost || 0)}</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Cost composition — compact horizontal bars (no random-color pie) */}
                   {(() => {
@@ -446,12 +476,24 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                           ? item.ingredient.name
                           : (item.subRecipe ? item.subRecipe.name : "Komponen"),
                         value: selectedCost.itemCosts?.[item.id] || 0,
-                      }))
+                      }));
+
+                    // Tambahkan kemasan & overhead jika nilainya ada
+                    if (!selectedRecipe.isBaseRecipe) {
+                      if (selectedRecipe.packagingCost > 0) {
+                        pieData.push({ name: "📦 Kemasan", value: selectedRecipe.packagingCost });
+                      }
+                      if (selectedRecipe.overheadCost > 0) {
+                        pieData.push({ name: "⚡ Overhead", value: selectedRecipe.overheadCost });
+                      }
+                    }
+
+                    const sortedData = pieData
                       .filter((d) => d.value > 0)
                       .sort((a, b) => b.value - a.value);
 
-                    const maxVal = pieData[0]?.value ?? 1;
-                    if (pieData.length === 0) return null;
+                    const maxVal = sortedData[0]?.value ?? 1;
+                    if (sortedData.length === 0) return null;
 
                     return (
                       <div className="p-4 bg-surface-950/20 border border-surface-700 rounded-xl space-y-3">
@@ -459,7 +501,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                           Komposisi Beban Biaya
                         </p>
                         <div className="space-y-2.5">
-                          {pieData.slice(0, 6).map((entry) => {
+                          {sortedData.slice(0, 6).map((entry) => {
                             const pct = Math.round((entry.value / maxVal) * 100);
                             const share = Math.round((entry.value / selectedCost.totalCost) * 100);
                             return (
@@ -480,9 +522,9 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                             );
                           })}
                         </div>
-                        {pieData.length > 6 && (
+                        {sortedData.length > 6 && (
                           <p className="text-[9px] text-slate-500 font-semibold">
-                            +{pieData.length - 6} komponen lainnya
+                            +{sortedData.length - 6} komponen lainnya
                           </p>
                         )}
                       </div>
@@ -510,7 +552,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                         className="w-20 px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-sm focus:outline-none focus:border-brand-500/50 text-center font-bold"
                       />
                       <span className="text-slate-400 text-xs truncate uppercase font-semibold">
-                        {selectedRecipe.yieldUnit}
+                        {selectedRecipe.yieldUnit === "portions" ? "porsi" : (selectedRecipe.yieldUnit === "grams" ? "gram" : selectedRecipe.yieldUnit)}
                       </span>
                     </div>
 
@@ -733,46 +775,82 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                     onChange={(e) => setYieldUnit(e.target.value as any)}
                     className="select"
                   >
+                    <option value="porsi" className="bg-slate-950">porsi (Porsi)</option>
                     <option value="portions" className="bg-slate-950">portions (Porsi)</option>
                     <option value="kg" className="bg-slate-950">kg (Kilogram)</option>
+                    <option value="gram" className="bg-slate-950">gram (Gram)</option>
                     <option value="grams" className="bg-slate-950">grams (Gram)</option>
                   </select>
                 </div>
               </div>
 
               {!isBaseRecipe && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                      Harga Jual Menu (Rp)
-                    </label>
-                    <input
-                      type="number"
-                      required={!isBaseRecipe}
-                      min="0"
-                      placeholder="Contoh: 45000"
-                      value={sellingPrice}
-                      onChange={(e) => setSellingPrice(e.target.value)}
-                      className="input"
-                    />
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                        Harga Jual Menu (Rp)
+                      </label>
+                      <input
+                        type="number"
+                        required={!isBaseRecipe}
+                        min="0"
+                        placeholder="Contoh: 45000"
+                        value={sellingPrice}
+                        onChange={(e) => setSellingPrice(e.target.value)}
+                        className="input"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                        Target Food Cost (%)
+                      </label>
+                      <input
+                        type="number"
+                        required={!isBaseRecipe}
+                        min="5"
+                        max="90"
+                        placeholder="Contoh: 30"
+                        value={targetFoodCost}
+                        onChange={(e) => setTargetFoodCost(parseFloat(e.target.value) || 0)}
+                        className="input"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                      Target Food Cost (%)
-                    </label>
-                    <input
-                      type="number"
-                      required={!isBaseRecipe}
-                      min="5"
-                      max="90"
-                      placeholder="Contoh: 30"
-                      value={targetFoodCost}
-                      onChange={(e) => setTargetFoodCost(parseFloat(e.target.value) || 0)}
-                      className="input"
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                        Biaya Kemasan / Batch (Rp)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="Contoh: 5000 (untuk paperbox/cup/plastik)"
+                        value={packagingCost}
+                        onChange={(e) => setPackagingCost(e.target.value)}
+                        className="input"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                        Biaya Overhead / Batch (Rp)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="any"
+                        placeholder="Contoh: 5000 (untuk gas/listrik/air flat)"
+                        value={overheadCost}
+                        onChange={(e) => setOverheadCost(e.target.value)}
+                        className="input"
+                      />
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Dynamic Items Builder Section */}
@@ -829,8 +907,8 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                             className="select-sm"
                           >
                             <option value="">-- Pilih Bumbu Dasar --</option>
-                            {availableBaseRecipes.map(r => (
-                              <option key={r.id} value={r.id}>{r.name} ({r.yieldQuantity} {r.yieldUnit})</option>
+                             {availableBaseRecipes.map(r => (
+                              <option key={r.id} value={r.id}>{r.name} ({r.yieldQuantity} {r.yieldUnit === "portions" ? "porsi" : (r.yieldUnit === "grams" ? "gram" : r.yieldUnit)})</option>
                             ))}
                           </select>
                         )}

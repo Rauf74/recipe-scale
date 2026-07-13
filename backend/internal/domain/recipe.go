@@ -6,11 +6,13 @@ type Recipe struct {
 	ID             string       `json:"id" gorm:"type:varchar(191);primaryKey"`
 	Name           string       `json:"name"`
 	YieldQuantity  float64      `json:"yieldQuantity"`
-	YieldUnit      string       `json:"yieldUnit"`                                       // e.g. "portions", "kg", "grams"
+	YieldUnit      string       `json:"yieldUnit"`                                       // e.g. "porsi", "kg", "gram"
 	RecipeType     string       `json:"recipeType" gorm:"type:varchar(16);default:MENU"` // PREP or MENU
 	IsBaseRecipe   bool         `json:"isBaseRecipe"`
 	SellingPrice   float64      `json:"sellingPrice" gorm:"type:decimal(15,2);default:0"`
 	TargetFoodCost float64      `json:"targetFoodCost" gorm:"type:decimal(5,2);default:30"`
+	PackagingCost  float64      `json:"packagingCost" gorm:"type:decimal(15,2);default:0"` // Biaya kemasan per batch
+	OverheadCost   float64      `json:"overheadCost" gorm:"type:decimal(15,2);default:0"`  // Biaya overhead per batch
 	WorkspaceID    string       `json:"workspaceId" gorm:"type:varchar(191)"`
 	Items          []RecipeItem `json:"items" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
 	CreatedAt      time.Time    `json:"createdAt"`
