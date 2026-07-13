@@ -10,7 +10,7 @@ RecipeScale adalah workspace untuk UMKM F&B, bakery, katering, dan restoran keci
 2. Jika target produksi berubah, berapa bahan yang harus disiapkan?
 3. Jika harga bahan berubah, menu mana yang margin-nya terdampak dan tindakan apa yang perlu diambil?
 
-**Fokus v1:** costing resep dan batch scaling yang dapat dipercaya. Inventory penuh, POS, supplier portal, dan billing SaaS bukan target sebelum core flow ini stabil.
+**Fokus v1:** workflow costing dan produksi dapur yang dapat dipercaya—dari katalog bahan sampai batch plan, HPP, dan margin. Inventory penuh, POS, supplier portal, dan billing SaaS bukan target sebelum core flow ini stabil.
 
 ---
 
@@ -75,6 +75,47 @@ Owner setup costing → tambah bahan & harga beli → buat resep/bumbu dasar
 4. Owner dapat menetapkan harga jual dan melihat gross margin per porsi/menu.
 5. Ketika harga bahan diperbarui, sistem menyimpan riwayat dan menandai resep/menu terdampak.
 6. Data workspace A tidak pernah dapat dibaca atau direferensikan oleh workspace B.
+
+### Information architecture v1
+
+Navigasi tidak boleh berhenti di `Dashboard → Bahan → Resep`. Itu membuat RecipeScale tampak sebagai CRUD resep, padahal nilai produknya ada pada proses sebelum dan setelah resep disusun.
+
+```text
+Dashboard
+├─ Katalog
+│  └─ Bahan Baku
+├─ Formulasi
+│  ├─ Bumbu Dasar & Prep
+│  └─ Resep Menu
+├─ Produksi
+│  └─ Batch Planner & Kitchen Sheet
+├─ Analisis
+│  └─ HPP, Harga Jual & Margin
+└─ Pengaturan Workspace
+   └─ Satuan, pembulatan, waste, packaging, target margin
+```
+
+| Area | Tujuan pengguna | Status implementasi |
+|---|---|---|
+| Dashboard | Melihat pekerjaan dan risiko yang perlu ditindak | Partial; jangan memakai gauge arbitrer untuk jumlah bahan/resep. |
+| Bahan Baku | Menyimpan katalog bahan serta harga pembelian | Ada; jangan diberi nama “Stok” sebelum ada quantity on hand dan mutasi. |
+| Bumbu Dasar & Prep | Membuat komponen reusable seperti kaldu, sambal, dough, atau sauce | Saat ini masih tercampur dalam halaman resep; perlu dipisah secara UI, domain tetap boleh memakai `Recipe`. |
+| Resep Menu | Menggabungkan bahan dan prep menjadi menu yang dijual | Saat ini masih tercampur dengan bumbu dasar; perlu halaman/list dan filter khusus. |
+| Produksi | Menentukan target batch lalu mendapat daftar timbang/kitchen sheet | Belum ada; ini pembeda utama RecipeScale. |
+| Analisis | Memutuskan harga dan melihat dampak perubahan bahan | Partial; HPP ada, tetapi margin, price history, dan impact belum ada. |
+| Pengaturan Workspace | Menentukan asumsi costing sesuai bisnis | Belum ada. |
+
+**Terminologi UI:** gunakan **Bahan Baku** atau **Katalog Bahan**, bukan **Stok Bahan**, sampai inventory fisik (masuk, keluar, saldo, opname) benar-benar tersedia.
+
+### Prioritas layar untuk portfolio MVP
+
+1. Dashboard yang memberi next action, bukan hanya statistik.
+2. Bahan Baku.
+3. Bumbu Dasar & Prep.
+4. Resep Menu.
+5. Produksi & HPP: pilih menu + target porsi → kebutuhan bahan, total batch cost, HPP/porsi, dan kitchen sheet.
+
+Halaman Analisis dan Pengaturan dapat mulai sebagai panel sederhana pada tahap awal, lalu dipisahkan ketika data price history dan cost profile sudah tersedia.
 
 ---
 
@@ -165,6 +206,8 @@ Prioritaskan pengaturan berikut karena memperluas kecocokan ke bakery, katering,
 - Selling price, target margin/markup, dan recommended price dengan aturan pembulatan workspace.
 - Endpoint dan UI **batch scaling sheet**: kuantitas tiap bahan/sub-recipe untuk target batch.
 - Dashboard: resep margin rendah, bahan dengan perubahan harga terbesar, dan menu terdampak.
+- Pecah UI formulasi menjadi **Bumbu Dasar & Prep** dan **Resep Menu** tanpa menduplikasi costing engine yang sama.
+- Tambahkan area **Produksi & HPP** sebagai tujuan setelah resep; jangan menjadikan resep sebagai akhir flow pengguna.
 
 **Definition of done:** perubahan harga minyak dapat menunjukkan semua menu yang terdampak, HPP lama/baru, dan rekomendasi harga baru.
 
@@ -191,7 +234,10 @@ Prioritaskan pengaturan berikut karena memperluas kecocokan ke bakery, katering,
 
 ## 7. UX yang disarankan
 
+- **Navigasi mengikuti workflow dapur:** Katalog → Formulasi (Prep → Menu) → Produksi → Analisis. Dashboard hanya sebagai titik masuk, bukan pengganti seluruh proses.
 - **Onboarding 3 langkah:** profil costing → tiga bahan contoh → satu resep pertama. Jangan tampilkan dashboard kosong tanpa arah.
+- **Bumbu dasar sebagai entitas UI terpisah:** tampilkan sebagai prep reusable, dengan yield, takaran output, dan daftar menu yang menggunakannya.
+- **Produksi sebagai langkah setelah resep:** pilih menu dan jumlah target, lalu tampilkan ingredient requirement, pembulatan, serta tombol print kitchen sheet.
 - **Ingredient form:** tuliskan “Rp15.000 per 1 kg”, lalu aplikasi menjelaskan biaya turunan “Rp15 per gram”. Ini mengurangi salah input.
 - **Recipe builder:** tampilkan validasi unit dan warning cycle secara inline; jangan hanya gagal setelah submit.
 - **Cost panel:** selalu tampilkan `live estimate` vs `last snapshot`, kontribusi biaya terbesar, serta margin setelah harga jual diisi.
