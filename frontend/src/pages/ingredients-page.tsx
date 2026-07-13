@@ -20,6 +20,16 @@ import {
 const RECIPE_UNITS = ["g", "kg", "ml", "L", "pcs"] as const;
 type RecipeUnit = typeof RECIPE_UNITS[number];
 
+// Satuan kemasan yang diizinkan per keluarga unit resep.
+// Isi kemasan HARUS dalam keluarga yang sama agar konversi backend valid.
+const PURCHASE_UNIT_OPTIONS: Record<RecipeUnit, string[]> = {
+  g:   ["g", "kg"],
+  kg:  ["kg", "g"],
+  ml:  ["ml", "L"],
+  L:   ["L", "ml"],
+  pcs: ["pcs"],
+};
+
 // Form state yang mencerminkan cara input belanja nyata
 interface IngredientForm {
   name: string;
@@ -110,12 +120,18 @@ export const IngredientsPage: React.FC = () => {
 
   const openEdit = (ing: Ingredient) => {
     setEditingId(ing.id);
+    // Pastikan purchaseUnit yang tersimpan masuk dalam daftar opsi unit resep saat ini.
+    // Jika tidak (misal data lama dari sebelum fitur ini), fallback ke opsi pertama.
+    const allowedUnits = PURCHASE_UNIT_OPTIONS[ing.unit] ?? [ing.unit];
+    const savedUnit = ing.purchaseUnit && allowedUnits.includes(ing.purchaseUnit)
+      ? ing.purchaseUnit
+      : allowedUnits[0];
     setForm({
       name: ing.name,
       unit: ing.unit,
       purchasePrice: ing.purchasePrice > 0 ? ing.purchasePrice.toString() : "",
       purchaseQuantity: ing.purchaseQuantity > 0 ? ing.purchaseQuantity.toString() : "",
-      purchaseUnit: ing.purchaseUnit || "",
+      purchaseUnit: savedUnit,
       usableYield: ing.usableYield > 0 ? ing.usableYield.toString() : "100",
     });
     setPriceHistory([]);
@@ -353,7 +369,16 @@ export const IngredientsPage: React.FC = () => {
                     </label>
                     <select
                       value={form.unit}
-                      onChange={e => setField("unit", e.target.value as RecipeUnit)}
+                      onChange={e => {
+                        const newUnit = e.target.value as RecipeUnit;
+                        // Saat satuan resep berubah, reset purchaseUnit ke opsi pertama
+                        // dari keluarga unit yang baru agar selalu valid.
+                        setForm(prev => ({
+                          ...prev,
+                          unit: newUnit,
+                          purchaseUnit: PURCHASE_UNIT_OPTIONS[newUnit][0],
+                        }));
+                      }}
                       className="w-full px-3 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
                     >
                       <option value="g">g — Gram (untuk berat kecil)</option>
@@ -412,18 +437,20 @@ export const IngredientsPage: React.FC = () => {
                       <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                         Satuan Kemasan
                       </label>
-                      <input
-                        type="text"
-                        placeholder={`Contoh: ${form.unit}`}
+                      <select
                         value={form.purchaseUnit}
                         onChange={e => setField("purchaseUnit", e.target.value)}
-                        className="w-full px-3.5 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
-                      />
+                        className="w-full px-3 py-2 bg-surface-950/40 border border-surface-700 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
+                      >
+                        {PURCHASE_UNIT_OPTIONS[form.unit].map(u => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   <p className="text-[10px] text-slate-600 leading-relaxed">
-                    Isi kemasan dalam satuan resep ({form.unit}).{" "}
-                    Contoh: beli 5 kg tepung, satuan resep gram → isi <span className="text-slate-400 font-bold">5000</span>, satuan kemasan <span className="text-slate-400 font-bold">kg</span>.
+                    Isi kemasan dalam satuan <span className="text-slate-400 font-semibold">{form.purchaseUnit}</span>,
+                    dikonversi ke satuan resep <span className="text-slate-400 font-semibold">{form.unit}</span> secara otomatis.
                   </p>
                 </section>
 
