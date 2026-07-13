@@ -30,6 +30,11 @@ type UpdateIngredientRequest struct {
 	PricePerUnit float64 `json:"pricePerUnit"`
 }
 
+type AdjustStockRequest struct {
+	Quantity float64 `json:"quantity"`
+	Note     string  `json:"note"`
+}
+
 func (s *IngredientService) CreateIngredient(workspaceID string, req CreateIngredientRequest) (*domain.Ingredient, error) {
 	if req.Name == "" || req.Unit == "" || req.PricePerUnit < 0 {
 		return nil, errors.New("invalid ingredient payload: name, unit, and non-negative price are required")
@@ -107,6 +112,44 @@ func (s *IngredientService) GetIngredientPriceHistory(id string, workspaceID str
 		return nil, errors.New("ingredient not found")
 	}
 	return s.ingredientRepo.GetPriceHistory(id)
+}
+
+func (s *IngredientService) AdjustStock(id string, workspaceID string, req AdjustStockRequest) (*domain.Ingredient, error) {
+	if req.Quantity == 0 {
+		return nil, errors.New("stock adjustment quantity cannot be zero")
+	}
+
+	ing, err := s.ingredientRepo.GetByID(id, workspaceID)
+	if err != nil {
+		return nil, errors.New("ingredient not found")
+	}
+	if ing.CurrentStock+req.Quantity < 0 {
+		return nil, errors.New("stock cannot become negative")
+	}
+
+	ing.CurrentStock += req.Quantity
+	ing.UpdatedAt = time.Now()
+	movementType := "IN"
+	if req.Quantity < 0 {
+		movementType = "ADJUSTMENT"
+	}
+	movement := &domain.StockMovement{
+		ID:           uuid.New().String(),
+		IngredientID: ing.ID,
+		WorkspaceID:  workspaceID,
+		Quantity:     req.Quantity,
+		Type:         movementType,
+		Note:         req.Note,
+		CreatedAt:    time.Now(),
+	}
+	if err := s.ingredientRepo.AdjustStock(ing, movement); err != nil {
+		return nil, err
+	}
+	return ing, nil
+}
+
+func (s *IngredientService) ListStockMovements(workspaceID string) ([]domain.StockMovement, error) {
+	return s.ingredientRepo.GetStockMovements(workspaceID)
 }
 
 func (s *IngredientService) DeleteIngredient(id string, workspaceID string) error {

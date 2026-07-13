@@ -161,3 +161,32 @@ func (h *IngredientHandler) GetPriceHistory(c *fiber.Ctx) error {
 		},
 	})
 }
+
+func (h *IngredientHandler) AdjustStock(c *fiber.Ctx) error {
+	workspaceID, ok := c.Locals("workspaceId").(string)
+	if !ok || workspaceID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+	}
+
+	var req service.AdjustStockRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "invalid request body"})
+	}
+	ingredient, err := h.ingredientService.AdjustStock(c.Params("id"), workspaceID, req)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"ingredient": ingredient}})
+}
+
+func (h *IngredientHandler) ListStockMovements(c *fiber.Ctx) error {
+	workspaceID, ok := c.Locals("workspaceId").(string)
+	if !ok || workspaceID == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+	}
+	movements, err := h.ingredientService.ListStockMovements(workspaceID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	}
+	return c.JSON(fiber.Map{"success": true, "data": fiber.Map{"movements": movements}})
+}

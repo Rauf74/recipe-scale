@@ -29,6 +29,9 @@ func (r *RecipeRepository) List(workspaceID string) ([]domain.Recipe, error) {
 		Preload("Items.Ingredient").
 		Preload("Items.SubRecipe").
 		Order("name asc").Find(&recipes).Error
+	for index := range recipes {
+		recipes[index].NormalizeType()
+	}
 	return recipes, err
 }
 
@@ -42,6 +45,7 @@ func (r *RecipeRepository) GetByID(id string, workspaceID string) (*domain.Recip
 	if err != nil {
 		return nil, err
 	}
+	recipe.NormalizeType()
 	return &recipe, nil
 }
 

@@ -20,12 +20,16 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	authService := service.NewAuthService(userRepo, workspaceRepo)
 	ingredientService := service.NewIngredientService(ingredientRepo)
 	recipeService := service.NewRecipeService(recipeRepo, ingredientRepo)
+	productionRepo := repository.NewProductionRepository(db)
+	productionService := service.NewProductionService(productionRepo, recipeRepo, recipeService)
 
 	// 3. Initialize Handlers
 	authHandler := NewAuthHandler(authService)
 	ingredientHandler := NewIngredientHandler(ingredientService)
 	recipeHandler := NewRecipeHandler(recipeService)
+	productionHandler := NewProductionHandler(productionService)
 	dashboardHandler := NewDashboardHandler(db, recipeService, ingredientService)
+	analyticsHandler := NewAnalyticsHandler(recipeService)
 
 	// 4. Setup CORS / API Groups
 	api := app.Group("/api")
@@ -44,6 +48,8 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	ingredients.Put("/:id", ingredientHandler.Update)
 	ingredients.Delete("/:id", ingredientHandler.Delete)
 	ingredients.Get("/:id/history", ingredientHandler.GetPriceHistory)
+	ingredients.Post("/:id/stock-adjustments", ingredientHandler.AdjustStock)
+	ingredients.Get("/stock-movements", ingredientHandler.ListStockMovements)
 
 	// 7. Recipe Routes (Protected)
 	recipes := api.Group("/recipes", middleware.RequireAuth)
@@ -54,7 +60,16 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	recipes.Delete("/:id", recipeHandler.Delete)
 	recipes.Get("/:id/cost", recipeHandler.GetCost)
 
-	// 8. Dashboard Routes (Protected)
+	// 8. Production routes (Protected)
+	production := api.Group("/production", middleware.RequireAuth)
+	production.Get("/batches", productionHandler.List)
+	production.Post("/batches", productionHandler.Create)
+	production.Post("/batches/:id/complete", productionHandler.Complete)
+
+	// 9. Dashboard Routes (Protected)
 	dashboard := api.Group("/dashboard", middleware.RequireAuth)
 	dashboard.Get("/alerts", dashboardHandler.GetAlerts)
+
+	analytics := api.Group("/analytics", middleware.RequireAuth)
+	analytics.Get("/menu-performance", analyticsHandler.MenuPerformance)
 }

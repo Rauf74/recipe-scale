@@ -55,3 +55,18 @@ func (r *IngredientRepository) GetPriceHistory(ingredientID string) ([]domain.Pr
 	err := r.db.Where("ingredient_id = ?", ingredientID).Order("recorded_at desc").Find(&histories).Error
 	return histories, err
 }
+
+func (r *IngredientRepository) AdjustStock(ingredient *domain.Ingredient, movement *domain.StockMovement) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Save(ingredient).Error; err != nil {
+			return err
+		}
+		return tx.Create(movement).Error
+	})
+}
+
+func (r *IngredientRepository) GetStockMovements(workspaceID string) ([]domain.StockMovement, error) {
+	var movements []domain.StockMovement
+	err := r.db.Where("workspace_id = ?", workspaceID).Order("created_at desc").Limit(100).Find(&movements).Error
+	return movements, err
+}

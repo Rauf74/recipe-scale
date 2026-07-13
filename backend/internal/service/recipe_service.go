@@ -35,9 +35,24 @@ type CreateRecipeRequest struct {
 	YieldQuantity  float64             `json:"yieldQuantity"`
 	YieldUnit      string              `json:"yieldUnit"`
 	IsBaseRecipe   bool                `json:"isBaseRecipe"`
+	RecipeType     string              `json:"recipeType"`
 	SellingPrice   float64             `json:"sellingPrice"`
 	TargetFoodCost float64             `json:"targetFoodCost"`
 	Items          []RecipeItemRequest `json:"items"`
+}
+
+func normalizeRecipeType(recipeType string, isBaseRecipe bool) (string, error) {
+	normalized := strings.ToUpper(strings.TrimSpace(recipeType))
+	if normalized == "" {
+		if isBaseRecipe {
+			return "PREP", nil
+		}
+		return "MENU", nil
+	}
+	if normalized != "PREP" && normalized != "MENU" {
+		return "", errors.New("recipeType must be PREP or MENU")
+	}
+	return normalized, nil
 }
 
 type RecipeCostResponse struct {
@@ -108,6 +123,10 @@ func (s *RecipeService) CreateRecipe(workspaceID string, req CreateRecipeRequest
 	}
 
 	recipeID := uuid.New().String()
+	recipeType, err := normalizeRecipeType(req.RecipeType, req.IsBaseRecipe)
+	if err != nil {
+		return nil, err
+	}
 
 	// Perform validation guards
 	if err := s.validateItems(recipeID, workspaceID, req.Items); err != nil {
@@ -127,17 +146,18 @@ func (s *RecipeService) CreateRecipe(workspaceID string, req CreateRecipeRequest
 	}
 
 	recipe := &domain.Recipe{
-		ID:            recipeID,
-		Name:          req.Name,
-		YieldQuantity: req.YieldQuantity,
-		YieldUnit:     req.YieldUnit,
-		IsBaseRecipe:  req.IsBaseRecipe,
-		SellingPrice:  req.SellingPrice,
+		ID:             recipeID,
+		Name:           req.Name,
+		YieldQuantity:  req.YieldQuantity,
+		YieldUnit:      req.YieldUnit,
+		RecipeType:     recipeType,
+		IsBaseRecipe:   recipeType == "PREP",
+		SellingPrice:   req.SellingPrice,
 		TargetFoodCost: req.TargetFoodCost,
-		WorkspaceID:   workspaceID,
-		Items:         items,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		WorkspaceID:    workspaceID,
+		Items:          items,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 
 	if err := s.recipeRepo.Create(recipe); err != nil {
@@ -161,6 +181,11 @@ func (s *RecipeService) UpdateRecipe(id string, workspaceID string, req CreateRe
 		return nil, errors.New("recipe not found")
 	}
 
+	recipeType, err := normalizeRecipeType(req.RecipeType, req.IsBaseRecipe)
+	if err != nil {
+		return nil, err
+	}
+
 	// Perform validation guards
 	if err := s.validateItems(recipe.ID, workspaceID, req.Items); err != nil {
 		return nil, err
@@ -169,7 +194,8 @@ func (s *RecipeService) UpdateRecipe(id string, workspaceID string, req CreateRe
 	recipe.Name = req.Name
 	recipe.YieldQuantity = req.YieldQuantity
 	recipe.YieldUnit = req.YieldUnit
-	recipe.IsBaseRecipe = req.IsBaseRecipe
+	recipe.RecipeType = recipeType
+	recipe.IsBaseRecipe = recipeType == "PREP"
 	recipe.SellingPrice = req.SellingPrice
 	recipe.TargetFoodCost = req.TargetFoodCost
 	recipe.UpdatedAt = time.Now()
@@ -240,10 +266,10 @@ func (s *RecipeService) calculateCostRecursive(recipe *domain.Recipe, workspaceI
 			// 2. Nested Sub-Recipe Cost
 			// Calculate the total cost of the sub-recipe recursively
 			subRecipeTotalCost := s.calculateCostRecursive(item.SubRecipe, workspaceID)
-			
+
 			// Adjust sub-recipe quantity based on unit matches
 			adjustedSubRecipeQty := convertQuantity(item.Quantity, item.Unit, item.SubRecipe.YieldUnit)
-			
+
 			if item.SubRecipe.YieldQuantity > 0 {
 				unitCost := subRecipeTotalCost / item.SubRecipe.YieldQuantity
 				total += unitCost * adjustedSubRecipeQty
@@ -281,6 +307,12 @@ func (s *RecipeService) calculateCostRecursiveWithBreakdown(recipe *domain.Recip
 func convertQuantity(qty float64, fromUnit, toUnit string) float64 {
 	from := strings.ToLower(strings.TrimSpace(fromUnit))
 	to := strings.ToLower(strings.TrimSpace(toUnit))
+	if from == "grams" || from == "gram" {
+		from = "g"
+	}
+	if to == "grams" || to == "gram" {
+		to = "g"
+	}
 
 	if from == to {
 		return qty
