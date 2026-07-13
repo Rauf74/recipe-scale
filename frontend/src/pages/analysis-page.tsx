@@ -1,15 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, BarChart3, Loader2, ReceiptText, TrendingUp } from "lucide-react";
+import type { Recipe } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
-
-interface Recipe {
-  id: string;
-  name: string;
-  isBaseRecipe: boolean;
-  sellingPrice?: number | null;
-  targetFoodCost?: number | null;
-}
 
 interface RecipeInsight {
   recipe: Recipe;

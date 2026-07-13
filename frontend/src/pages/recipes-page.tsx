@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
+import { ConfirmDeleteModal } from "../components/shared/ConfirmDeleteModal";
 import {
   ChefHat,
   AlertTriangle,
@@ -906,39 +907,14 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
 
       {/* Delete confirmation modal */}
       {pendingDelete && (
-        <div className="fixed inset-0 bg-surface-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-sm bg-surface-900 border border-surface-700 rounded-2xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-red-500/10 text-red-400 rounded-xl border border-red-500/20">
-                <Trash2 className="w-5 h-5" />
-              </div>
-              <h3 className="font-extrabold text-slate-100 text-base">Hapus Resep</h3>
-            </div>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              Yakin hapus <span className="text-slate-200 font-semibold">{pendingDelete.name}</span>?
-              Resep lain yang memakai ini sebagai bumbu dasar mungkin terpengaruh.
-            </p>
-            {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs">
-                {error}
-              </div>
-            )}
-            <div className="flex items-center justify-end gap-3 pt-1">
-              <button
-                onClick={() => { setPendingDelete(null); setError(""); }}
-                className="px-4 py-2 rounded-xl border border-surface-700 hover:bg-surface-800 text-slate-400 font-bold transition-all cursor-pointer text-xs"
-              >
-                Batal
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-500 hover:bg-red-400 text-white font-bold rounded-xl transition-all active:scale-[0.98] cursor-pointer text-xs"
-              >
-                Hapus
-              </button>
-            </div>
-          </div>
-        </div>
+        <ConfirmDeleteModal
+          title="Hapus Resep"
+          itemName={pendingDelete.name}
+          description="Resep lain yang memakai ini sebagai bumbu dasar mungkin terpengaruh."
+          error={error}
+          onConfirm={confirmDelete}
+          onCancel={() => { setPendingDelete(null); setError(""); }}
+        />
       )}
     </div>
   );
