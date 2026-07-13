@@ -541,7 +541,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                           max="95"
                           value={targetFoodCost}
                           onChange={(e) => setTargetFoodCost(Math.max(5, Math.min(95, parseInt(e.target.value) || 30)))}
-                          className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs font-bold focus:outline-none focus:border-brand-500/50 text-center"
+                          className="input-sm text-center font-bold"
                         />
                       </div>
 
@@ -553,7 +553,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                           max="50"
                           value={taxPercent}
                           onChange={(e) => setTaxPercent(Math.max(0, Math.min(50, parseInt(e.target.value) || 0)))}
-                          className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs font-bold focus:outline-none focus:border-brand-500/50 text-center"
+                          className="input-sm text-center font-bold"
                         />
                       </div>
 
@@ -565,7 +565,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                           max="50"
                           value={servicePercent}
                           onChange={(e) => setServicePercent(Math.max(0, Math.min(50, parseInt(e.target.value) || 0)))}
-                          className="w-full px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs font-bold focus:outline-none focus:border-brand-500/50 text-center"
+                          className="input-sm text-center font-bold"
                         />
                       </div>
                     </div>
@@ -689,7 +689,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                     placeholder={isPrepMode ? "Contoh: Bumbu Dasar Merah, Kaldu Ayam" : "Contoh: Rendang Daging, Nasi Goreng"}
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-950/40 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                    className="input"
                   />
                 </div>
 
@@ -720,7 +720,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                     placeholder="Contoh: 10"
                     value={yieldQuantity}
                     onChange={(e) => setYieldQuantity(e.target.value)}
-                    className="w-full px-3.5 py-2 bg-slate-950/40 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                    className="input"
                   />
                 </div>
 
@@ -731,7 +731,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                   <select
                     value={yieldUnit}
                     onChange={(e) => setYieldUnit(e.target.value as any)}
-                    className="w-full px-3 py-2.5 bg-slate-950/40 border border-slate-800 rounded-xl text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm transition-all cursor-pointer"
+                    className="select"
                   >
                     <option value="portions" className="bg-slate-950">portions (Porsi)</option>
                     <option value="kg" className="bg-slate-950">kg (Kilogram)</option>
@@ -753,7 +753,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       placeholder="Contoh: 45000"
                       value={sellingPrice}
                       onChange={(e) => setSellingPrice(e.target.value)}
-                      className="w-full px-3.5 py-2 bg-slate-950/40 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                      className="input"
                     />
                   </div>
 
@@ -769,7 +769,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       placeholder="Contoh: 30"
                       value={targetFoodCost}
                       onChange={(e) => setTargetFoodCost(parseFloat(e.target.value) || 0)}
-                      className="w-full px-3.5 py-2 bg-slate-950/40 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 text-sm transition-all"
+                      className="input"
                     />
                   </div>
                 </div>
@@ -800,7 +800,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                         <select
                           value={item.type}
                           onChange={(e) => handleItemChange(index, "type", e.target.value)}
-                          className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-brand-500/50 cursor-pointer"
+                          className="select-sm"
                         >
                           <option value="ingredient">Bahan Baku</option>
                           <option value="sub-recipe">Bumbu Dasar</option>
@@ -814,7 +814,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                             value={item.id}
                             required
                             onChange={(e) => handleItemChange(index, "id", e.target.value)}
-                            className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-brand-500/50 cursor-pointer"
+                            className="select-sm"
                           >
                             <option value="">-- Pilih Bahan Baku --</option>
                             {ingredients.map(ing => (
@@ -826,7 +826,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                             value={item.id}
                             required
                             onChange={(e) => handleItemChange(index, "id", e.target.value)}
-                            className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-brand-500/50 cursor-pointer"
+                            className="select-sm"
                           >
                             <option value="">-- Pilih Bumbu Dasar --</option>
                             {availableBaseRecipes.map(r => (
@@ -846,7 +846,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                           placeholder="Jumlah"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(index, "quantity", parseFloat(e.target.value) || 0)}
-                          className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-xs focus:outline-none focus:border-brand-500/50 text-center font-bold"
+                          className="input-sm text-center font-bold"
                         />
                       </div>
 
@@ -858,7 +858,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                           placeholder="Unit"
                           value={item.unit}
                           onChange={(e) => handleItemChange(index, "unit", e.target.value)}
-                          className="w-full px-2 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-slate-400 text-xs focus:outline-none text-center font-semibold"
+                          className="input-sm text-center font-semibold text-slate-400"
                         />
                       </div>
 
