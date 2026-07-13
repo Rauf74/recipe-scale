@@ -166,7 +166,7 @@ export const IngredientsPage: React.FC = () => {
         {/* Add Trigger */}
         <button
           onClick={handleAddNewClick}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98] cursor-pointer text-sm shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-brand active:scale-[0.98] cursor-pointer text-sm shrink-0"
         >
           <Plus className="w-4 h-4" />
           Tambah Bahan
@@ -221,7 +221,7 @@ export const IngredientsPage: React.FC = () => {
                       <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleEditClick(ing)}
-                          className="p-2 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-emerald-500/10"
+                          className="p-2 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-brand-500/10"
                           title="Edit Harga"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -322,7 +322,7 @@ export const IngredientsPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={actionLoading}
-                className="w-full py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 hover:shadow-lg hover:shadow-emerald-500/10"
+                className="w-full py-2 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 hover:shadow-lg hover:shadow-brand"
               >
                 {actionLoading ? (
                   <>

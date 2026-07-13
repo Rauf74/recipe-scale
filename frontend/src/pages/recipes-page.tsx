@@ -68,10 +68,6 @@ export const RecipesPage: React.FC = () => {
     for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
     return ACCENTS[h % ACCENTS.length];
   };
-  const accentBar: Record<string, string> = {
-    brand: "bg-brand-500", sky: "bg-sky-500", violet: "bg-violet-500",
-    amber: "bg-amber-500", rose: "bg-rose-500", teal: "bg-teal-500",
-  };
   const accentAvatar: Record<string, string> = {
     brand: "bg-brand-500/15 text-brand-400", sky: "bg-sky-500/15 text-sky-400",
     violet: "bg-violet-500/15 text-violet-400", amber: "bg-amber-500/15 text-amber-400",
@@ -305,64 +301,62 @@ export const RecipesPage: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-2xl border border-surface-700/60 bg-surface-900/40 overflow-hidden">
+              <div className="ledger-th grid-cols-[1fr_90px_90px_110px_70px]">
+                <span>Resep</span>
+                <span className="text-right">Yield</span>
+                <span className="text-right">Komp.</span>
+                <span className="text-right">Tipe</span>
+                <span className="text-right">Aksi</span>
+              </div>
               {recipes.map(recipe => {
                 const isSelected = selectedRecipe?.id === recipe.id;
                 return (
                   <div
                     key={recipe.id}
                     onClick={() => handleRecipeClick(recipe)}
-                    className={`relative overflow-hidden group p-5 rounded-2xl border transition-all cursor-pointer ${
-                      isSelected
-                        ? "bg-surface-900/70 border-brand-500/60 shadow-lg shadow-brand-500/5"
-                        : "bg-surface-900/40 border-surface-700/60 hover:border-surface-600 hover:bg-surface-900/60"
+                    className={`ledger-row grid-cols-[1fr_90px_90px_110px_70px] ${
+                      isSelected ? "bg-brand-500/5 border-l-2 border-l-brand-500" : ""
                     }`}
                   >
-                    {/* Identity accent bar */}
-                    <div className={`absolute top-0 left-0 right-0 h-1 ${accentBar[accentFor(recipe.id)]}`} />
-
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-extrabold text-sm shrink-0 ${accentAvatar[accentFor(recipe.id)]}`}>
-                          {recipe.name.charAt(0).toUpperCase()}
-                        </div>
-                        <h3 className="font-bold text-slate-200 group-hover:text-brand-400 transition-colors text-base truncate pr-2">
-                          {recipe.name}
-                        </h3>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-extrabold text-sm shrink-0 ${accentAvatar[accentFor(recipe.id)]}`}>
+                        {recipe.name.charAt(0).toUpperCase()}
                       </div>
-                      <span
-                        className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border tracking-wide uppercase shrink-0 ${
-                          recipe.isBaseRecipe
-                            ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
-                            : "bg-sky-500/10 text-sky-400 border-sky-500/20"
-                        }`}
-                      >
-                        {recipe.isBaseRecipe ? "Bumbu Dasar" : "Menu Utama"}
+                      <span className="ledger-name font-semibold text-slate-200 truncate">
+                        {recipe.name}
                       </span>
                     </div>
-
-                    <p className="text-xs text-slate-500 mb-4">
-                      Yield: <span className="text-slate-300 font-semibold">{recipe.yieldQuantity} {recipe.yieldUnit}</span>
-                    </p>
-
-                    <div className="flex items-center justify-between border-t border-surface-700/50 pt-3 text-[10px] text-slate-500">
-                      <span>{recipe.items.length} Komponen</span>
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={(e) => handleEditClick(recipe, e)}
-                          className="p-1.5 hover:bg-surface-800 hover:text-brand-400 rounded-lg transition-all cursor-pointer"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={(e) => handleDeleteClick(recipe, e)}
-                          className="p-1.5 hover:bg-surface-800 hover:text-red-400 rounded-lg transition-all cursor-pointer"
-                          title="Hapus"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                    <span className="nums text-right text-sm text-slate-300">
+                      {recipe.yieldQuantity} {recipe.yieldUnit}
+                    </span>
+                    <span className="nums text-right text-sm text-slate-400">
+                      {recipe.items.length}
+                    </span>
+                    <span className="text-right">
+                      <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border tracking-wide uppercase ${
+                        recipe.isBaseRecipe
+                          ? "bg-violet-500/10 text-violet-400 border-violet-500/20"
+                          : "bg-sky-500/10 text-sky-400 border-sky-500/20"
+                      }`}>
+                        {recipe.isBaseRecipe ? "Bumbu" : "Menu"}
+                      </span>
+                    </span>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={(e) => handleEditClick(recipe, e)}
+                        className="p-1.5 hover:bg-surface-800 hover:text-brand-400 rounded-lg transition-all cursor-pointer"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(recipe, e)}
+                        className="p-1.5 hover:bg-surface-800 hover:text-red-400 rounded-lg transition-all cursor-pointer"
+                        title="Hapus"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 );
