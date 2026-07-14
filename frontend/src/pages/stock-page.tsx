@@ -54,6 +54,13 @@ export function StockPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingReorder, setIsSavingReorder] = useState(false);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Filtered ingredients based on name search
+  const filteredIngredients = useMemo(() => {
+    if (!searchQuery) return ingredients;
+    return ingredients.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [ingredients, searchQuery]);
 
   // Bahan yang stoknya di bawah atau sama dengan reorder point (dan reorder point > 0)
   const lowStockIngredients = useMemo(
@@ -232,19 +239,47 @@ export function StockPage() {
         
         {/* ── Ketersediaan Bahan (Table View) ── */}
         <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40">
-          <div className="flex items-center gap-3 border-b border-surface-700/60 px-5 py-4">
-            <Package className="h-4 w-4 text-slate-500" />
-            <h2 className="font-bold text-slate-100 font-sans">Ketersediaan Bahan</h2>
-            <span className="ml-auto text-xs text-slate-600">{ingredients.length} bahan</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-700/60 px-5 py-4 gap-3 bg-surface-900/20">
+            <div className="flex items-center gap-3">
+              <Package className="h-4 w-4 text-slate-500" />
+              <h2 className="font-bold text-slate-100 font-sans">Ketersediaan Bahan</h2>
+              <span className="text-xs text-slate-500">
+                ({filteredIngredients.length} dari {ingredients.length} bahan)
+              </span>
+            </div>
+            
+            {/* Search Input Box */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Cari bahan baku..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="input py-1 px-3 text-xs w-full sm:w-48 bg-surface-950 border-surface-700/60 rounded-xl"
+                style={{ paddingRight: "2rem", height: "auto" }}
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
           </div>
 
           {ingredients.length === 0 ? (
             <div className="px-5 py-16 text-center text-sm text-slate-600">
               Belum ada bahan baku. Tambahkan di tab <span className="text-brand-400 font-semibold font-bold">Bahan</span> terlebih dahulu.
             </div>
+          ) : filteredIngredients.length === 0 ? (
+            <div className="px-5 py-16 text-center text-sm text-slate-500 italic bg-surface-950/10">
+              Bahan baku "{searchQuery}" tidak ditemukan.
+            </div>
           ) : (
             <div className="divide-y divide-surface-700/50">
-              {ingredients.map(ing => {
+              {filteredIngredients.map(ing => {
                 const isLow = (ing.reorderPoint ?? 0) > 0 && (ing.currentStock ?? 0) <= (ing.reorderPoint ?? 0);
                 const stockPct = ing.reorderPoint > 0
                   ? Math.min((ing.currentStock / ing.reorderPoint) * 100, 200)

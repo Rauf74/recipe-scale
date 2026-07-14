@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
@@ -80,17 +80,21 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
 
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
-
-
+  const [searchQuery, setSearchQuery] = useState("");
 
   const isPrepMode = mode === "prep";
   const pageTitle = isPrepMode ? "Bumbu Dasar & Prep" : "Resep Menu";
   const pageDescription = isPrepMode
     ? "Kelola komponen reusable seperti kaldu, sambal, sauce, dan adonan."
     : "Susun menu akhir dari bahan baku dan bumbu dasar yang sudah tersedia.";
-  const visibleRecipes = recipes.filter((recipe) =>
-    recipe.recipeType ? recipe.recipeType === (isPrepMode ? "PREP" : "MENU") : recipe.isBaseRecipe === isPrepMode,
-  );
+
+  const visibleRecipes = useMemo(() => {
+    const base = recipes.filter((recipe) =>
+      recipe.recipeType ? recipe.recipeType === (isPrepMode ? "PREP" : "MENU") : recipe.isBaseRecipe === isPrepMode
+    );
+    if (!searchQuery) return base;
+    return base.filter((r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [recipes, isPrepMode, searchQuery]);
 
   // Deterministic per-recipe accent (on-brand palette, no random color drift)
   const ACCENTS = ["brand", "sky", "violet", "amber", "rose", "teal"] as const;
@@ -347,13 +351,34 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-100">{pageTitle}</h1>
           <p className="mt-1 text-sm text-slate-500">{pageDescription}</p>
         </div>
-        <button
-          onClick={handleAddNew}
-          className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98] cursor-pointer text-sm shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {isPrepMode ? "Buat Bumbu Dasar" : "Racik Resep Menu"}
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-60">
+            <input
+              type="text"
+              placeholder={isPrepMode ? "Cari bumbu dasar..." : "Cari resep menu..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input w-full py-2 px-3.5 text-xs bg-surface-900 border-surface-700/60 rounded-xl"
+              style={{ paddingRight: "2.25rem", height: "auto" }}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <button
+            onClick={handleAddNew}
+            className="flex items-center gap-1.5 px-4 py-2 bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold rounded-xl transition-all hover:shadow-lg hover:shadow-emerald-500/10 active:scale-[0.98] cursor-pointer text-sm shrink-0 whitespace-nowrap"
+          >
+            <Plus className="w-4 h-4" />
+            {isPrepMode ? "Buat Bumbu" : "Racik Resep"}
+          </button>
+        </div>
       </div>
 
       {/* Main Double Grid Layout */}

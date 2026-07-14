@@ -3,6 +3,16 @@ import { AlertTriangle, BarChart3, Loader2, ReceiptText, TrendingUp } from "luci
 import type { Recipe } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  CartesianGrid,
+} from "recharts";
 
 interface RecipeInsight {
   recipe: Recipe;
@@ -51,6 +61,21 @@ export function AnalysisPage() {
     return { withoutPrice, needsAttention, averageFoodCost };
   }, [insights]);
 
+  const chartData = useMemo(() => {
+    return insights
+      .filter((item) => item.sellingPrice !== null && item.sellingPrice > 0)
+      .map((item) => {
+        const cost = item.totalCost;
+        const profit = (item.sellingPrice ?? 0) - cost;
+        return {
+          name: item.recipe.name,
+          "Biaya (HPP)": Math.round(cost),
+          "Keuntungan (Margin)": Math.round(profit),
+        };
+      })
+      .slice(0, 8); // Top 8 recipes to prevent crowding
+  }, [insights]);
+
   if (isLoading) {
     return <div className="grid min-h-[55vh] place-items-center"><Loader2 className="h-6 w-6 animate-spin text-brand-400" /></div>;
   }
@@ -80,6 +105,46 @@ export function AnalysisPage() {
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warm-400" />
               <p>{summary.withoutPrice} menu belum memiliki harga jual sehingga margin dan food cost belum bisa dievaluasi.</p>
             </div>
+          )}
+
+          {/* Visualisasi HPP vs Margin */}
+          {chartData.length > 0 && (
+            <section className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-5 space-y-4">
+              <div>
+                <h2 className="font-bold text-slate-100 font-sans">Komposisi HPP vs Keuntungan</h2>
+                <p className="mt-1 text-xs text-slate-500">Visualisasi kontribusi biaya bahan baku (HPP) dibandingkan margin keuntungan kotor per menu (dalam Rupiah).</p>
+              </div>
+
+              <div className="h-[280px] w-full text-[10px] font-sans">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
+                    <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
+                    <YAxis
+                      stroke="#64748b"
+                      fontSize={10}
+                      tickFormatter={(value) => `Rp ${value.toLocaleString("id-ID")}`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        borderColor: "#334155",
+                        borderRadius: "16px",
+                        color: "#f1f5f9",
+                        fontSize: "11px",
+                      }}
+                      formatter={(value: any) => [`Rp ${value.toLocaleString("id-ID")}`]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: "10px", paddingTop: "5px" }} />
+                    <Bar dataKey="Biaya (HPP)" stackId="a" fill="#3b82f6" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="Keuntungan (Margin)" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </section>
           )}
 
           <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40">
