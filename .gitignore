@@ -38,3 +38,7 @@ Thumbs.db
 # Coverage / temp
 coverage/
 *.tmp
+
+# Documentation & planning
+planning/
+DEPLOYMENT_STORY.md
