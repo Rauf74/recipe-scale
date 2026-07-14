@@ -1,9 +1,11 @@
 package config
 
 import (
+	"crypto/tls"
 	"log"
 	"os"
 
+	mysqldriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -17,8 +19,14 @@ func InitDB() *gorm.DB {
 		log.Fatal("DB_DSN environment variable is not set")
 	}
 
+	// Daftarkan TLS config "aiven" — Aiven pakai self-signed cert, jadi skip verify.
+	// Pendekatan sama kayak task-management yang pake rejectUnauthorized: false di Prisma adapter.
+	mysqldriver.RegisterTLSConfig("aiven", &tls.Config{
+		InsecureSkipVerify: true,
+	})
+
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Warn), // Log slow queries + errors; tidak log setiap query
+		Logger: logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
@@ -26,7 +34,6 @@ func InitDB() *gorm.DB {
 
 	log.Println("Database connection established. Running migrations...")
 
-	// Run Auto-Migrations
 	err = db.AutoMigrate(
 		&domain.Workspace{},
 		&domain.User{},
