@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import { isAxiosError } from "axios";
 import type { User } from "../../types";
 import { apiClient } from "../../lib/api-client";
 
@@ -25,8 +26,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(response.data.data.user);
         }
       } catch (err) {
-        // Silent error, means user is not logged in
-        setUser(null);
+        // Per audit recommendation: distinguish 401 (real unauth) from 5xx/network (transient).
+        // Only null the user on confirmed 401; otherwise keep last known user state and
+        // surface a small reconnecting indicator via console warning.
+        if (isAxiosError(err) && err.response?.status === 401) {
+          setUser(null);
+        } else {
+          console.warn("[auth] session check failed (transient); keeping last user state", err);
+        }
       } finally {
         setLoading(false);
       }
