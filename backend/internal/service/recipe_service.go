@@ -26,21 +26,21 @@ func NewRecipeService(recipeRepo *repository.RecipeRepository, ingredientRepo *r
 type RecipeItemRequest struct {
 	IngredientID *string `json:"ingredientId"`
 	SubRecipeID  *string `json:"subRecipeId"`
-	Quantity     float64 `json:"quantity"`
-	Unit         string  `json:"unit"`
+	Quantity     float64 `json:"quantity" validate:"required,gt=0"`
+	Unit         string  `json:"unit" validate:"required"`
 }
 
 type CreateRecipeRequest struct {
-	Name           string              `json:"name"`
-	YieldQuantity  float64             `json:"yieldQuantity"`
-	YieldUnit      string              `json:"yieldUnit"`
+	Name           string              `json:"name" validate:"required"`
+	YieldQuantity  float64             `json:"yieldQuantity" validate:"required,gt=0"`
+	YieldUnit      string              `json:"yieldUnit" validate:"required"`
 	IsBaseRecipe   bool                `json:"isBaseRecipe"`
-	RecipeType     string              `json:"recipeType"`
-	SellingPrice   float64             `json:"sellingPrice"`
-	TargetFoodCost float64             `json:"targetFoodCost"`
-	PackagingCost  float64             `json:"packagingCost"`
-	OverheadCost   float64             `json:"overheadCost"`
-	Items          []RecipeItemRequest `json:"items"`
+	RecipeType     string              `json:"recipeType" validate:"omitempty,oneof=PREP MENU"`
+	SellingPrice   float64             `json:"sellingPrice" validate:"gte=0"`
+	TargetFoodCost float64             `json:"targetFoodCost" validate:"gte=0"`
+	PackagingCost  float64             `json:"packagingCost" validate:"gte=0"`
+	OverheadCost   float64             `json:"overheadCost" validate:"gte=0"`
+	Items          []RecipeItemRequest `json:"items" validate:"required,min=1,dive"`
 }
 
 func normalizeRecipeType(recipeType string, isBaseRecipe bool) (string, error) {

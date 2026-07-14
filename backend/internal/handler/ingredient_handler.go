@@ -5,6 +5,7 @@ import (
 
 	"recipe-scale/backend/internal/apperror"
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/validation"
 )
 
 type IngredientHandler struct {
@@ -24,6 +25,9 @@ func (h *IngredientHandler) Create(c *fiber.Ctx) error {
 	var req service.CreateIngredientRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.BadRequest("invalid request body", err)
+	}
+	if err := validation.ValidateRequest(&req); err != nil {
+		return apperror.BadRequest(err.Error(), nil)
 	}
 
 	ing, err := h.ingredientService.CreateIngredient(workspaceID, req)
@@ -72,6 +76,9 @@ func (h *IngredientHandler) Update(c *fiber.Ctx) error {
 	var req service.UpdateIngredientRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.BadRequest("invalid request body", err)
+	}
+	if err := validation.ValidateRequest(&req); err != nil {
+		return apperror.BadRequest(err.Error(), nil)
 	}
 
 	ing, err := h.ingredientService.UpdateIngredient(id, workspaceID, req)
@@ -142,6 +149,9 @@ func (h *IngredientHandler) AdjustStock(c *fiber.Ctx) error {
 	var req service.AdjustStockRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.BadRequest("invalid request body", err)
+	}
+	if err := validation.ValidateRequest(&req); err != nil {
+		return apperror.BadRequest(err.Error(), nil)
 	}
 	ingredient, err := h.ingredientService.AdjustStock(c.Params("id"), workspaceID, req)
 	if err != nil {

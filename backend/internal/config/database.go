@@ -11,16 +11,13 @@ import (
 	"recipe-scale/backend/internal/domain"
 )
 
-var DB *gorm.DB
-
 func InitDB() *gorm.DB {
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
 		log.Fatal("DB_DSN environment variable is not set")
 	}
 
-	var err error
-	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Warn), // Log slow queries + errors; tidak log setiap query
 	})
 	if err != nil {
@@ -30,7 +27,7 @@ func InitDB() *gorm.DB {
 	log.Println("Database connection established. Running migrations...")
 
 	// Run Auto-Migrations
-	err = DB.AutoMigrate(
+	err = db.AutoMigrate(
 		&domain.Workspace{},
 		&domain.User{},
 		&domain.Ingredient{},
@@ -47,5 +44,5 @@ func InitDB() *gorm.DB {
 	}
 
 	log.Println("Database migrations completed successfully!")
-	return DB
+	return db
 }

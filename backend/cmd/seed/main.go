@@ -420,7 +420,7 @@ func main() {
 
 			var qty float64
 			unitL := strings.ToLower(ing.Unit)
-			if unitL == "kg" || unitL == "l" || unitL == "l" {
+				if unitL == "kg" || unitL == "l" {
 				qty = 0.01 + rSource.Float64()*0.10 // 10g to 110g/ml
 			} else if unitL == "g" || unitL == "ml" {
 				qty = 10.0 + rSource.Float64()*100.0 // 10g to 110g/ml
@@ -684,7 +684,7 @@ func main() {
 
 			var qty float64
 			unitL := strings.ToLower(ing.Unit)
-			if unitL == "kg" || unitL == "l" || unitL == "l" {
+				if unitL == "kg" || unitL == "l" {
 				qty = 0.01 + rSourceMenu.Float64()*0.10 // 10g to 110g
 			} else if unitL == "g" || unitL == "ml" {
 				qty = 5.0 + rSourceMenu.Float64()*45.0 // 5g to 50g

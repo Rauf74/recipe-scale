@@ -5,6 +5,7 @@ import (
 
 	"recipe-scale/backend/internal/apperror"
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/validation"
 )
 
 type ProductionHandler struct {
@@ -23,6 +24,9 @@ func (h *ProductionHandler) Create(c *fiber.Ctx) error {
 	var req service.CreateProductionBatchRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.BadRequest("invalid request body", err)
+	}
+	if err := validation.ValidateRequest(&req); err != nil {
+		return apperror.BadRequest(err.Error(), nil)
 	}
 	batch, err := h.productionService.CreateBatch(workspaceID, req)
 	if err != nil {

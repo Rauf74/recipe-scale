@@ -1,9 +1,10 @@
 package handler
-
 import (
 	"github.com/gofiber/fiber/v2"
+
 	"recipe-scale/backend/internal/apperror"
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/validation"
 )
 
 type CustomUnitHandler struct {
@@ -42,6 +43,9 @@ func (h *CustomUnitHandler) Create(c *fiber.Ctx) error {
 	var req service.CreateCustomUnitRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.BadRequest("cannot parse request body", err)
+	}
+	if err := validation.ValidateRequest(&req); err != nil {
+		return apperror.BadRequest(err.Error(), nil)
 	}
 
 	cu, err := h.cuService.Create(workspaceID, req)

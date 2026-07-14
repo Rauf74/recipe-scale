@@ -18,9 +18,9 @@ func NewCustomUnitService(cuRepo *repository.CustomUnitRepository) *CustomUnitSe
 }
 
 type CreateCustomUnitRequest struct {
-	Name             string  `json:"name"`
-	BaseUnit         string  `json:"baseUnit"` // g, kg, ml, L, pcs
-	ConversionFactor float64 `json:"conversionFactor"`
+	Name             string  `json:"name" validate:"required"`
+	BaseUnit         string  `json:"baseUnit" validate:"required,oneof=g kg ml L pcs porsi"`
+	ConversionFactor float64 `json:"conversionFactor" validate:"required,gt=0"`
 }
 
 func (s *CustomUnitService) List(workspaceID string) ([]domain.CustomUnit, error) {

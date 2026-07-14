@@ -29,12 +29,15 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
 	customUnitService := service.NewCustomUnitService(customUnitRepo)
 
-	// 3. Initialize Handlers
+	// 3. Initialize Services (cont.)
+	dashboardService := service.NewDashboardService(db, recipeService, ingredientService)
+
+	// 4. Initialize Handlers
 	authHandler := NewAuthHandler(authService)
 	ingredientHandler := NewIngredientHandler(ingredientService)
 	recipeHandler := NewRecipeHandler(recipeService)
 	productionHandler := NewProductionHandler(productionService)
-	dashboardHandler := NewDashboardHandler(db, recipeService, ingredientService)
+	dashboardHandler := NewDashboardHandler(dashboardService)
 	analyticsHandler := NewAnalyticsHandler(recipeService)
 	workspaceHandler := NewWorkspaceHandler(workspaceService)
 	customUnitHandler := NewCustomUnitHandler(customUnitService)

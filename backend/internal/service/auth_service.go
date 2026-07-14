@@ -26,15 +26,15 @@ func NewAuthService(userRepo *repository.UserRepository, workspaceRepo *reposito
 }
 
 type RegisterRequest struct {
-	WorkspaceName string `json:"workspaceName"`
-	Name          string `json:"name"`
-	Email         string `json:"email"`
-	Password      string `json:"password"`
+	WorkspaceName string `json:"workspaceName" validate:"required"`
+	Name          string `json:"name" validate:"required"`
+	Email         string `json:"email" validate:"required,email"`
+	Password      string `json:"password" validate:"required,min=6"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type AuthResponse struct {

@@ -5,6 +5,7 @@ import (
 
 	"recipe-scale/backend/internal/apperror"
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/validation"
 )
 
 type RecipeHandler struct {
@@ -24,6 +25,9 @@ func (h *RecipeHandler) Create(c *fiber.Ctx) error {
 	var req service.CreateRecipeRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.BadRequest("invalid request body", err)
+	}
+	if err := validation.ValidateRequest(&req); err != nil {
+		return apperror.BadRequest(err.Error(), nil)
 	}
 
 	recipe, err := h.recipeService.CreateRecipe(workspaceID, req)

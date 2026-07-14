@@ -18,8 +18,8 @@ type ProductionService struct {
 }
 
 type CreateProductionBatchRequest struct {
-	RecipeID    string  `json:"recipeId"`
-	TargetYield float64 `json:"targetYield"`
+	RecipeID    string  `json:"recipeId" validate:"required"`
+	TargetYield float64 `json:"targetYield" validate:"required,gt=0"`
 	Notes       string  `json:"notes"`
 }
 

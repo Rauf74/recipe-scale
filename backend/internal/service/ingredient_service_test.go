@@ -30,3 +30,27 @@ func TestCalculateCostPerRecipeUnit(t *testing.T) {
 		})
 	}
 }
+
+func TestCalculateCostPerRecipeUnit_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name  string
+		price float64
+		qty   float64
+		yield float64
+		want  float64
+	}{
+		{"Zero price", 0, 1000, 100, 0},
+		{"Very small quantity", 10000, 1, 100, 10000},
+		{"Very low yield", 10000, 1000, 1, 1000},
+		{"Large values", 1000000, 100000, 100, 10},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := calculateCostPerRecipeUnit(tt.price, tt.qty, tt.yield)
+			if got != tt.want {
+				t.Errorf("calculateCostPerRecipeUnit(%v, %v, %v) = %v; want %v", tt.price, tt.qty, tt.yield, got, tt.want)
+			}
+		})
+	}
+}

@@ -1,9 +1,10 @@
 package handler
-
 import (
 	"github.com/gofiber/fiber/v2"
+
 	"recipe-scale/backend/internal/apperror"
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/validation"
 )
 
 type WorkspaceHandler struct {
@@ -44,6 +45,9 @@ func (h *WorkspaceHandler) Update(c *fiber.Ctx) error {
 	var req service.UpdateWorkspaceRequest
 	if err := c.BodyParser(&req); err != nil {
 		return apperror.BadRequest("cannot parse request body", err)
+	}
+	if err := validation.ValidateRequest(&req); err != nil {
+		return apperror.BadRequest(err.Error(), nil)
 	}
 
 	ws, err := h.workspaceService.UpdateWorkspace(workspaceID, req)

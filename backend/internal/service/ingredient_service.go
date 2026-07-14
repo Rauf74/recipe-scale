@@ -22,18 +22,16 @@ func NewIngredientService(ingredientRepo *repository.IngredientRepository) *Ingr
 // IngredientRequest digunakan untuk create maupun update.
 // User menginput cara belanja nyata (kemasan), bukan harga per satuan resep langsung.
 type IngredientRequest struct {
-	Name string `json:"name"`
-	Unit string `json:"unit"` // satuan resep: g, kg, ml, L, pcs
+	Name string `json:"name" validate:"required"`
+	Unit string `json:"unit" validate:"required,oneof=g kg ml L pcs"`
 
 	// Cara beli
-	PurchasePrice    float64 `json:"purchasePrice"`    // harga total kemasan (Rp)
-	PurchaseQuantity float64 `json:"purchaseQuantity"` // isi kemasan dalam satuan unit resep
-	PurchaseUnit     string  `json:"purchaseUnit"`     // label kemasan bebas: "kg", "pack", "ikat"
-	UsableYield      float64 `json:"usableYield"`      // % bahan terpakai, 1–100 (opsional, default 100)
+	PurchasePrice    float64 `json:"purchasePrice" validate:"gte=0"`
+	PurchaseQuantity float64 `json:"purchaseQuantity" validate:"gt=0"`
+	PurchaseUnit     string  `json:"purchaseUnit"`
+	UsableYield      float64 `json:"usableYield" validate:"min=0,max=100"`
 
 	// Stok
-	// Gunakan pointer agar bisa membedakan "tidak dikirim" (nil) dengan "sengaja di-set 0".
-	// Jika nil (tidak dikirim dari form bahan), reorderPoint TIDAK diubah.
 	ReorderPoint *float64 `json:"reorderPoint"`
 }
 
@@ -42,7 +40,7 @@ type CreateIngredientRequest = IngredientRequest
 type UpdateIngredientRequest = IngredientRequest
 
 type AdjustStockRequest struct {
-	Quantity float64 `json:"quantity"`
+	Quantity float64 `json:"quantity" validate:"required,ne=0"`
 	Note     string  `json:"note"`
 }
 

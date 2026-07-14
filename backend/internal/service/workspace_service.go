@@ -18,10 +18,10 @@ func NewWorkspaceService(workspaceRepo *repository.WorkspaceRepository) *Workspa
 
 type UpdateWorkspaceRequest struct {
 	Name                  string  `json:"name"`
-	DefaultTaxPercent     float64 `json:"defaultTaxPercent"`
-	DefaultServicePercent float64 `json:"defaultServicePercent"`
-	DefaultTargetFoodCost float64 `json:"defaultTargetFoodCost"`
-	RoundPriceTo          float64 `json:"roundPriceTo"`
+	DefaultTaxPercent     float64 `json:"defaultTaxPercent" validate:"gte=0"`
+	DefaultServicePercent float64 `json:"defaultServicePercent" validate:"gte=0"`
+	DefaultTargetFoodCost float64 `json:"defaultTargetFoodCost" validate:"gte=0"`
+	RoundPriceTo          float64 `json:"roundPriceTo" validate:"omitempty,oneof=1 100 500 1000"`
 }
 
 func (s *WorkspaceService) GetWorkspace(id string) (*domain.Workspace, error) {
