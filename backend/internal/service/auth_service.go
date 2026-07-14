@@ -1,8 +1,8 @@
 package service
 
 import (
+	"log"
 	"errors"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -10,6 +10,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"recipe-scale/backend/internal/domain"
+	"recipe-scale/backend/internal/jwtutil"
 	"recipe-scale/backend/internal/repository"
 )
 
@@ -136,9 +137,9 @@ func (s *AuthService) GetUserByID(userID string) (*domain.User, error) {
 }
 
 func (s *AuthService) generateJWT(user *domain.User) (string, error) {
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "super-secret-key-recipe-scale"
+	jwtSecret, err := jwtutil.Secret()
+	if err != nil {
+		log.Fatal("JWT_SECRET not set: ", err)
 	}
 
 	claims := JWTCustomClaims{
