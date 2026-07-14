@@ -80,31 +80,25 @@ func InitDB() *gorm.DB {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// AutoMigrate hanya jalan di development. Di production (Vercel/Render dengan APP_ENV=production)
-	// migrasi lambat dan bisa bikin server timeout. Jalankan migrate manual atau gunakan migration tool.
-	if os.Getenv("APP_ENV") != "production" {
-		log.Println("Database connection established. Running migrations...")
+	log.Println("Database connection established. Running migrations...")
 
-		err = db.AutoMigrate(
-			&domain.Workspace{},
-			&domain.User{},
-			&domain.Ingredient{},
-			&domain.Recipe{},
-			&domain.RecipeItem{},
-			&domain.PriceHistory{},
-			&domain.StockMovement{},
-			&domain.ProductionBatch{},
-			&domain.ProductionBatchItem{},
-			&domain.CustomUnit{},
-		)
-		if err != nil {
-			log.Fatalf("Failed to run database migrations: %v", err)
-		}
-
-		log.Println("Database migrations completed successfully!")
-	} else {
-		log.Println("Database connection established. Skipping migrations (production mode).")
+	err = db.AutoMigrate(
+		&domain.Workspace{},
+		&domain.User{},
+		&domain.Ingredient{},
+		&domain.Recipe{},
+		&domain.RecipeItem{},
+		&domain.PriceHistory{},
+		&domain.StockMovement{},
+		&domain.ProductionBatch{},
+		&domain.ProductionBatchItem{},
+		&domain.CustomUnit{},
+	)
+	if err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
 	}
+
+	log.Println("Database migrations completed successfully!")
 
 	return db
 }
