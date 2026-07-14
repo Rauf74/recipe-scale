@@ -53,6 +53,7 @@ export const DashboardPage: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [costs, setCosts] = useState<Record<string, number>>({});
+  const [sortOrder, setSortOrder] = useState<"highest" | "lowest">("highest");
   
   // Dashboard Alerts state
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
@@ -117,7 +118,7 @@ export const DashboardPage: React.FC = () => {
       : 0;
 
   // Top profit margin recipes vs low margin recipes (menu recipes only)
-  const marginRankings = useMemo(() => {
+  const sortedRankings = useMemo(() => {
     const list = menuRecipes
       .map(r => {
         const cost = costs[r.id] || 0;
@@ -127,14 +128,12 @@ export const DashboardPage: React.FC = () => {
       })
       .filter(x => x.recipe.sellingPrice > 0);
 
-    const highest = [...list].sort((a, b) => b.margin - a.margin).slice(0, 3);
-    const lowest = [...list]
-      .sort((a, b) => a.margin - b.margin)
-      .filter(x => !highest.some(h => h.recipe.id === x.recipe.id))
-      .slice(0, 3);
-
-    return { highest, lowest };
-  }, [menuRecipes, costs]);
+    if (sortOrder === "highest") {
+      return [...list].sort((a, b) => b.margin - a.margin).slice(0, 5);
+    } else {
+      return [...list].sort((a, b) => a.margin - b.margin).slice(0, 5);
+    }
+  }, [menuRecipes, costs, sortOrder]);
 
   if (loading) {
     return (
@@ -316,21 +315,37 @@ export const DashboardPage: React.FC = () => {
         {/* Left: Recipe Margins Analysis */}
         <section className="space-y-6">
           
-          {/* Top Profit Margins List */}
-          {marginRankings.highest.length > 0 && (
+          {/* Analisis Margin Menu */}
+          {sortedRankings.length > 0 ? (
             <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700/60">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700/60 gap-4">
                 <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-brand-400" />
-                  Menu Margin Tertinggi (Cash Cows)
+                  {sortOrder === "highest" ? (
+                    <TrendingUp className="w-4 h-4 text-brand-400" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4 text-warm-500" />
+                  )}
+                  Peringkat Margin Menu
                 </h2>
-                <span className="text-[10px] text-brand-400 font-semibold">Margin Sehat</span>
+                
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value as "highest" | "lowest")}
+                  className="select bg-surface-950 border border-surface-700/60 py-1 px-3 text-xs w-auto rounded-lg cursor-pointer text-slate-300 font-semibold focus:outline-none"
+                  style={{ paddingRight: "2.25rem", height: "auto" }}
+                >
+                  <option value="highest">Margin Tertinggi</option>
+                  <option value="lowest">Margin Terendah</option>
+                </select>
               </div>
+
               <div className="divide-y divide-surface-800">
-                {marginRankings.highest.map((item: { recipe: Recipe; cost: number; margin: number; foodCostPct: number }) => (
+                {sortedRankings.map((item: { recipe: Recipe; cost: number; margin: number; foodCostPct: number }) => (
                   <div key={item.recipe.id} className="ledger-row grid-cols-[1fr_auto_auto]">
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-7 h-7 grid place-items-center rounded-lg bg-brand-500/10 text-brand-400 font-extrabold text-xs shrink-0">
+                      <span className={`w-7 h-7 grid place-items-center rounded-lg font-extrabold text-xs shrink-0 ${
+                        sortOrder === "highest" ? "bg-brand-500/10 text-brand-400" : "bg-warm-500/10 text-warm-400"
+                      }`}>
                         {item.recipe.name.charAt(0).toUpperCase()}
                       </span>
                       <span className="ledger-name font-semibold text-slate-200 truncate text-sm">
@@ -340,52 +355,18 @@ export const DashboardPage: React.FC = () => {
                     <span className="text-xs text-slate-500 mr-2">
                       Food Cost: {item.foodCostPct.toFixed(1)}%
                     </span>
-                    <span className="nums text-sm font-extrabold text-brand-400">
+                    <span className={`nums text-sm font-extrabold ${
+                      sortOrder === "highest" ? "text-brand-400" : "text-warm-400"
+                    }`}>
                       Margin: {item.margin.toFixed(1)}%
                     </span>
                   </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Low Profit Margins List */}
-          {marginRankings.highest.length > 0 && (
-            <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700/60">
-                <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-                  <TrendingDown className="w-4 h-4 text-warm-500" />
-                  Menu Perlu Evaluasi (Margin Rendah)
-                </h2>
-                <span className="text-[10px] text-warm-400 font-semibold">Tinjau Harga Jual</span>
-              </div>
-              
-              {marginRankings.lowest.length === 0 ? (
-                <div className="py-8 text-center text-slate-500 text-xs italic bg-surface-950/20">
-                  Belum ada resep menu lain untuk dibandingkan.
-                </div>
-              ) : (
-                <div className="divide-y divide-surface-800">
-                  {marginRankings.lowest.map((item: { recipe: Recipe; cost: number; margin: number; foodCostPct: number }) => (
-                    <div key={item.recipe.id} className="ledger-row grid-cols-[1fr_auto_auto]">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="w-7 h-7 grid place-items-center rounded-lg bg-warm-500/10 text-warm-400 font-extrabold text-xs shrink-0">
-                          {item.recipe.name.charAt(0).toUpperCase()}
-                        </span>
-                        <span className="ledger-name font-semibold text-slate-200 truncate text-sm">
-                          {item.recipe.name}
-                        </span>
-                      </div>
-                      <span className="text-xs text-slate-500 mr-2">
-                        Food Cost: {item.foodCostPct.toFixed(1)}%
-                      </span>
-                      <span className="nums text-sm font-extrabold text-warm-400">
-                        Margin: {item.margin.toFixed(1)}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+          ) : (
+            <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-8 text-center text-slate-500 text-sm italic">
+              Belum ada resep menu dengan harga jual untuk dianalisis marginnya.
             </div>
           )}
         </section>
