@@ -1,5 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, BarChart3, Loader2, ReceiptText, TrendingUp, Search } from "lucide-react";
+import { AlertTriangle, BarChart3, Loader2, ReceiptText, TrendingUp, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  createColumnHelper,
+  flexRender,
+  type SortingState,
+} from "@tanstack/react-table";
 import type { Recipe } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
@@ -30,15 +39,7 @@ export function AnalysisPage() {
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "HEALTHY" | "ATTENTION">("ALL");
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Reset page when search or filter changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, statusFilter]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   useEffect(() => {
     const loadInsights = async () => {
@@ -109,11 +110,7 @@ export function AnalysisPage() {
     });
   }, [insights, searchQuery, statusFilter]);
 
-  const totalPages = Math.ceil(filteredInsights.length / itemsPerPage);
-  const paginatedInsights = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredInsights.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredInsights, currentPage]);
+  const totalFilteredLength = filteredInsights.length;
 
   // Generate chart data reactively from the filtered insights list
   const chartData = useMemo(() => {
@@ -130,6 +127,90 @@ export function AnalysisPage() {
       })
       .slice(0, 8); // Display top 8 filtered items to prevent layout clutter
   }, [filteredInsights]);
+
+  const columnHelper = createColumnHelper<RecipeInsight>();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const columns = useMemo(() => [
+    columnHelper.accessor(row => row.recipe.name, {
+      id: "menu",
+      header: "Menu",
+      enableSorting: true,
+      cell: info => (
+        <span className="font-semibold text-slate-100 print:text-slate-900">{info.getValue()}</span>
+      ),
+    }),
+    columnHelper.accessor("totalCost", {
+      id: "hpp",
+      header: "HPP",
+      enableSorting: true,
+      sortDescFirst: true,
+      cell: info => <span className="font-mono text-sm">{formatRupiah(info.getValue())}</span>,
+    }),
+    columnHelper.accessor("sellingPrice", {
+      id: "hargaJual",
+      header: "Harga Jual",
+      enableSorting: true,
+      sortDescFirst: true,
+      cell: info => info.getValue() ? (
+        <span className="font-mono text-sm">{formatRupiah(info.getValue()!)}</span>
+      ) : (
+        <span className="font-sans text-slate-500 text-sm italic">Belum diatur</span>
+      ),
+    }),
+    columnHelper.accessor("foodCost", {
+      id: "foodCost",
+      header: "Food Cost (FC)",
+      enableSorting: true,
+      sortDescFirst: true,
+      cell: info => {
+        const item = info.row.original;
+        const target = item.recipe.targetFoodCost ?? 35;
+        const needsAttention = item.foodCost !== null && item.foodCost > target;
+        return item.foodCost === null ? (
+          <span className="text-slate-500">—</span>
+        ) : (
+          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border tracking-wider ${
+            needsAttention
+              ? "bg-warm-500/10 text-warm-300 border-warm-500/20 print:bg-red-50 print:text-red-700 print:border-red-200"
+              : "bg-brand-500/10 text-brand-300 border-brand-500/20 print:bg-emerald-50 print:text-emerald-700 print:border-emerald-200"
+          }`}>
+            {item.foodCost.toFixed(1)}% / Target {target}%
+          </span>
+        );
+      },
+    }),
+    columnHelper.accessor("margin", {
+      id: "margin",
+      header: "Margin Kotor (Rp)",
+      enableSorting: true,
+      sortDescFirst: true,
+      cell: info => {
+        const item = info.row.original;
+        const target = item.recipe.targetFoodCost ?? 35;
+        const needsAttention = item.foodCost !== null && item.foodCost > target;
+        return (
+          <span className={`font-mono font-bold text-sm ${
+            needsAttention ? "text-warm-300 print:text-red-700" : "text-brand-300 print:text-emerald-700"
+          }`}>
+            {info.getValue() === null ? "—" : formatRupiah(info.getValue()!)}
+          </span>
+        );
+      },
+    }),
+  ], []);
+
+  const table = useReactTable({
+    data: filteredInsights,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
+    autoResetPageIndex: true,
+  });
 
   if (isLoading) {
     return (
@@ -271,73 +352,84 @@ export function AnalysisPage() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[680px] text-left text-sm">
                   <thead className="border-b border-surface-700/60 text-xs uppercase tracking-wider text-slate-500 print:text-slate-700 print:border-slate-300">
-                    <tr>
-                      <th className="px-5 py-3.5 font-semibold">Menu</th>
-                      <th className="px-4 py-3.5 font-semibold">HPP</th>
-                      <th className="px-4 py-3.5 font-semibold">Harga Jual</th>
-                      <th className="px-4 py-3.5 font-semibold">Food Cost (FC)</th>
-                      <th className="px-5 py-3.5 text-right font-semibold">Margin Kotor (Rp)</th>
-                    </tr>
+                    {table.getHeaderGroups().map(headerGroup => (
+                      <tr key={headerGroup.id}>
+                        {headerGroup.headers.map(header => {
+                          const canSort = header.column.getCanSort();
+                          const sorted = header.column.getIsSorted();
+                          return (
+                            <th
+                              key={header.id}
+                              className={`py-3.5 font-semibold whitespace-nowrap ${
+                                header.id === "margin" ? "px-5 text-right" : header.id === "menu" ? "px-5" : "px-4"
+                              } ${canSort ? "cursor-pointer select-none hover:text-slate-300 transition-colors" : ""}`}
+                              onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                            >
+                              <div className={`inline-flex items-center gap-1.5 ${header.id === "margin" ? "justify-end w-full" : ""}`}>
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                {canSort && (
+                                  sorted === "asc" ? <ArrowUp className="w-3 h-3 text-brand-400" /> :
+                                  sorted === "desc" ? <ArrowDown className="w-3 h-3 text-brand-400" /> :
+                                  <ArrowUpDown className="w-3 h-3 text-slate-600" />
+                                )}
+                              </div>
+                            </th>
+                          );
+                        })}
+                      </tr>
+                    ))}
                   </thead>
                   <tbody className="divide-y divide-surface-700/50 print:divide-slate-200">
-                    {paginatedInsights.map((item) => {
-                      const target = item.recipe.targetFoodCost ?? 35;
-                      const needsAttention = item.foodCost !== null && item.foodCost > target;
-                      return (
-                        <tr key={item.recipe.id} className="text-slate-300 hover:bg-surface-800/10 transition-colors print:text-slate-800">
-                          <td className="px-5 py-4 font-semibold text-slate-100 print:text-slate-900">{item.recipe.name}</td>
-                          <td className="px-4 py-4 font-mono text-sm">{formatRupiah(item.totalCost)}</td>
-                          <td className="px-4 py-4 font-mono text-sm">
-                            {item.sellingPrice ? (
-                              formatRupiah(item.sellingPrice)
-                            ) : (
-                              <span className="font-sans text-slate-500 text-sm italic">Belum diatur</span>
-                            )}
+                    {table.getRowModel().rows.map(row => (
+                      <tr key={row.id} className="text-slate-300 hover:bg-surface-800/10 transition-colors print:text-slate-800">
+                        {row.getVisibleCells().map(cell => (
+                          <td
+                            key={cell.id}
+                            className={`py-4 ${
+                              cell.column.id === "menu" ? "px-5" :
+                              cell.column.id === "margin" ? "px-5 text-right" : "px-4"
+                            }`}
+                          >
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </td>
-                          <td className="px-4 py-4">
-                            {item.foodCost === null ? (
-                              <span className="text-slate-500">—</span>
-                            ) : (
-                              <span
-                                className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border tracking-wider ${
-                                  needsAttention
-                                    ? "bg-warm-500/10 text-warm-300 border-warm-500/20 print:bg-red-50 print:text-red-700 print:border-red-200"
-                                    : "bg-brand-500/10 text-brand-300 border-brand-500/20 print:bg-emerald-50 print:text-emerald-700 print:border-emerald-200"
-                                }`}
-                              >
-                                {item.foodCost.toFixed(1)}% / Target {target}%
-                              </span>
-                            )}
-                          </td>
-                          <td className={`px-5 py-4 text-right font-mono font-bold text-sm ${needsAttention ? "text-warm-300 print:text-red-700" : "text-brand-300 print:text-emerald-700"}`}>
-                            {item.margin === null ? "—" : formatRupiah(item.margin)}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                        ))}
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
 
                 {/* Pagination Control */}
-                {totalPages > 1 && (
+                {table.getPageCount() > 1 && (
                   <div className="flex items-center justify-between px-5 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 print:hidden">
                     <div>
-                      Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredInsights.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, filteredInsights.length)}</span> dari <span className="font-semibold text-slate-200">{filteredInsights.length}</span> menu
+                      Menampilkan{" "}
+                      <span className="font-semibold text-slate-200">
+                        {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+                      </span>
+                      {" "}-{" "}
+                      <span className="font-semibold text-slate-200">
+                        {Math.min(
+                          (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                          totalFilteredLength
+                        )}
+                      </span>
+                      {" "}dari{" "}
+                      <span className="font-semibold text-slate-200">{totalFilteredLength}</span> menu
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
-                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPage === 1}
+                        onClick={() => table.previousPage()}
+                        disabled={!table.getCanPreviousPage()}
                         className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                       >
                         Sebelumnya
                       </button>
                       <span className="px-3 py-1.5 text-slate-400 font-medium">
-                        Halaman {currentPage} dari {totalPages}
+                        Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount()}
                       </span>
                       <button
-                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                        disabled={currentPage === totalPages}
+                        onClick={() => table.nextPage()}
+                        disabled={!table.getCanNextPage()}
                         className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                       >
                         Berikutnya

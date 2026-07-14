@@ -12,6 +12,15 @@ import {
   AlertCircle,
   Search,
 } from "lucide-react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  createColumnHelper,
+  type SortingState,
+} from "@tanstack/react-table";
 import Swal from "sweetalert2";
 import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
@@ -57,26 +66,7 @@ export function StockPage() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Reset page when search query changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery]);
-
-  // Filtered ingredients based on name search
-  const filteredIngredients = useMemo(() => {
-    if (!searchQuery) return ingredients;
-    return ingredients.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [ingredients, searchQuery]);
-
-  const totalPages = Math.ceil(filteredIngredients.length / itemsPerPage);
-  const paginatedIngredients = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredIngredients.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredIngredients, currentPage]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Bahan yang stoknya di bawah atau sama dengan reorder point (dan reorder point > 0)
   const lowStockIngredients = useMemo(
@@ -89,6 +79,46 @@ export function StockPage() {
     () => Object.fromEntries(ingredients.map(i => [i.id, i.name])),
     [ingredients],
   );
+
+  // TanStack Table
+  const columnHelper = createColumnHelper<Ingredient>();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const columns = useMemo(() => [
+    columnHelper.accessor("name", {
+      id: "name",
+      header: "Nama Bahan",
+      enableSorting: true,
+      cell: () => null,
+    }),
+    columnHelper.accessor(row => row.currentStock ?? 0, {
+      id: "stock",
+      header: "Stok",
+      enableSorting: true,
+      sortDescFirst: true,
+      cell: () => null,
+    }),
+    columnHelper.accessor(row => row.reorderPoint ?? 0, {
+      id: "reorderPoint",
+      header: "Batas Min.",
+      enableSorting: false,
+      cell: () => null,
+    }),
+  ], []);
+
+  const table = useReactTable({
+    data: ingredients,
+    columns,
+    state: { sorting, globalFilter: searchQuery },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
+    autoResetPageIndex: true,
+    globalFilterFn: (row, _colId, filterValue) =>
+      (row.original.name as string).toLowerCase().includes((filterValue as string).toLowerCase()),
+  });
 
   const loadData = async () => {
     setIsLoading(true);
@@ -260,7 +290,7 @@ export function StockPage() {
               <Package className="h-4 w-4 text-slate-500" />
               <h2 className="font-bold text-slate-100 font-sans">Ketersediaan Bahan</h2>
               <span className="text-xs text-slate-500">
-                ({filteredIngredients.length} dari {ingredients.length} bahan)
+              ({table.getFilteredRowModel().rows.length} dari {ingredients.length} bahan)
               </span>
             </div>
             
@@ -290,97 +320,114 @@ export function StockPage() {
             <div className="px-5 py-16 text-center text-sm text-slate-600">
               Belum ada bahan baku. Tambahkan di tab <span className="text-brand-400 font-semibold font-bold">Bahan</span> terlebih dahulu.
             </div>
-          ) : filteredIngredients.length === 0 ? (
-            <div className="px-5 py-16 text-center text-sm text-slate-500 italic bg-surface-950/10">
-              Bahan baku "{searchQuery}" tidak ditemukan.
-            </div>
           ) : (
-            <div className="divide-y divide-surface-700/50 lg:flex-1 lg:overflow-y-auto">
-              {paginatedIngredients.map(ing => {
-                const isLow = (ing.reorderPoint ?? 0) > 0 && (ing.currentStock ?? 0) <= (ing.reorderPoint ?? 0);
-                const stockPct = ing.reorderPoint > 0
-                  ? Math.min((ing.currentStock / ing.reorderPoint) * 100, 200)
-                  : null;
+            <>
+              {table.getRowModel().rows.length === 0 ? (
+                <div className="px-5 py-16 text-center text-sm text-slate-500 italic bg-surface-950/10">
+                  Bahan baku &ldquo;{searchQuery}&rdquo; tidak ditemukan.
+                </div>
+              ) : (
+                <div className="divide-y divide-surface-700/50 lg:flex-1 lg:overflow-y-auto">
+                  {table.getRowModel().rows.map(row => {
+                    const ing = row.original;
+                    const isLow = (ing.reorderPoint ?? 0) > 0 && (ing.currentStock ?? 0) <= (ing.reorderPoint ?? 0);
+                    const stockPct = ing.reorderPoint > 0
+                      ? Math.min((ing.currentStock / ing.reorderPoint) * 100, 200)
+                      : null;
 
-                return (
-                  <div key={ing.id} className="px-5 py-4 space-y-3 hover:bg-surface-800/10 transition-colors">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-slate-200 truncate">{ing.name}</p>
-                        <p className="mt-0.5 text-xs text-slate-500">
-                          {ing.reorderPoint > 0
-                            ? `Batas minimum: ${ing.reorderPoint} ${ing.unit}`
-                            : <span className="text-slate-600 italic text-[10px]">Batas minimum belum diatur</span>
-                          }
-                        </p>
-                      </div>
-                      
-                      {/* Current Stock Value */}
-                      <div className="text-right shrink-0">
-                        <span className={`font-mono text-sm font-bold ${isLow ? "text-warm-300" : "text-brand-300"}`}>
-                          {Number(ing.currentStock ?? 0).toLocaleString("id-ID", { maximumFractionDigits: 2 })} {ing.unit}
-                        </span>
-                        {isLow && (
-                          <p className="text-[10px] text-warm-500 font-semibold mt-0.5">⚠ Stok rendah</p>
+                    return (
+                      <div key={row.id} className="px-5 py-4 space-y-3 hover:bg-surface-800/10 transition-colors">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-slate-200 truncate">{ing.name}</p>
+                            <p className="mt-0.5 text-xs text-slate-500">
+                              {ing.reorderPoint > 0
+                                ? `Batas minimum: ${ing.reorderPoint} ${ing.unit}`
+                                : <span className="text-slate-600 italic text-[10px]">Batas minimum belum diatur</span>
+                              }
+                            </p>
+                          </div>
+                          
+                          {/* Current Stock Value */}
+                          <div className="text-right shrink-0">
+                            <span className={`font-mono text-sm font-bold ${isLow ? "text-warm-300" : "text-brand-300"}`}>
+                              {Number(ing.currentStock ?? 0).toLocaleString("id-ID", { maximumFractionDigits: 2 })} {ing.unit}
+                            </span>
+                            {isLow && (
+                              <p className="text-[10px] text-warm-500 font-semibold mt-0.5">⚠ Stok rendah</p>
+                            )}
+                          </div>
+
+                          {/* Direct Actions */}
+                          <div className="flex items-center gap-1.5 shrink-0 pl-2">
+                            <button
+                              onClick={() => openManagePanel(ing, "stock-in")}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold text-xs transition-all cursor-pointer active:scale-95"
+                              title="Tambah Stok Masuk"
+                            >
+                              <Plus className="w-3 h-3" />
+                              <span>Stok</span>
+                            </button>
+                            <button
+                              onClick={() => openManagePanel(ing, "reorder")}
+                              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 text-slate-300 font-semibold text-xs transition-all cursor-pointer active:scale-95"
+                              title="Atur Batas Pengingat Kritis"
+                            >
+                              <Settings2 className="w-3 h-3 text-slate-500" />
+                              <span>Batas</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Progress bar stok vs reorder point */}
+                        {stockPct !== null && (
+                          <div className="h-1 w-full rounded-full bg-surface-800 overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${isLow ? "bg-warm-500" : "bg-brand-500"}`}
+                              style={{ width: `${Math.min(stockPct, 100)}%` }}
+                            />
+                          </div>
                         )}
                       </div>
-
-                      {/* Direct Actions */}
-                      <div className="flex items-center gap-1.5 shrink-0 pl-2">
-                        <button
-                          onClick={() => openManagePanel(ing, "stock-in")}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold text-xs transition-all cursor-pointer active:scale-95"
-                          title="Tambah Stok Masuk"
-                        >
-                          <Plus className="w-3 h-3" />
-                          <span>Stok</span>
-                        </button>
-                        <button
-                          onClick={() => openManagePanel(ing, "reorder")}
-                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 text-slate-300 font-semibold text-xs transition-all cursor-pointer active:scale-95"
-                          title="Atur Batas Pengingat Kritis"
-                        >
-                          <Settings2 className="w-3 h-3 text-slate-500" />
-                          <span>Batas</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Progress bar stok vs reorder point */}
-                    {stockPct !== null && (
-                      <div className="h-1 w-full rounded-full bg-surface-800 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${isLow ? "bg-warm-500" : "bg-brand-500"}`}
-                          style={{ width: `${Math.min(stockPct, 100)}%` }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
           )}
 
           {/* Pagination Control */}
-          {totalPages > 1 && (
+          {table.getPageCount() > 1 && (
             <div className="flex items-center justify-between px-5 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 shrink-0">
               <div>
-                Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredIngredients.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, filteredIngredients.length)}</span> dari <span className="font-semibold text-slate-200">{filteredIngredients.length}</span> bahan
+                Menampilkan{" "}
+                <span className="font-semibold text-slate-200">
+                  {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+                </span>
+                {" "}-{" "}
+                <span className="font-semibold text-slate-200">
+                  {Math.min(
+                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                    table.getFilteredRowModel().rows.length
+                  )}
+                </span>
+                {" "}dari{" "}
+                <span className="font-semibold text-slate-200">{table.getFilteredRowModel().rows.length}</span> bahan
               </div>
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
                   className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                 >
                   Sebelumnya
                 </button>
                 <span className="px-3 py-1.5 text-slate-400 font-medium">
-                  {currentPage} / {totalPages}
+                  {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
                 </span>
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
                   className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                 >
                   Berikutnya

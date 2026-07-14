@@ -1,4 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  createColumnHelper,
+  type SortingState,
+} from "@tanstack/react-table";
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
@@ -30,7 +38,10 @@ import {
   Eye,
   Layers,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 
 interface RecipeCostData {
@@ -83,13 +94,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
-
-  // Reset page when search or mode changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, mode]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const isPrepMode = mode === "prep";
   const pageTitle = isPrepMode ? "Bumbu Dasar & Prep" : "Resep Menu";
@@ -105,11 +110,27 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
     return base.filter((r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [recipes, isPrepMode, searchQuery]);
 
-  const totalPages = Math.ceil(visibleRecipes.length / itemsPerPage);
-  const paginatedRecipes = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return visibleRecipes.slice(startIndex, startIndex + itemsPerPage);
-  }, [visibleRecipes, currentPage]);
+  const columnHelper = createColumnHelper<Recipe>();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const columns = useMemo(() => [
+    columnHelper.accessor("name", { id: "name", header: "Resep", enableSorting: true, cell: () => null }),
+    columnHelper.accessor(row => row.yieldQuantity, { id: "yield", header: "Yield", enableSorting: true, sortDescFirst: true, cell: () => null }),
+    columnHelper.accessor(row => row.items.length, { id: "components", header: "Komp.", enableSorting: true, sortDescFirst: true, cell: () => null }),
+    columnHelper.display({ id: "type", header: "Tipe", enableSorting: false, cell: () => null }),
+    columnHelper.display({ id: "aksi", header: "Aksi", enableSorting: false, cell: () => null }),
+  ], []);
+
+  const table = useReactTable({
+    data: visibleRecipes,
+    columns,
+    state: { sorting },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 8 } },
+    autoResetPageIndex: true,
+  });
 
   // Deterministic per-recipe accent (on-brand palette, no random color drift)
   const ACCENTS = ["brand", "sky", "violet", "amber", "rose", "teal"] as const;
@@ -425,18 +446,40 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
             </div>
           ) : (
             <div className="rounded-2xl border border-surface-700/60 bg-surface-900/40 overflow-hidden">
+              {/* Sortable ledger header */}
               <div className="ledger-th grid-cols-[1fr_90px_90px_110px_70px]">
-                <span>Resep</span>
-                <span className="text-right">Yield</span>
-                <span className="text-right">Komp.</span>
-                <span className="text-right">Tipe</span>
-                <span className="text-right">Aksi</span>
+                {([
+                  { id: "name", label: "Resep", align: "left" as const },
+                  { id: "yield", label: "Yield", align: "right" as const },
+                  { id: "components", label: "Komp.", align: "right" as const },
+                  { id: "type", label: "Tipe", align: "right" as const },
+                  { id: "aksi", label: "Aksi", align: "right" as const },
+                ]).map(({ id, label, align }) => {
+                  const col = table.getColumn(id);
+                  const canSort = col?.getCanSort() ?? false;
+                  const sorted = col?.getIsSorted();
+                  return (
+                    <div
+                      key={id}
+                      className={`inline-flex items-center gap-1 ${align === "right" ? "justify-end" : ""} ${canSort ? "cursor-pointer select-none hover:text-slate-200 transition-colors" : ""}`}
+                      onClick={canSort ? col?.getToggleSortingHandler() : undefined}
+                    >
+                      <span>{label}</span>
+                      {canSort && (
+                        sorted === "asc" ? <ArrowUp className="w-2.5 h-2.5 text-brand-400" /> :
+                        sorted === "desc" ? <ArrowDown className="w-2.5 h-2.5 text-brand-400" /> :
+                        <ArrowUpDown className="w-2.5 h-2.5 text-slate-600" />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              {paginatedRecipes.map(recipe => {
+              {table.getRowModel().rows.map(row => {
+                const recipe = row.original;
                 const isSelected = selectedRecipe?.id === recipe.id;
                 return (
                   <div
-                    key={recipe.id}
+                    key={row.id}
                     onClick={() => handleRecipeClick(recipe)}
                     className={`ledger-row grid-cols-[1fr_90px_90px_110px_70px] ${
                       isSelected ? "bg-brand-500/5 border-l-2 border-l-brand-500" : ""
@@ -486,25 +529,37 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
               })}
 
               {/* Pagination Control */}
-              {totalPages > 1 && (
+              {table.getPageCount() > 1 && (
                 <div className="flex items-center justify-between px-5 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 shrink-0">
                   <div>
-                    Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, visibleRecipes.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, visibleRecipes.length)}</span> dari <span className="font-semibold text-slate-200">{visibleRecipes.length}</span> resep
+                    Menampilkan{" "}
+                    <span className="font-semibold text-slate-200">
+                      {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+                    </span>
+                    {" "}-{" "}
+                    <span className="font-semibold text-slate-200">
+                      {Math.min(
+                        (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                        visibleRecipes.length
+                      )}
+                    </span>
+                    {" "}dari{" "}
+                    <span className="font-semibold text-slate-200">{visibleRecipes.length}</span> resep
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
-                      disabled={currentPage === 1}
+                      onClick={(e) => { e.stopPropagation(); table.previousPage(); }}
+                      disabled={!table.getCanPreviousPage()}
                       className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                     >
                       Sebelumnya
                     </button>
                     <span className="px-3 py-1.5 text-slate-400 font-medium">
-                      {currentPage} / {totalPages}
+                      {table.getState().pagination.pageIndex + 1} / {table.getPageCount()}
                     </span>
                     <button
-                      onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
-                      disabled={currentPage === totalPages}
+                      onClick={(e) => { e.stopPropagation(); table.nextPage(); }}
+                      disabled={!table.getCanNextPage()}
                       className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                     >
                       Berikutnya
