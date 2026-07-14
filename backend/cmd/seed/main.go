@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -282,7 +283,7 @@ func main() {
 				IngName string
 				Qty     float64
 			}{
-				{"Cabai Merah Keriting", 600}, // we can simulate green chili using keriting
+				{"Cabai Merah Keriting", 600},
 				{"Bawang Merah", 200},
 				{"Tomat Merah Segar", 150},
 				{"Minyak Goreng Sawit Bimoli", 100},
@@ -313,9 +314,9 @@ func main() {
 				IngName string
 				Qty     float64
 			}{
-				{"Daging Ayam Karkas", 1000},
-				{"Tulang Sapi Sup", 500},
-				{"Air Mineral Dapur", 6000},
+				{"Daging Ayam Fillet (Dada)", 0.6}, // 0.6 kg (600g)
+				{"Tulang Sapi Sup", 0.4}, // 0.4 kg (400g)
+				{"Air Mineral Dapur", 4500},
 				{"Bawang Putih", 50},
 				{"Garam Meja Beriodium", 30},
 			},
@@ -411,17 +412,28 @@ func main() {
 			UpdatedAt:      time.Now(),
 		}
 
-		// Pick 3 random raw ingredients
+		// Pick 3 random raw ingredients with realistic units matching quantity limits!
 		var items []domain.RecipeItem
 		for k := 0; k < 3; k++ {
 			ing := savedIngredients[rSource.Intn(len(savedIngredients))]
 			ingIDCopy := ing.ID
-			qty := 50.0 + rSource.Float64()*150.0
+			
+			var qty float64
+			unitL := strings.ToLower(ing.Unit)
+			if unitL == "kg" || unitL == "l" || unitL == "l" {
+				qty = 0.01 + rSource.Float64()*0.10 // 10g to 110g/ml
+			} else if unitL == "g" || unitL == "ml" {
+				qty = 10.0 + rSource.Float64()*100.0 // 10g to 110g/ml
+			} else {
+				qty = 1.0 + float64(rSource.Intn(2)) // 1 to 2 pcs
+			}
+			qty = float64(int(qty*1000)) / 1000.0
+
 			items = append(items, domain.RecipeItem{
 				ID:           uuid.New().String(),
 				RecipeID:     recipe.ID,
 				IngredientID: &ingIDCopy,
-				Quantity:     float64(int(qty)),
+				Quantity:     qty,
 				Unit:         ing.Unit,
 			})
 		}
@@ -540,7 +552,7 @@ func main() {
 				Qty   float64
 			}{
 				{2, 35}, // Bumbu Dasar Kuning
-				{7, 250}, // Kaldu Ayam Pekat
+				{7, 250}, // Kaldu Ayam Pekat (250 ml of a 5000ml batch)
 			},
 		},
 		{
@@ -651,12 +663,16 @@ func main() {
 		for k := 0; k < numBumbu; k++ {
 			baseRecipe := savedBaseRecipes[rSourceMenu.Intn(len(savedBaseRecipes))]
 			baseRecipeIDCopy := baseRecipe.ID
-			qty := 15.0 + rSourceMenu.Float64()*45.0 // 15 to 60 g/ml
+			
+			// Base recipe yields 1000 g or 1000 ml. Menu needs a small fraction like 10g to 45g
+			qty := 10.0 + rSourceMenu.Float64()*35.0 // 10 to 45 g/ml
+			qty = float64(int(qty))
+
 			items = append(items, domain.RecipeItem{
 				ID:          uuid.New().String(),
 				RecipeID:    recipe.ID,
 				SubRecipeID: &baseRecipeIDCopy,
-				Quantity:    float64(int(qty)),
+				Quantity:    qty,
 				Unit:        baseRecipe.YieldUnit,
 			})
 		}
@@ -665,19 +681,23 @@ func main() {
 		for k := 0; k < 2; k++ {
 			ing := savedIngredients[rSourceMenu.Intn(len(savedIngredients))]
 			ingIDCopy := ing.ID
+			
 			var qty float64
-			if ing.Unit == "kg" {
-				qty = 0.05 + rSourceMenu.Float64()*0.15 // 50g to 200g
-			} else if ing.Unit == "g" || ing.Unit == "ml" {
-				qty = 10.0 + rSourceMenu.Float64()*90.0 // 10 to 100
+			unitL := strings.ToLower(ing.Unit)
+			if unitL == "kg" || unitL == "l" || unitL == "l" {
+				qty = 0.01 + rSourceMenu.Float64()*0.10 // 10g to 110g
+			} else if unitL == "g" || unitL == "ml" {
+				qty = 5.0 + rSourceMenu.Float64()*45.0 // 5g to 50g
 			} else {
-				qty = 1.0 + float64(rSourceMenu.Intn(3)) // 1 to 3 pcs
+				qty = 1.0 + float64(rSourceMenu.Intn(2)) // 1 to 2 pcs
 			}
+			qty = float64(int(qty*1000)) / 1000.0
+
 			items = append(items, domain.RecipeItem{
 				ID:           uuid.New().String(),
 				RecipeID:     recipe.ID,
 				IngredientID: &ingIDCopy,
-				Quantity:     float64(int(qty*100)) / 100.0,
+				Quantity:     qty,
 				Unit:         ing.Unit,
 			})
 		}

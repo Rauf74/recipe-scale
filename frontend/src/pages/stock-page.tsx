@@ -10,6 +10,7 @@ import {
   Plus,
   X,
   AlertCircle,
+  Search,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import type { Ingredient } from "../types";
@@ -235,11 +236,11 @@ export function StockPage() {
       )}
 
       {/* Main Grid Layout */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-stretch">
         
         {/* ── Ketersediaan Bahan (Table View) ── */}
-        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-700/60 px-5 py-4 gap-3 bg-surface-900/20">
+        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col lg:h-full">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-700/60 px-5 py-4 gap-3 bg-surface-900/20 shrink-0">
             <div className="flex items-center gap-3">
               <Package className="h-4 w-4 text-slate-500" />
               <h2 className="font-bold text-slate-100 font-sans">Ketersediaan Bahan</h2>
@@ -255,9 +256,10 @@ export function StockPage() {
                 placeholder="Cari bahan baku..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="input py-1 px-3 text-xs w-full sm:w-48 bg-surface-950 border-surface-700/60 rounded-xl"
-                style={{ paddingRight: "2rem", height: "auto" }}
+                className="input py-1 pr-3 text-xs w-full sm:w-48 bg-surface-950 border-surface-700/60 rounded-xl"
+                style={{ paddingLeft: "2.25rem", paddingRight: "2rem", height: "auto" }}
               />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
@@ -278,7 +280,7 @@ export function StockPage() {
               Bahan baku "{searchQuery}" tidak ditemukan.
             </div>
           ) : (
-            <div className="divide-y divide-surface-700/50">
+            <div className="divide-y divide-surface-700/50 lg:flex-1 lg:overflow-y-auto">
               {filteredIngredients.map(ing => {
                 const isLow = (ing.reorderPoint ?? 0) > 0 && (ing.currentStock ?? 0) <= (ing.reorderPoint ?? 0);
                 const stockPct = ing.reorderPoint > 0
@@ -345,24 +347,24 @@ export function StockPage() {
           )}
         </section>
 
-        {/* ── Riwayat Mutasi (Sidebar View) ── */}
-        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40">
-          <div className="flex items-center gap-3 border-b border-surface-700/60 px-5 py-4">
+        {/* ── Riwayat Mutasi (Sidebar View - Stretches and Scrolls) ── */}
+        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col lg:h-full">
+          <div className="flex items-center gap-3 border-b border-surface-700/60 px-5 py-4 shrink-0">
             <History className="h-4 w-4 text-slate-500" />
             <h2 className="font-bold text-slate-100 font-sans">Riwayat Mutasi</h2>
           </div>
 
-          <div className="p-4 space-y-3">
-            <p className="text-[10px] text-slate-500 leading-relaxed">
+          <div className="p-4 space-y-3 lg:flex-1 lg:flex lg:flex-col lg:min-h-0">
+            <p className="text-[10px] text-slate-500 leading-relaxed shrink-0">
               Log mutasi (50 transaksi terakhir). Stok masuk (+) di-input manual, stok keluar (−) dikurangi otomatis saat produksi selesai.
             </p>
 
             {movements.length === 0 ? (
-              <div className="py-16 text-center text-slate-600 text-xs italic">
+              <div className="py-16 text-center text-slate-600 text-xs italic shrink-0">
                 Belum ada transaksi mutasi.
               </div>
             ) : (
-              <div className="space-y-2 max-h-[500px] overflow-y-auto pr-0.5">
+              <div className="space-y-2 max-h-[500px] lg:max-h-none lg:flex-1 lg:overflow-y-auto pr-0.5 min-h-0">
                 {movements.map(m => {
                   const isIn = m.quantity > 0;
                   const typeLabel: Record<string, string> = {
