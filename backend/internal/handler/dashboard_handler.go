@@ -2,8 +2,8 @@ package handler
 
 import (
 	"math"
-	"recipe-scale/backend/internal/domain"
 	"recipe-scale/backend/internal/apperror"
+	"recipe-scale/backend/internal/domain"
 	"recipe-scale/backend/internal/service"
 	"time"
 
@@ -47,15 +47,13 @@ type MarginAlert struct {
 func (h *DashboardHandler) GetAlerts(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	// 1. Fetch Ingredients to compute Price Alerts
 	ingredients, err := h.ingredientService.ListIngredients(workspaceID)
 	if err != nil {
-	return apperror.Internal("terjadi kesalahan internal", err)
+		return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	var priceAlerts []PriceAlert
@@ -83,7 +81,7 @@ func (h *DashboardHandler) GetAlerts(c *fiber.Ctx) error {
 	// 2. Fetch Recipes to compute Margin Alerts
 	recipes, err := h.recipeService.ListRecipes(workspaceID)
 	if err != nil {
-	return apperror.Internal("terjadi kesalahan internal", err)
+		return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	var marginAlerts []MarginAlert

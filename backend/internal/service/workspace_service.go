@@ -19,7 +19,7 @@ func NewWorkspaceService(workspaceRepo *repository.WorkspaceRepository) *Workspa
 type UpdateWorkspaceRequest struct {
 	Name                  string  `json:"name"`
 	DefaultTaxPercent     float64 `json:"defaultTaxPercent"`
-	DefaultServicePercent  float64 `json:"defaultServicePercent"`
+	DefaultServicePercent float64 `json:"defaultServicePercent"`
 	DefaultTargetFoodCost float64 `json:"defaultTargetFoodCost"`
 	RoundPriceTo          float64 `json:"roundPriceTo"`
 }

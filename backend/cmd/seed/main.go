@@ -35,7 +35,7 @@ func main() {
 	}
 
 	log.Println("Seeder connected to MySQL. Clearing old tables...")
-	
+
 	// Delete in order to avoid foreign key constraint errors
 	db.Exec("DELETE FROM production_batch_items")
 	db.Exec("DELETE FROM production_batches")
@@ -76,7 +76,7 @@ func main() {
 		{"Sosis Sapi Bratwurst", "pcs", 65000, 12, "pcs", 100, 48, 20},
 		{"Kepiting Bakau", "kg", 160000, 1, "kg", 60, 4, 2},
 		{"Tulang Sapi Sup", "kg", 48000, 1, "kg", 80, 15, 5},
-		
+
 		// Sayuran & Bumbu Basah
 		{"Bawang Merah", "g", 40000, 1000, "g", 90, 8000, 3000},
 		{"Bawang Putih", "g", 36000, 1000, "g", 92, 9000, 3000},
@@ -102,7 +102,7 @@ func main() {
 		{"Sawi Hijau", "g", 10000, 1000, "g", 80, 6000, 2000},
 		{"Jamur Kancing", "g", 42000, 1000, "g", 95, 3000, 1000},
 		{"Kemiri Bulat", "g", 50000, 1000, "g", 100, 4000, 1500},
-		
+
 		// Bahan Kering & Tepung
 		{"Beras Premium Cianjur", "kg", 15000, 1, "kg", 100, 120, 40},
 		{"Tepung Terigu Segitiga Biru", "g", 13000, 1000, "g", 100, 45000, 15000},
@@ -120,7 +120,7 @@ func main() {
 		{"Kaldu Ayam Bubuk Knorr", "g", 55000, 1000, "g", 100, 10000, 3000},
 		{"Kaldu Sapi Bubuk Royco", "g", 42000, 1000, "g", 100, 8000, 3000},
 		{"Asam Jawa Matang", "g", 25000, 1000, "g", 70, 3000, 1000},
-		
+
 		// Saus, Minyak, & Cairan
 		{"Minyak Goreng Sawit Bimoli", "ml", 18000, 1000, "ml", 100, 80000, 30000},
 		{"Minyak Wijen Lee Kum Kee", "ml", 45000, 750, "ml", 100, 4500, 1500},
@@ -139,7 +139,7 @@ func main() {
 		{"Teh Celup Hitam Sosro", "pcs", 8000, 25, "kantong", 100, 250, 1000},
 		{"Bubuk Matcha Premium", "g", 350000, 1000, "g", 100, 2000, 800},
 		{"Es Batu Kristal", "kg", 15000, 10, "kg", 100, 100, 30},
-		
+
 		// Kemasan & Penunjang
 		{"Paper Box Food Grade", "pcs", 1200, 1, "pcs", 100, 1000, 300},
 		{"Paper Cup 12oz", "pcs", 800, 1, "pcs", 100, 1500, 400},
@@ -152,7 +152,7 @@ func main() {
 	for _, ing := range ingredientsList {
 		// Calculate CostPerRecipeUnit = (PurchasePrice / PurchaseQuantity) / (UsableYield / 100)
 		costPerUnit := (ing.PurPrice / ing.PurQty) / (ing.Yield / 100.0)
-		
+
 		newIng := &domain.Ingredient{
 			ID:                uuid.New().String(),
 			Name:              ing.Name,
@@ -173,7 +173,7 @@ func main() {
 			log.Fatalf("Failed to create ingredient %s: %v", ing.Name, err)
 		}
 		savedIngredients = append(savedIngredients, newIng)
-		
+
 		// Insert price history entry
 		ph := &domain.PriceHistory{
 			ID:               uuid.New().String(),
@@ -215,12 +215,12 @@ func main() {
 	// Create 100 Base Recipes (PREP / Bumbu Dasar / Sub-recipes)
 	log.Println("Generating 100 base recipes (Bumbu Dasar)...")
 	var savedBaseRecipes []*domain.Recipe
-	
+
 	// Predefined core base recipes
 	predefinedBumbuList := []struct {
-		Name string
-		Unit string
-		Qty  float64
+		Name  string
+		Unit  string
+		Qty   float64
 		Items []struct {
 			IngName string
 			Qty     float64
@@ -315,7 +315,7 @@ func main() {
 				Qty     float64
 			}{
 				{"Daging Ayam Fillet (Dada)", 0.6}, // 0.6 kg (600g)
-				{"Tulang Sapi Sup", 0.4}, // 0.4 kg (400g)
+				{"Tulang Sapi Sup", 0.4},           // 0.4 kg (400g)
 				{"Air Mineral Dapur", 4500},
 				{"Bawang Putih", 50},
 				{"Garam Meja Beriodium", 30},
@@ -362,7 +362,7 @@ func main() {
 			CreatedAt:      time.Now().Add(-120 * time.Hour),
 			UpdatedAt:      time.Now(),
 		}
-		
+
 		var items []domain.RecipeItem
 		for _, item := range pb.Items {
 			ing := findIng(item.IngName)
@@ -392,13 +392,13 @@ func main() {
 		ar := aromas[rSource.Intn(len(aromas))]
 		cat := categories[rSource.Intn(len(categories))]
 		nm := names[rSource.Intn(len(names))]
-		
+
 		baseName := fmt.Sprintf("%s %s %s %d", cat, nm, ar, i)
 		yieldUnit := "g"
 		if cat == "Saus" || cat == "Minyak" || cat == "Kaldu" || cat == "Sirup" {
 			yieldUnit = "ml"
 		}
-		
+
 		recipe := &domain.Recipe{
 			ID:             uuid.New().String(),
 			Name:           baseName,
@@ -417,7 +417,7 @@ func main() {
 		for k := 0; k < 3; k++ {
 			ing := savedIngredients[rSource.Intn(len(savedIngredients))]
 			ingIDCopy := ing.ID
-			
+
 			var qty float64
 			unitL := strings.ToLower(ing.Unit)
 			if unitL == "kg" || unitL == "l" || unitL == "l" {
@@ -450,12 +450,12 @@ func main() {
 	var savedMenuRecipes []*domain.Recipe
 
 	predefinedMenuList := []struct {
-		Name        string
-		Price       float64
-		Packaging   float64
-		Overhead    float64
-		TargetFC    float64
-		RawItems    []struct {
+		Name      string
+		Price     float64
+		Packaging float64
+		Overhead  float64
+		TargetFC  float64
+		RawItems  []struct {
 			Name string
 			Qty  float64
 		}
@@ -470,7 +470,7 @@ func main() {
 				Name string
 				Qty  float64
 			}{
-				{"Beras Premium Cianjur", 0.15}, // 0.15 kg
+				{"Beras Premium Cianjur", 0.15},     // 0.15 kg
 				{"Daging Ayam Fillet (Dada)", 0.05}, // 0.05 kg
 				{"Bakso Sapi Halus", 2},
 				{"Minyak Goreng Sawit Bimoli", 20},
@@ -551,7 +551,7 @@ func main() {
 				Index int
 				Qty   float64
 			}{
-				{2, 35}, // Bumbu Dasar Kuning
+				{2, 35},  // Bumbu Dasar Kuning
 				{7, 250}, // Kaldu Ayam Pekat (250 ml of a 5000ml batch)
 			},
 		},
@@ -633,7 +633,7 @@ func main() {
 		tp := types[rSourceMenu.Intn(len(types))]
 		sty := styles[rSourceMenu.Intn(len(styles))]
 		top := toppings[rSourceMenu.Intn(len(toppings))]
-		
+
 		menuName := fmt.Sprintf("%s %s %s %d", tp, sty, top, i)
 		price := float64(20000 + rSourceMenu.Intn(16)*5000) // Rp 20.000 to Rp 95.000
 		packaging := float64(500 + rSourceMenu.Intn(6)*500)
@@ -657,13 +657,13 @@ func main() {
 		}
 
 		var items []domain.RecipeItem
-		
+
 		// Pick 1-2 random base recipes
 		numBumbu := 1 + rSourceMenu.Intn(2)
 		for k := 0; k < numBumbu; k++ {
 			baseRecipe := savedBaseRecipes[rSourceMenu.Intn(len(savedBaseRecipes))]
 			baseRecipeIDCopy := baseRecipe.ID
-			
+
 			// Base recipe yields 1000 g or 1000 ml. Menu needs a small fraction like 10g to 45g
 			qty := 10.0 + rSourceMenu.Float64()*35.0 // 10 to 45 g/ml
 			qty = float64(int(qty))
@@ -681,7 +681,7 @@ func main() {
 		for k := 0; k < 2; k++ {
 			ing := savedIngredients[rSourceMenu.Intn(len(savedIngredients))]
 			ingIDCopy := ing.ID
-			
+
 			var qty float64
 			unitL := strings.ToLower(ing.Unit)
 			if unitL == "kg" || unitL == "l" || unitL == "l" {
@@ -726,10 +726,10 @@ func main() {
 		if i > 5 {
 			status = "PLANNED"
 		}
-		
+
 		qty := float64(10 + rand.Intn(4)*10) // 10, 20, 30, 40 portions
 		note := batchNotes[rand.Intn(len(batchNotes))]
-		
+
 		// Calculate batch items snapshot and estimated cost
 		var totalCost float64
 		var batchItems []domain.ProductionBatchItem
@@ -803,6 +803,6 @@ func main() {
 			log.Fatalf("Failed to create production batch %d: %v", i, err)
 		}
 	}
-	
+
 	log.Println("Seeding complete! Database is now fully populated with 100 ingredients, 100 base recipes, 100 menu items, and realistic production logs.")
 }

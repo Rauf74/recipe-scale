@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"recipe-scale/backend/internal/service"
 	"recipe-scale/backend/internal/apperror"
+	"recipe-scale/backend/internal/service"
 )
 
 type CustomUnitHandler struct {
@@ -17,14 +17,12 @@ func NewCustomUnitHandler(cuService *service.CustomUnitService) *CustomUnitHandl
 func (h *CustomUnitHandler) List(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	list, err := h.cuService.List(workspaceID)
 	if err != nil {
-	return apperror.Internal("terjadi kesalahan internal", err)
+		return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -38,21 +36,17 @@ func (h *CustomUnitHandler) List(c *fiber.Ctx) error {
 func (h *CustomUnitHandler) Create(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	var req service.CreateCustomUnitRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "cannot parse request body",
-		})
+		return apperror.BadRequest("cannot parse request body", err)
 	}
 
 	cu, err := h.cuService.Create(workspaceID, req)
 	if err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -66,20 +60,16 @@ func (h *CustomUnitHandler) Create(c *fiber.Ctx) error {
 func (h *CustomUnitHandler) Delete(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "id is required",
-		})
+		return apperror.BadRequest("id is required", nil)
 	}
 
 	if err := h.cuService.Delete(workspaceID, id); err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

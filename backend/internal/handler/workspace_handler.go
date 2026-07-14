@@ -2,8 +2,8 @@ package handler
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"recipe-scale/backend/internal/service"
 	"recipe-scale/backend/internal/apperror"
+	"recipe-scale/backend/internal/service"
 )
 
 type WorkspaceHandler struct {
@@ -19,14 +19,12 @@ func NewWorkspaceHandler(workspaceService *service.WorkspaceService) *WorkspaceH
 func (h *WorkspaceHandler) Get(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	ws, err := h.workspaceService.GetWorkspace(workspaceID)
 	if err != nil {
-	return apperror.NotFound(err.Error(), err)
+		return apperror.NotFound(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -40,21 +38,17 @@ func (h *WorkspaceHandler) Get(c *fiber.Ctx) error {
 func (h *WorkspaceHandler) Update(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	var req service.UpdateWorkspaceRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "cannot parse request body",
-		})
+		return apperror.BadRequest("cannot parse request body", err)
 	}
 
 	ws, err := h.workspaceService.UpdateWorkspace(workspaceID, req)
 	if err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

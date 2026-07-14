@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"recipe-scale/backend/internal/service"
 	"recipe-scale/backend/internal/apperror"
+	"recipe-scale/backend/internal/service"
 )
 
 type RecipeHandler struct {
@@ -18,21 +18,17 @@ func NewRecipeHandler(recipeService *service.RecipeService) *RecipeHandler {
 func (h *RecipeHandler) Create(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	var req service.CreateRecipeRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid request body",
-		})
+		return apperror.BadRequest("invalid request body", err)
 	}
 
 	recipe, err := h.recipeService.CreateRecipe(workspaceID, req)
 	if err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -46,14 +42,12 @@ func (h *RecipeHandler) Create(c *fiber.Ctx) error {
 func (h *RecipeHandler) List(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	recipes, err := h.recipeService.ListRecipes(workspaceID)
 	if err != nil {
-	return apperror.Internal("terjadi kesalahan internal", err)
+		return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -67,21 +61,17 @@ func (h *RecipeHandler) List(c *fiber.Ctx) error {
 func (h *RecipeHandler) Get(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "missing recipe ID",
-		})
+		return apperror.BadRequest("missing recipe ID", nil)
 	}
 
 	recipe, err := h.recipeService.GetRecipe(id, workspaceID)
 	if err != nil {
-	return apperror.NotFound(err.Error(), err)
+		return apperror.NotFound(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -95,28 +85,22 @@ func (h *RecipeHandler) Get(c *fiber.Ctx) error {
 func (h *RecipeHandler) Update(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "missing recipe ID",
-		})
+		return apperror.BadRequest("missing recipe ID", nil)
 	}
 
 	var req service.CreateRecipeRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid request body",
-		})
+		return apperror.BadRequest("invalid request body", err)
 	}
 
 	recipe, err := h.recipeService.UpdateRecipe(id, workspaceID, req)
 	if err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -130,21 +114,17 @@ func (h *RecipeHandler) Update(c *fiber.Ctx) error {
 func (h *RecipeHandler) Delete(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "missing recipe ID",
-		})
+		return apperror.BadRequest("missing recipe ID", nil)
 	}
 
 	err := h.recipeService.DeleteRecipe(id, workspaceID)
 	if err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -156,21 +136,17 @@ func (h *RecipeHandler) Delete(c *fiber.Ctx) error {
 func (h *RecipeHandler) GetCost(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	id := c.Params("id")
 	if id == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "missing recipe ID",
-		})
+		return apperror.BadRequest("missing recipe ID", nil)
 	}
 
 	costRes, err := h.recipeService.GetRecipeCost(id, workspaceID)
 	if err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

@@ -68,9 +68,10 @@ type body struct {
 
 // Handler adalah Fiber error-handling middleware. Pasang via app.Use(handler).
 // Mapping:
-//   *AppError -> status + JSON envelope (code + message aman ke client, cause log)
-//   fiber.Error -> status + JSON envelope (generic message)
-//   default -> 500 + JSON envelope, cause di-log
+//
+//	*AppError -> status + JSON envelope (code + message aman ke client, cause log)
+//	fiber.Error -> status + JSON envelope (generic message)
+//	default -> 500 + JSON envelope, cause di-log
 func Handler(c *fiber.Ctx, err error) error {
 	if err == nil {
 		return nil

@@ -246,10 +246,10 @@ func (s *RecipeService) GetRecipeCost(id string, workspaceID string) (*RecipeCos
 
 	itemCosts := make(map[string]float64)
 	materialCost := s.calculateCostRecursiveWithBreakdown(recipe, workspaceID, itemCosts)
-	
+
 	// Total cost includes raw material costs + packaging cost + overhead cost
 	totalCost := materialCost + recipe.PackagingCost + recipe.OverheadCost
-	
+
 	unitCost := 0.0
 	if recipe.YieldQuantity > 0 {
 		unitCost = totalCost / recipe.YieldQuantity
@@ -317,7 +317,7 @@ func (s *RecipeService) calculateCostRecursiveWithBreakdown(recipe *domain.Recip
 func convertQuantity(qty float64, fromUnit, toUnit string) float64 {
 	from := strings.ToLower(strings.TrimSpace(fromUnit))
 	to := strings.ToLower(strings.TrimSpace(toUnit))
-	
+
 	// Normalize Indonesian and English units to consistent tokens
 	if from == "grams" || from == "gram" {
 		from = "g"
