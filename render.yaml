@@ -3,8 +3,8 @@ services:
     name: recipe-scale-api
     env: go
     rootDir: backend
-    buildCommand: go build -o main ./cmd/api/main.go
-    startCommand: ./main
+    buildCommand: cd backend && go build -o main ./cmd/api/main.go
+    startCommand: cd backend && ./main
     plan: free
     healthCheckPath: /health
     envVars:
