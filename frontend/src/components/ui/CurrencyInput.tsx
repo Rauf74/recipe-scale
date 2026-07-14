@@ -41,7 +41,8 @@ export const CurrencyInput: React.FC<CurrencyInputProps> = ({
         placeholder={placeholder}
         value={displayVal}
         onChange={handleTextChange}
-        className={`${className} pl-9 w-full`}
+        className={`${className} w-full`}
+        style={{ paddingLeft: "2.25rem" }}
       />
     </div>
   );
