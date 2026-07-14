@@ -3,7 +3,7 @@ import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
 import { CurrencyInput } from "../components/ui/CurrencyInput";
-import { ConfirmDeleteModal } from "../components/shared/ConfirmDeleteModal";
+import Swal from "sweetalert2";
 import {
   Search,
   Plus,
@@ -16,6 +16,19 @@ import {
   PackageOpen,
   Scissors,
 } from "lucide-react";
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  background: "#0f172a",
+  color: "#f1f5f9",
+  customClass: {
+    popup: "rounded-2xl border border-surface-700/60 shadow-lg",
+  },
+});
 
 // Satuan resep yang didukung oleh sistem konversi backend
 const RECIPE_UNITS = ["g", "kg", "ml", "L", "pcs"] as const;
@@ -62,9 +75,6 @@ export const IngredientsPage: React.FC = () => {
   const [form, setForm] = useState<IngredientForm>(EMPTY_FORM);
   const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Delete confirmation
-  const [pendingDelete, setPendingDelete] = useState<Ingredient | null>(null);
 
   // Price history untuk ditampilkan saat edit
   const [priceHistory, setPriceHistory] = useState<{
@@ -257,18 +267,45 @@ export const IngredientsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteClick = (ing: Ingredient) => setPendingDelete(ing);
+  const handleDeleteClick = async (ing: Ingredient) => {
+    const result = await Swal.fire({
+      title: "Hapus Bahan Baku?",
+      text: `Apakah Anda yakin ingin menghapus "${ing.name}"? Tindakan ini tidak dapat dibatalkan.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#10b981", // emerald
+      cancelButtonColor: "#334155",  // slate-700
+      background: "#0f172a",
+      color: "#f1f5f9",
+      customClass: {
+        popup: "rounded-3xl border border-surface-700/60 shadow-lg font-sans",
+      },
+    });
 
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-    try {
-      await apiClient.delete(`/api/ingredients/${pendingDelete.id}`);
-      setIngredients(prev => prev.filter(i => i.id !== pendingDelete.id));
-    } catch (err) {
-      console.error("Gagal menghapus:", err);
-      setError("Gagal menghapus bahan baku. Pastikan bahan ini tidak sedang digunakan di dalam resep.");
-    } finally {
-      setPendingDelete(null);
+    if (result.isConfirmed) {
+      try {
+        await apiClient.delete(`/api/ingredients/${ing.id}`);
+        setIngredients(prev => prev.filter(i => i.id !== ing.id));
+        void Toast.fire({
+          icon: "success",
+          title: `Bahan baku "${ing.name}" berhasil dihapus.`,
+        });
+      } catch (err) {
+        console.error("Gagal menghapus:", err);
+        void Swal.fire({
+          title: "Gagal Menghapus",
+          text: "Bahan baku ini sedang digunakan di dalam resep aktif.",
+          icon: "error",
+          confirmButtonColor: "#10b981",
+          background: "#0f172a",
+          color: "#f1f5f9",
+          customClass: {
+            popup: "rounded-3xl border border-surface-700/60 shadow-lg font-sans",
+          },
+        });
+      }
     }
   };
 
@@ -652,17 +689,6 @@ export const IngredientsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Delete confirmation modal */}
-      {pendingDelete && (
-        <ConfirmDeleteModal
-          title="Hapus Bahan Baku"
-          itemName={pendingDelete.name}
-          description="Bahan yang dipakai di resep tidak bisa dihapus."
-          error={error}
-          onConfirm={confirmDelete}
-          onCancel={() => { setPendingDelete(null); setError(""); }}
-        />
-      )}
     </div>
   );
 };

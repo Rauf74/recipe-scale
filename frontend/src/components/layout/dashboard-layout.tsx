@@ -19,7 +19,7 @@ const NAV = [
   { to: "/", label: "Dasbor", icon: LayoutDashboard, end: true },
   { to: "/ingredients", label: "Bahan", icon: Package, end: false },
   { to: "/stock", label: "Stok", icon: Warehouse, end: false },
-  { to: "/preps", label: "Prep", icon: Layers, end: false },
+  { to: "/preps", label: "Bumbu Dasar", icon: Layers, end: false },
   { to: "/recipes", label: "Resep", icon: BookOpen, end: false },
   { to: "/production", label: "Produksi", icon: ClipboardList, end: false },
   { to: "/analysis", label: "Analisis", icon: TrendingUp, end: false },
@@ -86,7 +86,7 @@ export const DashboardLayout: React.FC = () => {
               className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-warm-500 hover:bg-warm-400 text-surface-950 font-bold rounded-full transition-all hover:shadow-warm active:scale-[0.98] cursor-pointer text-sm"
             >
               <Plus className="w-4 h-4" />
-              Racik
+              Resep
             </button>
             
             {/* Relative wrapper for dropdown positioning */}

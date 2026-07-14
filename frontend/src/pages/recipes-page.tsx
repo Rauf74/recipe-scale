@@ -3,7 +3,20 @@ import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
 import { CurrencyInput } from "../components/ui/CurrencyInput";
-import { ConfirmDeleteModal } from "../components/shared/ConfirmDeleteModal";
+import Swal from "sweetalert2";
+
+const Toast = Swal.mixin({
+  toast: true,
+  position: "top-end",
+  showConfirmButton: false,
+  timer: 3000,
+  timerProgressBar: true,
+  background: "#0f172a",
+  color: "#f1f5f9",
+  customClass: {
+    popup: "rounded-2xl border border-surface-700/60 shadow-lg",
+  },
+});
 import {
   ChefHat,
   AlertTriangle,
@@ -68,8 +81,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
   const [error, setError] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Delete confirmation modal state (replaces window.confirm / alert)
-  const [pendingDelete, setPendingDelete] = useState<Recipe | null>(null);
+
 
   const isPrepMode = mode === "prep";
   const pageTitle = isPrepMode ? "Bumbu Dasar & Prep" : "Resep Menu";
@@ -273,26 +285,51 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
     }
   };
 
-  const handleDeleteClick = (recipe: Recipe, e: React.MouseEvent) => {
+  const handleDeleteClick = async (recipe: Recipe, e: React.MouseEvent) => {
     e.stopPropagation();
-    setPendingDelete(recipe);
-  };
+    
+    const result = await Swal.fire({
+      title: isPrepMode ? "Hapus Bumbu Dasar?" : "Hapus Resep Menu?",
+      text: `Apakah Anda yakin ingin menghapus "${recipe.name}"? Tindakan ini tidak dapat dibatalkan.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Ya, Hapus!",
+      cancelButtonText: "Batal",
+      confirmButtonColor: "#10b981", // emerald
+      cancelButtonColor: "#334155",  // slate-700
+      background: "#0f172a",
+      color: "#f1f5f9",
+      customClass: {
+        popup: "rounded-3xl border border-surface-700/60 shadow-lg font-sans",
+      },
+    });
 
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-    const id = pendingDelete.id;
-    try {
-      await apiClient.delete(`/api/recipes/${id}`);
-      setRecipes(recipes.filter((r) => r.id !== id));
-      if (selectedRecipe?.id === id) {
-        setSelectedRecipe(null);
-        setSelectedCost(null);
+    if (result.isConfirmed) {
+      try {
+        await apiClient.delete(`/api/recipes/${recipe.id}`);
+        setRecipes(recipes.filter((r) => r.id !== recipe.id));
+        if (selectedRecipe?.id === recipe.id) {
+          setSelectedRecipe(null);
+          setSelectedCost(null);
+        }
+        void Toast.fire({
+          icon: "success",
+          title: `Resep "${recipe.name}" berhasil dihapus.`,
+        });
+      } catch (err) {
+        console.error("Gagal menghapus resep:", err);
+        void Swal.fire({
+          title: "Gagal Menghapus",
+          text: "Resep ini tidak dapat dihapus karena sedang digunakan sebagai bumbu dasar di resep lainnya.",
+          icon: "error",
+          confirmButtonColor: "#10b981",
+          background: "#0f172a",
+          color: "#f1f5f9",
+          customClass: {
+            popup: "rounded-3xl border border-surface-700/60 shadow-lg font-sans",
+          },
+        });
       }
-    } catch (err) {
-      console.error("Gagal menghapus resep:", err);
-      setError("Gagal menghapus resep. Pastikan resep ini tidak sedang digunakan sebagai bumbu dasar di resep lain.");
-    } finally {
-      setPendingDelete(null);
     }
   };
 
@@ -973,17 +1010,6 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
         </div>
       )}
 
-      {/* Delete confirmation modal */}
-      {pendingDelete && (
-        <ConfirmDeleteModal
-          title="Hapus Resep"
-          itemName={pendingDelete.name}
-          description="Resep lain yang memakai ini sebagai bumbu dasar mungkin terpengaruh."
-          error={error}
-          onConfirm={confirmDelete}
-          onCancel={() => { setPendingDelete(null); setError(""); }}
-        />
-      )}
     </div>
   );
 };
