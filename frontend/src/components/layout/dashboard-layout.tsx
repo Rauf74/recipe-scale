@@ -13,6 +13,8 @@ import {
   Plus,
   LogOut,
   Settings,
+  Menu,
+  X,
 } from "lucide-react";
 
 const NAV = [
@@ -30,6 +32,7 @@ export const DashboardLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isActive = (to: string, end?: boolean) =>
     end ? location.pathname === to : location.pathname.startsWith(to);
@@ -39,6 +42,12 @@ export const DashboardLayout: React.FC = () => {
     navigate("/login");
   };
 
+  // Mobile Bottom Nav visibility splits:
+  // Show Dasbor, Bahan, Stok, Resep directly. Group the rest into "Lainnya"
+  const MOBILE_VISIBLE_KEYS = ["/", "/ingredients", "/stock", "/recipes"];
+  const mobileVisibleNav = NAV.filter((item) => MOBILE_VISIBLE_KEYS.includes(item.to));
+  const mobileOverflowNav = NAV.filter((item) => !MOBILE_VISIBLE_KEYS.includes(item.to));
+
   return (
     <div className="min-h-screen bg-surface-950 text-slate-200 font-sans">
       <div className="app-glow" />
@@ -46,7 +55,7 @@ export const DashboardLayout: React.FC = () => {
 
       {/* ============ DESKTOP: top horizontal nav ============ */}
       <header className="relative z-10 sticky top-0 z-30 border-b border-surface-700/60 bg-surface-950/80 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-4 h-16 flex items-center justify-between gap-4">
+        <div className="mx-auto max-w-[1400px] px-4 h-16 flex items-center justify-between gap-4">
           {/* Brand */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
             <div className="p-2 bg-brand-500/10 text-brand-400 rounded-xl border border-brand-500/20">
@@ -153,21 +162,21 @@ export const DashboardLayout: React.FC = () => {
       </header>
 
       {/* ============ MAIN ============ */}
-      <main className="relative z-10 mx-auto max-w-6xl px-4 py-6 pb-24 lg:pb-6">
+      <main className="relative z-10 mx-auto max-w-[1400px] px-4 py-6 pb-24 lg:pb-6">
         <Outlet />
       </main>
 
       {/* ============ MOBILE: bottom tab bar ============ */}
       <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-surface-700/60 bg-surface-950/90 backdrop-blur-md">
-        <div className="flex overflow-x-auto px-1">
-          {NAV.map((item) => {
+        <div className="flex px-1 justify-around items-center">
+          {mobileVisibleNav.map((item) => {
             const active = isActive(item.to, item.end);
             const Icon = item.icon;
             return (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`min-w-[68px] flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-semibold transition-colors ${
+                className={`flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-semibold transition-colors ${
                   active ? "text-brand-400" : "text-slate-500"
                 }`}
               >
@@ -176,8 +185,63 @@ export const DashboardLayout: React.FC = () => {
               </Link>
             );
           })}
+          
+          {/* 5th Slot: Overflow Lainnya */}
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            className={`flex-1 flex flex-col items-center gap-1 py-3 text-[10px] font-semibold transition-colors cursor-pointer ${
+              mobileMenuOpen ? "text-brand-400" : "text-slate-500"
+            }`}
+          >
+            <Menu className="w-5 h-5" />
+            Lainnya
+          </button>
         </div>
       </nav>
+
+      {/* ============ MOBILE: slide-up menu overlay ============ */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          {/* Backdrop */}
+          <div 
+            onClick={() => setMobileMenuOpen(false)}
+            className="absolute inset-0 bg-surface-950/80 backdrop-blur-sm transition-opacity"
+          />
+          {/* Bottom Drawer */}
+          <div className="absolute bottom-0 inset-x-0 bg-surface-900 border-t border-surface-700/60 rounded-t-3xl p-5 pb-8 space-y-4 shadow-2xl transform transition-transform">
+            <div className="flex justify-between items-center pb-2 border-b border-surface-800">
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-500">Menu Lainnya</span>
+              <button 
+                onClick={() => setMobileMenuOpen(false)} 
+                className="p-1 rounded-lg hover:bg-surface-800 text-slate-500 hover:text-slate-300"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              {mobileOverflowNav.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.to, item.end);
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all text-center ${
+                      active
+                        ? "bg-brand-500/10 border-brand-500/30 text-brand-400"
+                        : "bg-surface-950/40 border-surface-800 hover:bg-surface-800/40 text-slate-300"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span className="text-[10px] font-semibold">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
