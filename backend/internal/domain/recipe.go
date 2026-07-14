@@ -13,7 +13,7 @@ type Recipe struct {
 	TargetFoodCost float64      `json:"targetFoodCost" gorm:"type:decimal(5,2);default:30"`
 	PackagingCost  float64      `json:"packagingCost" gorm:"type:decimal(15,2);default:0"` // Biaya kemasan per batch
 	OverheadCost   float64      `json:"overheadCost" gorm:"type:decimal(15,2);default:0"`  // Biaya overhead per batch
-	WorkspaceID    string       `json:"workspaceId" gorm:"type:varchar(191)"`
+	WorkspaceID    string       `json:"workspaceId" gorm:"type:varchar(191);index"`
 	Items          []RecipeItem `json:"items" gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE"`
 	CreatedAt      time.Time    `json:"createdAt"`
 	UpdatedAt      time.Time    `json:"updatedAt"`
@@ -57,7 +57,7 @@ type ProductionBatchItem struct {
 
 type RecipeItem struct {
 	ID           string      `json:"id" gorm:"type:varchar(191);primaryKey"`
-	RecipeID     string      `json:"recipeId" gorm:"type:varchar(191)"`
+	RecipeID     string      `json:"recipeId" gorm:"type:varchar(191);index"`
 	IngredientID *string     `json:"ingredientId,omitempty" gorm:"type:varchar(191)"` // Nullable if it is a sub-recipe
 	SubRecipeID  *string     `json:"subRecipeId,omitempty" gorm:"type:varchar(191)"`  // Nullable if it is a raw ingredient
 	Quantity     float64     `json:"quantity"`

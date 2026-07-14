@@ -21,7 +21,7 @@ func InitDB() *gorm.DB {
 
 	var err error
 	DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info), // Show SQL queries in console
+		Logger: logger.Default.LogMode(logger.Warn), // Log slow queries + errors; tidak log setiap query
 	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
