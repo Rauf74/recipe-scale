@@ -33,6 +33,11 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		return apperror.BadRequest(err.Error(), err)
 	}
 
+	sameSite := "Lax"
+	if os.Getenv("APP_ENV") == "production" {
+		sameSite = "None"
+	}
+
 	// Set JWT as HttpOnly Cookie
 	c.Cookie(&fiber.Cookie{
 		Name:     "jwt",
@@ -40,7 +45,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		Expires:  time.Now().Add(24 * 7 * time.Hour), // 7 days
 		HTTPOnly: true,
 		Secure:   os.Getenv("APP_ENV") == "production",
-		SameSite: "Lax",
+		SameSite: sameSite,
 	})
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -65,6 +70,11 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		return apperror.Unauthorized(err.Error(), err)
 	}
 
+	sameSite := "Lax"
+	if os.Getenv("APP_ENV") == "production" {
+		sameSite = "None"
+	}
+
 	// Set JWT as HttpOnly Cookie
 	c.Cookie(&fiber.Cookie{
 		Name:     "jwt",
@@ -72,7 +82,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		Expires:  time.Now().Add(24 * 7 * time.Hour), // 7 days
 		HTTPOnly: true,
 		Secure:   os.Getenv("APP_ENV") == "production",
-		SameSite: "Lax",
+		SameSite: sameSite,
 	})
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -84,6 +94,11 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 }
 
 func (h *AuthHandler) Logout(c *fiber.Ctx) error {
+	sameSite := "Lax"
+	if os.Getenv("APP_ENV") == "production" {
+		sameSite = "None"
+	}
+
 	// Clear the JWT Cookie
 	c.Cookie(&fiber.Cookie{
 		Name:     "jwt",
@@ -91,7 +106,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		Expires:  time.Now().Add(-time.Hour),
 		HTTPOnly: true,
 		Secure:   os.Getenv("APP_ENV") == "production",
-		SameSite: "Lax",
+		SameSite: sameSite,
 	})
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
