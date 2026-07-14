@@ -25,3 +25,7 @@ func (r *WorkspaceRepository) GetByID(id string) (*domain.Workspace, error) {
 	}
 	return &ws, nil
 }
+
+func (r *WorkspaceRepository) Update(ws *domain.Workspace) error {
+	return r.db.Save(ws).Error
+}

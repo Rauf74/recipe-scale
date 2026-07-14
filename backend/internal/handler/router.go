@@ -22,6 +22,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	recipeService := service.NewRecipeService(recipeRepo, ingredientRepo)
 	productionRepo := repository.NewProductionRepository(db)
 	productionService := service.NewProductionService(productionRepo, recipeRepo, recipeService)
+	workspaceService := service.NewWorkspaceService(workspaceRepo)
 
 	// 3. Initialize Handlers
 	authHandler := NewAuthHandler(authService)
@@ -30,6 +31,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	productionHandler := NewProductionHandler(productionService)
 	dashboardHandler := NewDashboardHandler(db, recipeService, ingredientService)
 	analyticsHandler := NewAnalyticsHandler(recipeService)
+	workspaceHandler := NewWorkspaceHandler(workspaceService)
 
 	// 4. Setup CORS / API Groups
 	api := app.Group("/api")
@@ -74,4 +76,9 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 
 	analytics := api.Group("/analytics", middleware.RequireAuth)
 	analytics.Get("/menu-performance", analyticsHandler.MenuPerformance)
+
+	// 10. Workspace Routes (Protected)
+	workspaces := api.Group("/workspace", middleware.RequireAuth)
+	workspaces.Get("/", workspaceHandler.Get)
+	workspaces.Put("/", workspaceHandler.Update)
 }
