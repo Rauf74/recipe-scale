@@ -18,6 +18,8 @@ import {
   Coins,
   ClipboardList,
   Plus,
+  CheckCircle2,
+  Lightbulb,
 } from "lucide-react";
 
 interface PriceAlert {
@@ -53,11 +55,11 @@ export const DashboardPage: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
   const [costs, setCosts] = useState<Record<string, number>>({});
-  const [sortOrder, setSortOrder] = useState<"highest" | "lowest">("highest");
   
   // Dashboard Alerts state
   const [priceAlerts, setPriceAlerts] = useState<PriceAlert[]>([]);
   const [marginAlerts, setMarginAlerts] = useState<MarginAlert[]>([]);
+  const [sortOrder, setSortOrder] = useState<"highest" | "lowest">("highest");
 
   useEffect(() => {
     setLoading(true);
@@ -70,13 +72,11 @@ export const DashboardPage: React.FC = () => {
         if (r.data.success) setRecipes(r.data.data.recipes);
         if (i.data.success) setIngredients(i.data.data.ingredients);
         
-        // Populate alerts if successful
         if (a.data.success) {
           setPriceAlerts(a.data.data.priceAlerts || []);
           setMarginAlerts(a.data.data.marginAlerts || []);
         }
 
-        // fetch per-recipe HPP (backend /cost)
         if (r.data.success) {
           const list = r.data.data.recipes;
           const entries = await Promise.all(
@@ -101,23 +101,19 @@ export const DashboardPage: React.FC = () => {
   const baseRecipes = recipes.filter((r) => r.isBaseRecipe);
   const menuRecipes = recipes.filter((r) => !r.isBaseRecipe);
 
-  // Ingredient with highest purchase price (proxy cost-risk)
   const topIngredient = [...ingredients].sort(
     (a, b) => (b.pricePerUnit || 0) - (a.pricePerUnit || 0)
   )[0];
 
-  // Calculate total inventory financial value
   const totalInventoryValue = useMemo(() => {
     return ingredients.reduce((sum, ing) => sum + (ing.currentStock * (ing.pricePerUnit || 0)), 0);
   }, [ingredients]);
 
-  // Average component count per recipe
   const avgComponents =
     recipes.length > 0
       ? recipes.reduce((s, r) => s + (r.items?.length || 0), 0) / recipes.length
       : 0;
 
-  // Top profit margin recipes vs low margin recipes (menu recipes only)
   const sortedRankings = useMemo(() => {
     const list = menuRecipes
       .map(r => {
@@ -217,70 +213,6 @@ export const DashboardPage: React.FC = () => {
         </div>
       </section>
 
-      {/* ===== Dashboard Alerts Section (Risks & Margin Alerts) ===== */}
-      {(priceAlerts.length > 0 || marginAlerts.length > 0) && (
-        <section className="grid gap-4 md:grid-cols-2">
-          
-          {/* Margin Alerts Card */}
-          {marginAlerts.length > 0 && (
-            <div className="rounded-3xl border border-red-500/20 bg-red-500/5 p-5 space-y-3">
-              <h2 className="text-sm font-bold text-red-400 flex items-center gap-2">
-                <AlertTriangle className="w-4.5 h-4.5 shrink-0" />
-                Alarm Margin Terancam ({marginAlerts.length} Menu)
-              </h2>
-              <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                {marginAlerts.map((alert) => (
-                  <div key={alert.recipeId} className="flex justify-between items-center bg-surface-950/40 p-2.5 rounded-xl border border-red-500/10 text-xs">
-                    <div>
-                      <p className="font-bold text-slate-200">{alert.name}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        Harga Jual: {formatRupiah(alert.sellingPrice)} · Target FC: {alert.targetFoodCostPercent}%
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-mono text-red-400 font-extrabold text-xs">
-                        FC: {alert.currentFoodCostPercent}%
-                      </span>
-                      <p className="text-[9px] text-red-500 font-semibold mt-0.5">Margin Susut</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Price Alerts Card */}
-          {priceAlerts.length > 0 && (
-            <div className="rounded-3xl border border-warm-500/20 bg-warm-500/5 p-5 space-y-3">
-              <h2 className="text-sm font-bold text-warm-400 flex items-center gap-2">
-                <CircleAlert className="w-4.5 h-4.5 shrink-0" />
-                Deteksi Kenaikan Harga Bahan ({priceAlerts.length} Item)
-              </h2>
-              <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-                {priceAlerts.map((alert) => (
-                  <div key={alert.ingredientId} className="flex justify-between items-center bg-surface-950/40 p-2.5 rounded-xl border border-warm-500/10 text-xs">
-                    <div>
-                      <p className="font-bold text-slate-200">{alert.name}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">
-                        Harga Lama: {formatRupiah(alert.previousPrice)}/unit
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-mono text-warm-400 font-extrabold text-xs flex items-center justify-end gap-1">
-                        +{alert.changePercent}%
-                      </span>
-                      <p className="text-[9px] text-slate-400 mt-0.5">
-                        Baru: {formatRupiah(alert.currentPrice)}/unit
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </section>
-      )}
-
       {/* ===== Kitchen KPIs ===== */}
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <MetricCard
@@ -309,23 +241,21 @@ export const DashboardPage: React.FC = () => {
         />
       </section>
 
-      {/* ===== Grid: Rankings & Shortcuts ===== */}
-      <div className="grid gap-6 md:grid-cols-[1fr_380px]">
+      {/* ===== Grid 3 Kolom Desktop Seimbang ===== */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         
-        {/* Left: Recipe Margins Analysis */}
+        {/* KOLOM 1: Peringkat Margin Menu */}
         <section className="space-y-6">
-          
-          {/* Analisis Margin Menu */}
           {sortedRankings.length > 0 ? (
-            <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 overflow-hidden">
+            <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 overflow-hidden flex flex-col h-full min-h-[380px]">
               <div className="flex items-center justify-between px-5 py-4 border-b border-surface-700/60 gap-4">
-                <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <h2 className="text-sm font-bold text-slate-200 flex items-center gap-2 font-sans">
                   {sortOrder === "highest" ? (
                     <TrendingUp className="w-4 h-4 text-brand-400" />
                   ) : (
                     <TrendingDown className="w-4 h-4 text-warm-500" />
                   )}
-                  Peringkat Margin Menu
+                  Margin Menu
                 </h2>
                 
                 <select
@@ -339,7 +269,7 @@ export const DashboardPage: React.FC = () => {
                 </select>
               </div>
 
-              <div className="divide-y divide-surface-800">
+              <div className="divide-y divide-surface-800 flex-1">
                 {sortedRankings.map((item: { recipe: Recipe; cost: number; margin: number; foodCostPct: number }) => (
                   <div key={item.recipe.id} className="ledger-row grid-cols-[1fr_auto_auto]">
                     <div className="flex items-center gap-3 min-w-0">
@@ -353,75 +283,139 @@ export const DashboardPage: React.FC = () => {
                       </span>
                     </div>
                     <span className="text-xs text-slate-500 mr-2">
-                      Food Cost: {item.foodCostPct.toFixed(1)}%
+                      FC: {item.foodCostPct.toFixed(0)}%
                     </span>
                     <span className={`nums text-sm font-extrabold ${
                       sortOrder === "highest" ? "text-brand-400" : "text-warm-400"
                     }`}>
-                      Margin: {item.margin.toFixed(1)}%
+                      {item.margin.toFixed(1)}%
                     </span>
                   </div>
                 ))}
               </div>
             </div>
           ) : (
-            <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-8 text-center text-slate-500 text-sm italic">
+            <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-8 text-center text-slate-500 text-sm italic min-h-[380px] flex items-center justify-center">
               Belum ada resep menu dengan harga jual untuk dianalisis marginnya.
             </div>
           )}
         </section>
 
-        {/* Right: Quick shortcuts and Risk-cost alerts */}
-        <section className="space-y-6">
-          
-          {/* Quick Actions Panel */}
-          <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-5 space-y-4">
-            <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
-              <ClipboardList className="w-4 h-4 text-slate-400" />
-              Pintasan Cepat Dapur
-            </h3>
-            <div className="grid grid-cols-2 gap-3.5">
-              <ShortcutButton
-                label="Tambah Bahan"
-                to="/ingredients"
-                desc="Input bahan baku"
-              />
-              <ShortcutButton
-                label="Racik Resep"
-                to="/recipes"
-                desc="HPP resep baru"
-              />
-              <ShortcutButton
-                label="Isi Stok Masuk"
-                to="/stock"
-                desc="Update persediaan"
-              />
-              <ShortcutButton
-                label="Mulai Produksi"
-                to="/production"
-                desc="Potong stok bahan"
-              />
-            </div>
-          </div>
+        {/* KOLOM 2: Notifikasi & Alarm Dapur */}
+        <section className="space-y-4">
+          <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-5 space-y-4 min-h-[380px] flex flex-col justify-between">
+            <div className="space-y-4">
+              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-slate-400" />
+                Notifikasi & Kondisi Dapur
+              </h3>
 
-          {/* Risk-cost Alert */}
-          {topIngredient && (
-            <div className="rounded-3xl border border-warm-500/20 bg-warm-500/5 p-5 space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-warm-500/10 text-warm-400 rounded-xl">
-                  <TrendingDown className="w-4.5 h-4.5" />
+              {/* 1. Alarm Margin Terancam */}
+              {marginAlerts.length > 0 ? (
+                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-3.5 space-y-2.5">
+                  <p className="text-xs font-bold text-red-400 flex items-center gap-1.5">
+                    <CircleAlert className="w-3.5 h-3.5" />
+                    Margin Terancam ({marginAlerts.length} Menu)
+                  </p>
+                  <div className="space-y-1.5 max-h-[110px] overflow-y-auto">
+                    {marginAlerts.map(alert => (
+                      <div key={alert.recipeId} className="flex justify-between items-center text-[10px] bg-surface-950/40 p-2 rounded-lg border border-red-500/10">
+                        <span className="font-semibold text-slate-300 truncate max-w-[120px]">{alert.name}</span>
+                        <span className="font-mono text-red-400 font-extrabold">FC: {alert.currentFoodCostPercent}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div>
-                  <h4 className="text-xs font-bold text-slate-300">Bahan Termahal (Risiko Cost)</h4>
-                  <p className="text-[10px] text-slate-500 mt-0.5">Fluktuasi harga paling berdampak</p>
+              ) : null}
+
+              {/* 2. Alarm Kenaikan Harga Bahan */}
+              {priceAlerts.length > 0 ? (
+                <div className="rounded-2xl border border-warm-500/20 bg-warm-500/5 p-3.5 space-y-2.5">
+                  <p className="text-xs font-bold text-warm-400 flex items-center gap-1.5">
+                    <TrendingUp className="w-3.5 h-3.5" />
+                    Bahan Baku Naik ({priceAlerts.length} Item)
+                  </p>
+                  <div className="space-y-1.5 max-h-[110px] overflow-y-auto">
+                    {priceAlerts.map(alert => (
+                      <div key={alert.ingredientId} className="flex justify-between items-center text-[10px] bg-surface-950/40 p-2 rounded-lg border border-warm-500/10">
+                        <span className="font-semibold text-slate-300 truncate max-w-[120px]">{alert.name}</span>
+                        <span className="font-mono text-warm-400 font-bold">+{alert.changePercent}%</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              ) : null}
+
+              {/* 3. Dapur Sehat (Jika Tidak Ada Alarm) */}
+              {marginAlerts.length === 0 && priceAlerts.length === 0 ? (
+                <div className="rounded-2xl border border-brand-500/20 bg-brand-500/5 p-4 py-6 text-center space-y-3">
+                  <CheckCircle2 className="w-10 h-10 text-brand-400 mx-auto" />
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-200">Kondisi Dapur Aman</h4>
+                    <p className="text-[10px] text-slate-500 leading-relaxed mt-1">
+                      Semua margin menu berjalan sesuai target aman Anda. Tidak mendeteksi lonjakan harga bahan baku baru.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            {/* Risk-cost warning di dasar box */}
+            {topIngredient && (
+              <div className="rounded-2xl border border-surface-700/60 bg-surface-950/40 p-3.5 flex items-center gap-3">
+                <TrendingDown className="w-4 h-4 text-warm-400 shrink-0" />
+                <p className="text-[10px] text-slate-400 leading-relaxed">
+                  Bahan termahal: <span className="font-bold text-slate-200">{topIngredient.name}</span> ({formatRupiah(topIngredient.pricePerUnit || 0)}/{topIngredient.unit}). Fluktuasinya paling berdampak ke HPP.
+                </p>
               </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Item termahal saat ini adalah <span className="font-bold text-slate-200">{topIngredient.name}</span> seharga{" "}
-                <span className="font-extrabold text-warm-400 font-mono">{formatRupiah(topIngredient.pricePerUnit || 0)}</span> per {topIngredient.unit}.
+            )}
+          </div>
+        </section>
+
+        {/* KOLOM 3: Pintasan Cepat & Tips Bisnis */}
+        <section className="space-y-4">
+          <div className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-5 space-y-4 min-h-[380px] flex flex-col justify-between">
+            {/* Shortcuts */}
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-slate-200 flex items-center gap-2">
+                <ClipboardList className="w-4 h-4 text-slate-400" />
+                Pintasan Cepat
+              </h3>
+              <div className="grid grid-cols-2 gap-2.5">
+                <ShortcutButton
+                  label="Tambah Bahan"
+                  to="/ingredients"
+                  desc="Input bahan baku"
+                />
+                <ShortcutButton
+                  label="Racik Resep"
+                  to="/recipes"
+                  desc="HPP resep baru"
+                />
+                <ShortcutButton
+                  label="Isi Stok Masuk"
+                  to="/stock"
+                  desc="Update persediaan"
+                />
+                <ShortcutButton
+                  label="Mulai Produksi"
+                  to="/production"
+                  desc="Potong stok bahan"
+                />
+              </div>
+            </div>
+
+            {/* Edu Card: Tips Dapur Pintar */}
+            <div className="rounded-2xl border border-brand-500/10 bg-surface-950/40 p-4 space-y-2">
+              <div className="flex items-center gap-1.5 text-brand-400 font-bold text-[10px] uppercase tracking-wider">
+                <Lightbulb className="w-3.5 h-3.5" />
+                Tips Dapur Pintar
+              </div>
+              <p className="text-[10px] text-slate-400 leading-relaxed">
+                Fokus evaluasi resep menu yang memiliki Food Cost aktual di atas 35%. Usahakan yield loss (usable yield) di atas 85% untuk menekan pemborosan bahan baku.
               </p>
             </div>
-          )}
+          </div>
         </section>
       </div>
 
