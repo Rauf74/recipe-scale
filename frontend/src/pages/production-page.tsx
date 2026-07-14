@@ -210,16 +210,16 @@ export function ProductionPage() {
       {/* Form: Buat Batch Rencana Baru */}
       <form
         onSubmit={createBatch}
-        className="grid gap-4 rounded-3xl border border-surface-700/60 bg-surface-900/40 p-5 sm:grid-cols-[1fr_180px_auto] sm:items-end"
+        className="grid gap-4 rounded-3xl border border-surface-700/60 bg-surface-900/40 p-4 sm:grid-cols-[1fr_180px_auto] sm:items-end print:hidden"
       >
         <div className="sm:col-span-1">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
             Menu Makanan / Minuman
           </label>
           <select
             value={recipeId}
             onChange={(event) => handleRecipeChange(event.target.value)}
-            className="select w-full"
+            className="select w-full py-1.5 text-xs"
           >
             {menus.length === 0 && <option value="">-- Belum ada resep menu --</option>}
             {menus.map((recipe) => (
@@ -231,7 +231,7 @@ export function ProductionPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
             Target Hasil (Porsi)
           </label>
           <input
@@ -240,48 +240,48 @@ export function ProductionPage() {
             type="number"
             min="0.1"
             step="0.1"
-            className="input w-full"
+            className="input w-full py-1.5 text-xs"
           />
         </div>
 
         <button
           type="submit"
           disabled={isSaving || !selectedRecipe}
-          className="flex items-center justify-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-surface-950 px-5 py-2.5 text-sm font-bold transition-all hover:shadow-brand active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 h-[38px] sm:w-auto"
+          className="flex items-center justify-center gap-2 rounded-xl bg-brand-500 hover:bg-brand-400 text-surface-950 px-4 py-2 text-xs font-bold transition-all hover:shadow-brand active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 h-[34px] sm:w-auto"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           Buat Batch
         </button>
 
         <div className="sm:col-span-3">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
             Catatan Tambahan (Opsional)
           </label>
           <input
             value={notes}
             onChange={(event) => setNotes(event.target.value)}
             placeholder="Contoh: Produksi untuk catering siang, ekstra es, dll."
-            className="input w-full"
+            className="input w-full py-1.5 text-xs"
           />
         </div>
       </form>
 
       {error && (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-xs text-red-200">
           {error}
         </div>
       )}
 
       {/* Control Bar: Search & Filter Tabs */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-surface-800 pb-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-surface-800 pb-3 print:hidden">
         {/* Status Filters */}
-        <div className="flex rounded-full bg-surface-900/60 p-1 border border-surface-700/60 w-full sm:w-auto">
+        <div className="flex rounded-full bg-surface-900/60 p-0.5 border border-surface-700/60 w-full sm:w-auto">
           {(["ALL", "PLANNED", "COMPLETED"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setStatusFilter(tab)}
-              className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-3.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
                 statusFilter === tab
                   ? "bg-surface-800 text-brand-400 shadow-sm"
                   : "text-slate-400 hover:text-slate-200"
@@ -293,14 +293,14 @@ export function ProductionPage() {
         </div>
 
         {/* Search Bar */}
-        <div className="relative w-full sm:w-72">
+        <div className="relative w-full sm:w-64">
           <input
             type="text"
             placeholder="Cari nama menu / catatan..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input w-full py-1.5 pl-8 pr-3 text-xs bg-surface-900/50 border-surface-700/60 rounded-xl"
-            style={{ height: "auto" }}
+            className="input w-full py-1.5 pr-3 text-xs bg-surface-900/50 border-surface-700/60 rounded-xl"
+            style={{ paddingLeft: "2.25rem", height: "auto" }}
           />
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
           {searchQuery && (
@@ -315,10 +315,10 @@ export function ProductionPage() {
       </div>
 
       {/* List of Batches */}
-      <section className="space-y-4">
+      <section className="space-y-4 print:space-y-6">
         {filteredBatches.length === 0 ? (
-          <div className="rounded-3xl border border-dashed border-surface-700/60 px-6 py-16 text-center text-sm text-slate-500 flex flex-col items-center gap-3">
-            <ClipboardList className="w-10 h-10 text-slate-700" />
+          <div className="rounded-3xl border border-dashed border-surface-700/60 px-6 py-12 text-center text-sm text-slate-500 flex flex-col items-center gap-3">
+            <ClipboardList className="w-8 h-8 text-slate-700" />
             <span>
               {batches.length === 0
                 ? "Belum ada rencana batch. Buat rencana pertama Anda di atas."
@@ -331,28 +331,28 @@ export function ProductionPage() {
             return (
               <article
                 key={batch.id}
-                className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40"
+                className="overflow-hidden rounded-2xl border border-surface-700/60 bg-surface-900/40 print:border-slate-300 print:bg-white print:text-slate-900"
               >
                 {/* Batch Header */}
-                <div className="flex flex-col gap-3 border-b border-surface-700/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between bg-surface-900/10">
+                <div className="flex flex-col gap-2 border-b border-surface-700/60 px-4 py-2.5 sm:flex-row sm:items-center sm:justify-between bg-surface-900/10 print:bg-slate-100 print:border-slate-300">
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-bold text-slate-100">{batch.recipe?.name || "Resep produksi"}</p>
+                      <p className="font-bold text-slate-100 print:text-slate-900 text-sm">{batch.recipe?.name || "Resep produksi"}</p>
                       {batch.notes && (
-                        <span className="text-[10px] bg-surface-800 text-slate-400 px-2 py-0.5 rounded-md border border-surface-700/40">
+                        <span className="text-[9px] bg-surface-800 text-slate-400 px-2 py-0.5 rounded border border-surface-700/40 print:bg-slate-200 print:text-slate-700 print:border-slate-300">
                           {batch.notes}
                         </span>
                       )}
                     </div>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-0.5 text-[11px] text-slate-500 print:text-slate-600">
                       Target: {batch.targetYield} {batch.yieldUnit === "portions" ? "porsi" : batch.yieldUnit === "grams" ? "gram" : batch.yieldUnit} · Estimasi HPP total:{" "}
-                      <span className="font-mono text-slate-300">{formatRupiah(batch.estimatedCost)}</span>
+                      <span className="font-mono text-slate-300 print:text-slate-800">{formatRupiah(batch.estimatedCost)}</span>
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 print:hidden">
                     <span
-                      className={`rounded-full px-3 py-0.5 text-[10px] font-extrabold border tracking-wider uppercase ${
+                      className={`rounded-full px-2.5 py-0.5 text-[9px] font-extrabold border tracking-wider uppercase ${
                         isCompleted
                           ? "bg-brand-500/10 text-brand-300 border-brand-500/20"
                           : "bg-warm-500/10 text-warm-300 border-warm-500/20"
@@ -365,21 +365,26 @@ export function ProductionPage() {
                         type="button"
                         disabled={isSaving}
                         onClick={() => void completeBatch(batch.id, batch.recipe?.name || "Resep")}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-surface-950 px-3.5 py-1.5 text-xs font-bold cursor-pointer transition-all active:scale-95 disabled:opacity-50 shrink-0"
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-surface-950 px-3 py-1 text-xs font-bold cursor-pointer transition-all active:scale-95 disabled:opacity-50 shrink-0"
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        <CheckCircle2 className="h-3 w-3" />
                         Selesaikan
                       </button>
                     )}
                   </div>
+
+                  {/* Print status display */}
+                  <div className="hidden print:block text-xs font-bold text-slate-700">
+                    Status: {isCompleted ? "SELESAI" : "DIRENCANAKAN"}
+                  </div>
                 </div>
 
-                {/* Batch Items list */}
-                <div className="grid divide-y divide-surface-700/50 sm:grid-cols-2 lg:grid-cols-3 sm:divide-x sm:divide-y-0 bg-surface-950/20">
+                {/* Batch Items list (More compact grid columns on desktop) */}
+                <div className="grid divide-y divide-surface-700/50 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 sm:divide-x sm:divide-y-0 bg-surface-950/20 print:bg-white print:divide-slate-200 print:border-t print:border-slate-300">
                   {batch.items.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-3 px-5 py-3.5">
-                      <span className="text-xs text-slate-300 font-semibold">{item.ingredientName}</span>
-                      <span className="font-mono text-xs font-bold text-slate-400 bg-surface-950/40 border border-surface-800 px-2 py-1 rounded-lg">
+                    <div key={item.id} className="flex items-center justify-between gap-3 px-4 py-2 print:border-slate-200">
+                      <span className="text-[11px] text-slate-300 print:text-slate-700 font-semibold">{item.ingredientName}</span>
+                      <span className="font-mono text-[10px] font-bold text-slate-400 bg-surface-950/40 border border-surface-800 px-2 py-0.5 rounded-md print:bg-slate-100 print:text-slate-800 print:border-slate-200">
                         {item.quantity.toLocaleString("id-ID", { maximumFractionDigits: 2 })} {item.unit}
                       </span>
                     </div>

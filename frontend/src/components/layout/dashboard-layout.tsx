@@ -49,12 +49,12 @@ export const DashboardLayout: React.FC = () => {
   const mobileOverflowNav = NAV.filter((item) => !MOBILE_VISIBLE_KEYS.includes(item.to));
 
   return (
-    <div className="min-h-screen bg-surface-950 text-slate-200 font-sans">
-      <div className="app-glow" />
-      <div className="app-grain" />
+    <div className="min-h-screen bg-surface-950 text-slate-200 font-sans print:bg-white print:text-slate-900">
+      <div className="app-glow print:hidden" />
+      <div className="app-grain print:hidden" />
 
       {/* ============ DESKTOP: top horizontal nav ============ */}
-      <header className="relative z-10 sticky top-0 z-30 border-b border-surface-700/60 bg-surface-950/80 backdrop-blur-md">
+      <header className="relative z-10 sticky top-0 z-30 border-b border-surface-700/60 bg-surface-950/80 backdrop-blur-md print:hidden">
         <div className="mx-auto max-w-[1400px] px-4 h-16 flex items-center justify-between gap-4">
           {/* Brand */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
@@ -162,12 +162,12 @@ export const DashboardLayout: React.FC = () => {
       </header>
 
       {/* ============ MAIN ============ */}
-      <main className="relative z-10 mx-auto max-w-[1400px] px-4 py-6 pb-24 lg:pb-6">
+      <main className="relative z-10 mx-auto max-w-[1400px] px-4 py-4 pb-24 lg:pb-4 print:p-0 print:m-0 print:max-w-full">
         <Outlet />
       </main>
 
       {/* ============ MOBILE: bottom tab bar ============ */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-surface-700/60 bg-surface-950/90 backdrop-blur-md">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 z-30 border-t border-surface-700/60 bg-surface-950/90 backdrop-blur-md print:hidden">
         <div className="flex px-1 justify-around items-center">
           {mobileVisibleNav.map((item) => {
             const active = isActive(item.to, item.end);
