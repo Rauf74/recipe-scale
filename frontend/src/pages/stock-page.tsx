@@ -57,11 +57,26 @@ export function StockPage() {
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
+
   // Filtered ingredients based on name search
   const filteredIngredients = useMemo(() => {
     if (!searchQuery) return ingredients;
     return ingredients.filter(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [ingredients, searchQuery]);
+
+  const totalPages = Math.ceil(filteredIngredients.length / itemsPerPage);
+  const paginatedIngredients = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredIngredients.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredIngredients, currentPage]);
 
   // Bahan yang stoknya di bawah atau sama dengan reorder point (dan reorder point > 0)
   const lowStockIngredients = useMemo(
@@ -281,7 +296,7 @@ export function StockPage() {
             </div>
           ) : (
             <div className="divide-y divide-surface-700/50 lg:flex-1 lg:overflow-y-auto">
-              {filteredIngredients.map(ing => {
+              {paginatedIngredients.map(ing => {
                 const isLow = (ing.reorderPoint ?? 0) > 0 && (ing.currentStock ?? 0) <= (ing.reorderPoint ?? 0);
                 const stockPct = ing.reorderPoint > 0
                   ? Math.min((ing.currentStock / ing.reorderPoint) * 100, 200)
@@ -343,6 +358,34 @@ export function StockPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Pagination Control */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 shrink-0">
+              <div>
+                Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredIngredients.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, filteredIngredients.length)}</span> dari <span className="font-semibold text-slate-200">{filteredIngredients.length}</span> bahan
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                >
+                  Sebelumnya
+                </button>
+                <span className="px-3 py-1.5 text-slate-400 font-medium">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                >
+                  Berikutnya
+                </button>
+              </div>
             </div>
           )}
         </section>

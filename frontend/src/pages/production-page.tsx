@@ -172,11 +172,25 @@ export function ProductionPage() {
       const matchSearch =
         recipeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         batch.notes.toLowerCase().includes(searchQuery.toLowerCase());
-      
       const matchStatus = statusFilter === "ALL" || batch.status === statusFilter;
       return matchSearch && matchStatus;
     });
   }, [batches, searchQuery, statusFilter]);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // Reset page when filter/search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
+  const totalPages = Math.ceil(filteredBatches.length / itemsPerPage);
+  const paginatedBatches = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredBatches.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredBatches, currentPage]);
 
   if (isLoading) {
     return (
@@ -326,7 +340,8 @@ export function ProductionPage() {
             </span>
           </div>
         ) : (
-          filteredBatches.map((batch) => {
+          <>
+          {paginatedBatches.map((batch) => {
             const isCompleted = batch.status === "COMPLETED";
             return (
               <article
@@ -392,7 +407,36 @@ export function ProductionPage() {
                 </div>
               </article>
             );
-          })
+          })}
+
+          {/* Pagination Control */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-5 py-3 rounded-2xl border border-surface-700/40 bg-surface-900/20 text-xs text-slate-400 print:hidden">
+              <div>
+                Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredBatches.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, filteredBatches.length)}</span> dari <span className="font-semibold text-slate-200">{filteredBatches.length}</span> batch
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                >
+                  Sebelumnya
+                </button>
+                <span className="px-3 py-1.5 text-slate-400 font-medium">
+                  {currentPage} / {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                >
+                  Berikutnya
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </section>
     </div>

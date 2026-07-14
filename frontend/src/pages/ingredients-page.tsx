@@ -69,6 +69,15 @@ export const IngredientsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset page when search query changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
+
   // Panel form state
   const [panelOpen, setPanelOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -320,6 +329,12 @@ export const IngredientsPage: React.FC = () => {
     ing.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const totalPages = Math.ceil(filteredIngredients.length / itemsPerPage);
+  const paginatedIngredients = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredIngredients.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredIngredients, currentPage]);
+
   return (
     <div className="space-y-6">
       {/* Toolbar */}
@@ -373,58 +388,88 @@ export const IngredientsPage: React.FC = () => {
               )}
             </div>
           ) : (
-            <table className="w-full text-left border-collapse text-sm">
-              <thead>
-                <tr className="border-b border-surface-700/80 text-slate-400 font-semibold tracking-wide text-xs bg-surface-900/50 uppercase">
-                  <th className="py-3.5 px-6">Nama Bahan</th>
-                  <th className="py-3.5 px-6">Cara Beli</th>
-                  <th className="py-3.5 px-6">Biaya / Satuan Resep</th>
-                  <th className="py-3.5 px-6 text-right">Aksi</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-surface-700/40">
-                {filteredIngredients.map(ing => (
-                  <tr key={ing.id} className="hover:bg-surface-900/20 transition-all group">
-                    <td className="py-4 px-6 font-semibold text-slate-200">{ing.name}</td>
-                    <td className="py-4 px-6 text-slate-400 text-xs">
-                      {ing.purchasePrice > 0 ? (
-                        <span>
-                          {formatRupiah(ing.purchasePrice)}{" "}
-                          <span className="text-slate-500">
-                            / {ing.purchaseQuantity} {ing.purchaseUnit || ing.unit}
-                            {ing.usableYield < 100 && ` · susut ${100 - ing.usableYield}%`}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className="text-slate-600 italic">—</span>
-                      )}
-                    </td>
-                    <td className="py-4 px-6">
-                      <span className="font-bold text-brand-400">{formatRupiah(ing.costPerRecipeUnit || ing.pricePerUnit)}</span>
-                      <span className="text-slate-500 text-xs font-normal"> / {ing.unit}</span>
-                    </td>
-                    <td className="py-4 px-6 text-right">
-                      <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => openEdit(ing)}
-                          className="p-2 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-brand-500/10"
-                          title="Edit Bahan"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(ing)}
-                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/10"
-                          title="Hapus Bahan"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </td>
+            <>
+              <table className="w-full text-left border-collapse text-sm">
+                <thead>
+                  <tr className="border-b border-surface-700/80 text-slate-400 font-semibold tracking-wide text-xs bg-surface-900/50 uppercase">
+                    <th className="py-3.5 px-6">Nama Bahan</th>
+                    <th className="py-3.5 px-6">Cara Beli</th>
+                    <th className="py-3.5 px-6">Biaya / Satuan Resep</th>
+                    <th className="py-3.5 px-6 text-right">Aksi</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-surface-700/40">
+                  {paginatedIngredients.map(ing => (
+                    <tr key={ing.id} className="hover:bg-surface-900/20 transition-all group">
+                      <td className="py-4 px-6 font-semibold text-slate-200">{ing.name}</td>
+                      <td className="py-4 px-6 text-slate-400 text-xs">
+                        {ing.purchasePrice > 0 ? (
+                          <span>
+                            {formatRupiah(ing.purchasePrice)}{" "}
+                            <span className="text-slate-500">
+                              / {ing.purchaseQuantity} {ing.purchaseUnit || ing.unit}
+                              {ing.usableYield < 100 && ` · susut ${100 - ing.usableYield}%`}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-600 italic">—</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-6">
+                        <span className="font-bold text-brand-400">{formatRupiah(ing.costPerRecipeUnit || ing.pricePerUnit)}</span>
+                        <span className="text-slate-500 text-xs font-normal"> / {ing.unit}</span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => openEdit(ing)}
+                            className="p-2 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-brand-500/10"
+                            title="Edit Bahan"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(ing)}
+                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/10"
+                            title="Hapus Bahan"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Pagination Control */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-6 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 shrink-0">
+                  <div>
+                    Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredIngredients.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, filteredIngredients.length)}</span> dari <span className="font-semibold text-slate-200">{filteredIngredients.length}</span> bahan
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                    >
+                      Sebelumnya
+                    </button>
+                    <span className="px-3 py-1.5 text-slate-400 font-medium">
+                      Halaman {currentPage} dari {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                    >
+                      Berikutnya
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
 

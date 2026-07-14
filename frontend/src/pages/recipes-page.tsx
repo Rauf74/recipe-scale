@@ -82,6 +82,15 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
+
+  // Reset page when search or mode changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, mode]);
+
   const isPrepMode = mode === "prep";
   const pageTitle = isPrepMode ? "Bumbu Dasar & Prep" : "Resep Menu";
   const pageDescription = isPrepMode
@@ -95,6 +104,12 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
     if (!searchQuery) return base;
     return base.filter((r) => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [recipes, isPrepMode, searchQuery]);
+
+  const totalPages = Math.ceil(visibleRecipes.length / itemsPerPage);
+  const paginatedRecipes = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return visibleRecipes.slice(startIndex, startIndex + itemsPerPage);
+  }, [visibleRecipes, currentPage]);
 
   // Deterministic per-recipe accent (on-brand palette, no random color drift)
   const ACCENTS = ["brand", "sky", "violet", "amber", "rose", "teal"] as const;
@@ -417,7 +432,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                 <span className="text-right">Tipe</span>
                 <span className="text-right">Aksi</span>
               </div>
-              {visibleRecipes.map(recipe => {
+              {paginatedRecipes.map(recipe => {
                 const isSelected = selectedRecipe?.id === recipe.id;
                 return (
                   <div
@@ -469,6 +484,34 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                   </div>
                 );
               })}
+
+              {/* Pagination Control */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-5 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 shrink-0">
+                  <div>
+                    Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, visibleRecipes.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, visibleRecipes.length)}</span> dari <span className="font-semibold text-slate-200">{visibleRecipes.length}</span> resep
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.max(prev - 1, 1)); }}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                    >
+                      Sebelumnya
+                    </button>
+                    <span className="px-3 py-1.5 text-slate-400 font-medium">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentPage(prev => Math.min(prev + 1, totalPages)); }}
+                      disabled={currentPage === totalPages}
+                      className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                    >
+                      Berikutnya
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

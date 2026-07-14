@@ -31,6 +31,15 @@ export function AnalysisPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "HEALTHY" | "ATTENTION">("ALL");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter]);
+
   useEffect(() => {
     const loadInsights = async () => {
       try {
@@ -99,6 +108,12 @@ export function AnalysisPage() {
       return matchSearch && matchStatus;
     });
   }, [insights, searchQuery, statusFilter]);
+
+  const totalPages = Math.ceil(filteredInsights.length / itemsPerPage);
+  const paginatedInsights = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredInsights.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredInsights, currentPage]);
 
   // Generate chart data reactively from the filtered insights list
   const chartData = useMemo(() => {
@@ -265,7 +280,7 @@ export function AnalysisPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-700/50 print:divide-slate-200">
-                    {filteredInsights.map((item) => {
+                    {paginatedInsights.map((item) => {
                       const target = item.recipe.targetFoodCost ?? 35;
                       const needsAttention = item.foodCost !== null && item.foodCost > target;
                       return (
@@ -302,6 +317,34 @@ export function AnalysisPage() {
                     })}
                   </tbody>
                 </table>
+
+                {/* Pagination Control */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-5 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 print:hidden">
+                    <div>
+                      Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredInsights.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, filteredInsights.length)}</span> dari <span className="font-semibold text-slate-200">{filteredInsights.length}</span> menu
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                      >
+                        Sebelumnya
+                      </button>
+                      <span className="px-3 py-1.5 text-slate-400 font-medium">
+                        Halaman {currentPage} dari {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
+                      >
+                        Berikutnya
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </section>
