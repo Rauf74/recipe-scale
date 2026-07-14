@@ -4,11 +4,5 @@
             "root": "frontend",
             "framework": "vite"
         }
-    },
-    "rewrites": [
-        {
-            "source": "/(.*)",
-            "destination": "/index.html"
-        }
-    ]
+    }
 }
