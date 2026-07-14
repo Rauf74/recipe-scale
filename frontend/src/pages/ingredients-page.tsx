@@ -540,7 +540,7 @@ export const IngredientsPage: React.FC = () => {
                         onChange={e => setField("usableYield", e.target.value)}
                         className="flex-1 accent-brand-500 cursor-pointer"
                       />
-                      <div className="w-14 shrink-0">
+                      <div className="w-20 shrink-0">
                         <input
                           type="number"
                           min="1"
