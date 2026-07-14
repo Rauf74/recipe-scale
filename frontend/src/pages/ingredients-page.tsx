@@ -1,4 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  createColumnHelper,
+  flexRender,
+  type SortingState,
+} from "@tanstack/react-table";
+import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
@@ -68,15 +79,7 @@ export const IngredientsPage: React.FC = () => {
   const [customUnits, setCustomUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  // Reset page when search query changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [search]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   // Panel form state
   const [panelOpen, setPanelOpen] = useState(false);
@@ -325,15 +328,88 @@ export const IngredientsPage: React.FC = () => {
     });
   };
 
-  const filteredIngredients = ingredients.filter(ing =>
-    ing.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const columnHelper = createColumnHelper<Ingredient>();
 
-  const totalPages = Math.ceil(filteredIngredients.length / itemsPerPage);
-  const paginatedIngredients = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredIngredients.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredIngredients, currentPage]);
+  const columns = useMemo(() => [
+    columnHelper.accessor("name", {
+      id: "name",
+      header: "Nama Bahan",
+      cell: info => <span className="font-semibold text-slate-200">{info.getValue()}</span>,
+      enableSorting: true,
+    }),
+    columnHelper.accessor(row => row.purchasePrice, {
+      id: "caraBeli",
+      header: "Cara Beli",
+      enableSorting: false,
+      cell: info => {
+        const ing = info.row.original;
+        return ing.purchasePrice > 0 ? (
+          <span className="text-slate-400 text-xs">
+            {formatRupiah(ing.purchasePrice)}{" "}
+            <span className="text-slate-500">
+              / {ing.purchaseQuantity} {ing.purchaseUnit || ing.unit}
+              {ing.usableYield < 100 && ` · susut ${100 - ing.usableYield}%`}
+            </span>
+          </span>
+        ) : <span className="text-slate-600 italic">—</span>;
+      },
+    }),
+    columnHelper.accessor(row => row.costPerRecipeUnit || row.pricePerUnit, {
+      id: "costPerUnit",
+      header: "Biaya / Satuan Resep",
+      enableSorting: true,
+      sortDescFirst: true,
+      cell: info => {
+        const ing = info.row.original;
+        return (
+          <>
+            <span className="font-bold text-brand-400">{formatRupiah(info.getValue() as number)}</span>
+            <span className="text-slate-500 text-xs font-normal"> / {ing.unit}</span>
+          </>
+        );
+      },
+    }),
+    columnHelper.display({
+      id: "aksi",
+      header: "Aksi",
+      cell: info => {
+        const ing = info.row.original;
+        return (
+          <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => openEdit(ing)}
+              className="p-2 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-brand-500/10"
+              title="Edit Bahan"
+            >
+              <Edit2 className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => handleDeleteClick(ing)}
+              className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/10"
+              title="Hapus Bahan"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        );
+      },
+    }),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  ], []);
+
+  const table = useReactTable({
+    data: ingredients,
+    columns,
+    state: { sorting, globalFilter: search },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
+    globalFilterFn: (row, _colId, filterValue) =>
+      (row.original.name as string).toLowerCase().includes((filterValue as string).toLowerCase()),
+  });
 
   return (
     <div className="space-y-6">
@@ -367,101 +443,115 @@ export const IngredientsPage: React.FC = () => {
               <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
               <span className="text-sm">Memuat daftar bahan baku...</span>
             </div>
-          ) : filteredIngredients.length === 0 ? (
+          ) : ingredients.length === 0 ? (
             <div className="py-20 flex flex-col items-center justify-center text-slate-500 max-w-md mx-auto text-center px-4">
               <div className="p-4 bg-surface-900 rounded-2xl border border-surface-700 text-slate-400 mb-4">
                 <ShoppingBag className="w-8 h-8" />
               </div>
               <h3 className="text-lg font-bold text-slate-300">Belum ada bahan baku</h3>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                {search
-                  ? "Pencarian tidak menemukan hasil."
-                  : "Tambahkan bahan baku dapur Anda (seperti Tepung, Gula, Bawang, Daging) beserta cara belinya."}
+                Tambahkan bahan baku dapur Anda (seperti Tepung, Gula, Bawang, Daging) beserta cara belinya.
               </p>
-              {!search && (
-                <button
-                  onClick={openAddNew}
-                  className="mt-4 px-4 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/25 font-bold rounded-xl text-xs transition-all cursor-pointer"
-                >
-                  Buat Bahan Pertama
-                </button>
-              )}
+              <button
+                onClick={openAddNew}
+                className="mt-4 px-4 py-1.5 bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/25 font-bold rounded-xl text-xs transition-all cursor-pointer"
+              >
+                Buat Bahan Pertama
+              </button>
             </div>
           ) : (
             <>
-              <table className="w-full text-left border-collapse text-sm">
-                <thead>
-                  <tr className="border-b border-surface-700/80 text-slate-400 font-semibold tracking-wide text-xs bg-surface-900/50 uppercase">
-                    <th className="py-3.5 px-6">Nama Bahan</th>
-                    <th className="py-3.5 px-6">Cara Beli</th>
-                    <th className="py-3.5 px-6">Biaya / Satuan Resep</th>
-                    <th className="py-3.5 px-6 text-right">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-700/40">
-                  {paginatedIngredients.map(ing => (
-                    <tr key={ing.id} className="hover:bg-surface-900/20 transition-all group">
-                      <td className="py-4 px-6 font-semibold text-slate-200">{ing.name}</td>
-                      <td className="py-4 px-6 text-slate-400 text-xs">
-                        {ing.purchasePrice > 0 ? (
-                          <span>
-                            {formatRupiah(ing.purchasePrice)}{" "}
-                            <span className="text-slate-500">
-                              / {ing.purchaseQuantity} {ing.purchaseUnit || ing.unit}
-                              {ing.usableYield < 100 && ` · susut ${100 - ing.usableYield}%`}
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-slate-600 italic">—</span>
-                        )}
-                      </td>
-                      <td className="py-4 px-6">
-                        <span className="font-bold text-brand-400">{formatRupiah(ing.costPerRecipeUnit || ing.pricePerUnit)}</span>
-                        <span className="text-slate-500 text-xs font-normal"> / {ing.unit}</span>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => openEdit(ing)}
-                            className="p-2 text-slate-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-brand-500/10"
-                            title="Edit Bahan"
+              {/* No results from search */}
+              {table.getRowModel().rows.length === 0 ? (
+                <div className="py-16 text-center text-sm text-slate-500 italic">
+                  Bahan baku &ldquo;{search}&rdquo; tidak ditemukan.
+                </div>
+              ) : (
+                <table className="w-full text-left border-collapse text-sm">
+                  <thead>
+                    {table.getHeaderGroups().map(headerGroup => (
+                      <tr
+                        key={headerGroup.id}
+                        className="border-b border-surface-700/80 text-slate-400 font-semibold tracking-wide text-xs bg-surface-900/50 uppercase"
+                      >
+                        {headerGroup.headers.map(header => {
+                          const canSort = header.column.getCanSort();
+                          const sorted = header.column.getIsSorted();
+                          return (
+                            <th
+                              key={header.id}
+                              className={`py-3.5 px-6 whitespace-nowrap ${header.id === "aksi" ? "text-right" : ""} ${canSort ? "cursor-pointer select-none hover:text-slate-200 transition-colors" : ""}`}
+                              onClick={canSort ? header.column.getToggleSortingHandler() : undefined}
+                            >
+                              <div className={`inline-flex items-center gap-1.5 ${header.id === "aksi" ? "justify-end w-full" : ""}`}>
+                                {flexRender(header.column.columnDef.header, header.getContext())}
+                                {canSort && (
+                                  <span className="text-slate-600">
+                                    {sorted === "asc" ? (
+                                      <ArrowUp className="w-3 h-3 text-brand-400" />
+                                    ) : sorted === "desc" ? (
+                                      <ArrowDown className="w-3 h-3 text-brand-400" />
+                                    ) : (
+                                      <ArrowUpDown className="w-3 h-3" />
+                                    )}
+                                  </span>
+                                )}
+                              </div>
+                            </th>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody className="divide-y divide-surface-700/40">
+                    {table.getRowModel().rows.map(row => (
+                      <tr key={row.id} className="hover:bg-surface-900/20 transition-all group">
+                        {row.getVisibleCells().map(cell => (
+                          <td
+                            key={cell.id}
+                            className={`py-4 px-6 ${cell.column.id === "aksi" ? "text-right" : ""}`}
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(ing)}
-                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer border border-transparent hover:border-red-500/10"
-                            title="Hapus Bahan"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
-              {/* Pagination Control */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-6 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400 shrink-0">
+              {/* Pagination Footer */}
+              {table.getPageCount() > 1 && (
+                <div className="flex items-center justify-between px-6 py-3 border-t border-surface-700/40 bg-surface-900/10 text-xs text-slate-400">
                   <div>
-                    Menampilkan <span className="font-semibold text-slate-200">{Math.min((currentPage - 1) * itemsPerPage + 1, filteredIngredients.length)}</span> - <span className="font-semibold text-slate-200">{Math.min(currentPage * itemsPerPage, filteredIngredients.length)}</span> dari <span className="font-semibold text-slate-200">{filteredIngredients.length}</span> bahan
+                    Menampilkan{" "}
+                    <span className="font-semibold text-slate-200">
+                      {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+                    </span>
+                    {" "}-{" "}
+                    <span className="font-semibold text-slate-200">
+                      {Math.min(
+                        (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                        table.getFilteredRowModel().rows.length
+                      )}
+                    </span>
+                    {" "}dari{" "}
+                    <span className="font-semibold text-slate-200">{table.getFilteredRowModel().rows.length}</span> bahan
                   </div>
                   <div className="flex items-center gap-1.5">
                     <button
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
+                      onClick={() => table.previousPage()}
+                      disabled={!table.getCanPreviousPage()}
                       className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                     >
                       Sebelumnya
                     </button>
                     <span className="px-3 py-1.5 text-slate-400 font-medium">
-                      Halaman {currentPage} dari {totalPages}
+                      Halaman {table.getState().pagination.pageIndex + 1} dari {table.getPageCount()}
                     </span>
                     <button
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
+                      onClick={() => table.nextPage()}
+                      disabled={!table.getCanNextPage()}
                       className="px-3 py-1.5 rounded-lg border border-surface-700 hover:bg-surface-800 disabled:opacity-40 disabled:hover:bg-transparent text-slate-300 font-semibold cursor-pointer transition-all disabled:cursor-not-allowed"
                     >
                       Berikutnya
