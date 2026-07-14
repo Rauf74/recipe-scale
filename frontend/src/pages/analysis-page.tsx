@@ -137,35 +137,35 @@ export function AnalysisPage() {
       </header>
 
       {error ? (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-xs text-red-200">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
           {error}
         </div>
       ) : (
         <>
           {/* Summary KPIs */}
-          <section className="grid gap-3 sm:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-3">
             <AnalysisMetric icon={ReceiptText} label="Menu Terhitung" value={`${insights.length} menu`} tone="brand" />
             <AnalysisMetric icon={AlertTriangle} label="Butuh Perhatian" value={`${summary.needsAttention} menu`} tone="warm" />
             <AnalysisMetric icon={TrendingUp} label="Rata-rata Food Cost" value={summary.averageFoodCost === null ? "Belum ada data" : `${summary.averageFoodCost.toFixed(1)}%`} tone="green" />
           </section>
 
           {summary.withoutPrice > 0 && (
-            <div className="flex gap-3 rounded-2xl border border-warm-500/25 bg-warm-500/10 px-4 py-2.5 text-xs text-warm-100 print:hidden">
-              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warm-400" />
+            <div className="flex gap-3 rounded-2xl border border-warm-500/25 bg-warm-500/10 px-4 py-3 text-sm text-warm-100 print:hidden">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warm-400" />
               <p>{summary.withoutPrice} menu belum memiliki harga jual sehingga margin dan food cost belum bisa dievaluasi.</p>
             </div>
           )}
 
           {/* Control Bar: Search & Status Filters */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-surface-800 pb-3 print:hidden">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-surface-800 pb-4 print:hidden">
             {/* Status Filters */}
-            <div className="flex rounded-full bg-surface-900/60 p-0.5 border border-surface-700/60 w-full sm:w-auto">
+            <div className="flex rounded-full bg-surface-900/60 p-1 border border-surface-700/60 w-full sm:w-auto">
               {(["ALL", "HEALTHY", "ATTENTION"] as const).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setStatusFilter(tab)}
-                  className={`flex-1 sm:flex-initial px-3.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                  className={`flex-1 sm:flex-initial px-4 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                     statusFilter === tab
                       ? "bg-surface-800 text-brand-400 shadow-sm"
                       : "text-slate-400 hover:text-slate-200"
@@ -177,7 +177,7 @@ export function AnalysisPage() {
             </div>
 
             {/* Search Bar */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-full sm:w-72">
               <input
                 type="text"
                 placeholder="Cari resep menu..."
@@ -200,68 +200,68 @@ export function AnalysisPage() {
 
           {/* Stacked Bar Chart: HPP vs Profit Margin */}
           {chartData.length > 0 && (
-            <section className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-4 space-y-3 print:hidden">
+            <section className="rounded-3xl border border-surface-700/60 bg-surface-900/40 p-5 space-y-4 print:hidden">
               <div>
-                <h2 className="font-bold text-slate-100 font-sans text-xs">Komposisi HPP vs Keuntungan</h2>
-                <p className="mt-0.5 text-[10px] text-slate-500">Visualisasi kontribusi biaya bahan baku (HPP) dibandingkan margin keuntungan kotor per menu (dalam Rupiah).</p>
+                <h2 className="font-bold text-slate-100 font-sans">Komposisi HPP vs Keuntungan</h2>
+                <p className="mt-1 text-xs text-slate-500">Visualisasi kontribusi biaya bahan baku (HPP) dibandingkan margin keuntungan kotor per menu (dalam Rupiah).</p>
               </div>
 
-              <div className="h-[210px] w-full text-[9px] font-sans">
+              <div className="h-[280px] w-full text-[10px] font-sans">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={chartData}
                     margin={{ top: 10, right: 10, left: 10, bottom: 5 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.2} />
-                    <XAxis dataKey="name" stroke="#64748b" fontSize={9} />
+                    <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
                     <YAxis
                       stroke="#64748b"
-                      fontSize={9}
+                      fontSize={10}
                       tickFormatter={(value) => `Rp ${value.toLocaleString("id-ID")}`}
                     />
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "#0f172a",
                         borderColor: "#334155",
-                        borderRadius: "12px",
+                        borderRadius: "16px",
                         color: "#f1f5f9",
-                        fontSize: "10px",
+                        fontSize: "11px",
                       }}
                       formatter={(value: any) => [`Rp ${value.toLocaleString("id-ID")}`]}
                     />
-                    <Legend wrapperStyle={{ fontSize: "9px", paddingTop: "5px" }} />
-                    <Bar dataKey="Biaya (HPP)" stackId="a" fill="#3b82f6" radius={[0, 0, 3, 3]} />
-                    <Bar dataKey="Keuntungan (Margin)" stackId="a" fill="#10b981" radius={[3, 3, 0, 0]} />
+                    <Legend wrapperStyle={{ fontSize: "10px", paddingTop: "5px" }} />
+                    <Bar dataKey="Biaya (HPP)" stackId="a" fill="#3b82f6" radius={[0, 0, 4, 4]} />
+                    <Bar dataKey="Keuntungan (Margin)" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </section>
           )}
 
-          {/* Ledger Table (Compact and Print-Friendly) */}
-          <section className="overflow-hidden rounded-2xl border border-surface-700/60 bg-surface-900/40 print:border-slate-300 print:bg-white print:text-slate-900">
-            <div className="flex items-center justify-between border-b border-surface-700/60 px-4 py-2.5 bg-surface-900/10 print:bg-slate-100 print:border-slate-300">
+          {/* Ledger Table */}
+          <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 print:border-slate-300 print:bg-white print:text-slate-900">
+            <div className="flex items-center justify-between border-b border-surface-700/60 px-5 py-4 bg-surface-900/10 print:bg-slate-100 print:border-slate-300">
               <div>
-                <h2 className="font-bold text-slate-100 print:text-slate-900 text-xs font-sans">Ledger HPP & Margin</h2>
-                <p className="mt-0.5 text-[10px] text-slate-500 print:text-slate-600">Ambang food cost mengikuti target per resep, atau 35% bila belum ditentukan.</p>
+                <h2 className="font-bold text-slate-100 print:text-slate-900 font-sans">Ledger HPP & Margin</h2>
+                <p className="mt-1 text-xs text-slate-500">Ambang food cost mengikuti target per resep, atau 35% bila belum ditentukan.</p>
               </div>
-              <BarChart3 className="h-4 w-4 text-slate-500 print:hidden" />
+              <BarChart3 className="h-5 w-5 text-slate-500 print:hidden" />
             </div>
 
             {filteredInsights.length === 0 ? (
-              <div className="px-4 py-10 text-center text-xs text-slate-500 italic">
+              <div className="px-5 py-14 text-center text-sm text-slate-500 italic">
                 Menu tidak ditemukan atau tidak ada resep yang sesuai kriteria filter.
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[680px] text-left text-xs">
-                  <thead className="border-b border-surface-700/60 text-[10px] uppercase tracking-wider text-slate-500 print:text-slate-700 print:border-slate-300">
+                <table className="w-full min-w-[680px] text-left text-sm">
+                  <thead className="border-b border-surface-700/60 text-xs uppercase tracking-wider text-slate-500 print:text-slate-700 print:border-slate-300">
                     <tr>
-                      <th className="px-4 py-2 font-semibold">Menu</th>
-                      <th className="px-3 py-2 font-semibold">HPP</th>
-                      <th className="px-3 py-2 font-semibold">Harga Jual</th>
-                      <th className="px-3 py-2 font-semibold">Food Cost (FC)</th>
-                      <th className="px-4 py-2 text-right font-semibold">Margin Kotor (Rp)</th>
+                      <th className="px-5 py-3.5 font-semibold">Menu</th>
+                      <th className="px-4 py-3.5 font-semibold">HPP</th>
+                      <th className="px-4 py-3.5 font-semibold">Harga Jual</th>
+                      <th className="px-4 py-3.5 font-semibold">Food Cost (FC)</th>
+                      <th className="px-5 py-3.5 text-right font-semibold">Margin Kotor (Rp)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface-700/50 print:divide-slate-200">
@@ -270,21 +270,21 @@ export function AnalysisPage() {
                       const needsAttention = item.foodCost !== null && item.foodCost > target;
                       return (
                         <tr key={item.recipe.id} className="text-slate-300 hover:bg-surface-800/10 transition-colors print:text-slate-800">
-                          <td className="px-4 py-2 font-semibold text-slate-100 print:text-slate-900">{item.recipe.name}</td>
-                          <td className="px-3 py-2 font-mono text-[11px]">{formatRupiah(item.totalCost)}</td>
-                          <td className="px-3 py-2 font-mono text-[11px]">
+                          <td className="px-5 py-4 font-semibold text-slate-100 print:text-slate-900">{item.recipe.name}</td>
+                          <td className="px-4 py-4 font-mono text-sm">{formatRupiah(item.totalCost)}</td>
+                          <td className="px-4 py-4 font-mono text-sm">
                             {item.sellingPrice ? (
                               formatRupiah(item.sellingPrice)
                             ) : (
-                              <span className="font-sans text-slate-500 text-[11px] italic">Belum diatur</span>
+                              <span className="font-sans text-slate-500 text-sm italic">Belum diatur</span>
                             )}
                           </td>
-                          <td className="px-3 py-2">
+                          <td className="px-4 py-4">
                             {item.foodCost === null ? (
                               <span className="text-slate-500">—</span>
                             ) : (
                               <span
-                                className={`inline-flex rounded px-2 py-0.5 text-[9px] font-extrabold border tracking-wider ${
+                                className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-extrabold border tracking-wider ${
                                   needsAttention
                                     ? "bg-warm-500/10 text-warm-300 border-warm-500/20 print:bg-red-50 print:text-red-700 print:border-red-200"
                                     : "bg-brand-500/10 text-brand-300 border-brand-500/20 print:bg-emerald-50 print:text-emerald-700 print:border-emerald-200"
@@ -294,7 +294,7 @@ export function AnalysisPage() {
                               </span>
                             )}
                           </td>
-                          <td className={`px-4 py-2 text-right font-mono font-bold text-[11px] ${needsAttention ? "text-warm-300 print:text-red-700" : "text-brand-300 print:text-emerald-700"}`}>
+                          <td className={`px-5 py-4 text-right font-mono font-bold text-sm ${needsAttention ? "text-warm-300 print:text-red-700" : "text-brand-300 print:text-emerald-700"}`}>
                             {item.margin === null ? "—" : formatRupiah(item.margin)}
                           </td>
                         </tr>
@@ -325,10 +325,10 @@ function AnalysisMetric({
   const iconColor = tone === "warm" ? "text-warm-400" : tone === "green" ? "text-brand-400" : "text-brand-400";
   const accentBorder = tone === "warm" ? "border-warm-500/20" : tone === "green" ? "border-brand-500/20" : "border-brand-500/20";
   return (
-    <article className={`rounded-2xl border bg-surface-900/40 p-3.5 ${accentBorder} print:bg-slate-50 print:border-slate-200`}>
-      <Icon className={`h-4 w-4 ${iconColor}`} />
-      <p className="mt-4 text-[9px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-1 text-base font-extrabold text-slate-100 print:text-slate-900">{value}</p>
+    <article className={`rounded-3xl border bg-surface-900/40 p-4 ${accentBorder} print:bg-slate-50 print:border-slate-200`}>
+      <Icon className={`h-4.5 w-4.5 ${iconColor}`} />
+      <p className="mt-5 text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
+      <p className="mt-1.5 text-lg font-extrabold text-slate-100 print:text-slate-900">{value}</p>
     </article>
   );
 }

@@ -162,7 +162,7 @@ export const DashboardLayout: React.FC = () => {
       </header>
 
       {/* ============ MAIN ============ */}
-      <main className="relative z-10 mx-auto max-w-[1400px] px-4 py-4 pb-24 lg:pb-4 print:p-0 print:m-0 print:max-w-full">
+      <main className="relative z-10 mx-auto max-w-[1400px] px-4 py-6 pb-24 lg:pb-6 print:p-0 print:m-0 print:max-w-full">
         <Outlet />
       </main>
 
