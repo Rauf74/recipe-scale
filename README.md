@@ -1,38 +1,68 @@
 # 🍳 RecipeScale — SaaS Multi-Tenant Costing & Scale Simulator for F&B
 
-**RecipeScale** adalah workspace kalkulator HPP (*Harga Pokok Penjualan*) bertingkat dan simulator porsi saji produksi dapur yang dirancang khusus untuk UMKM F&B, bakery, katering, dan restoran kecil. 
+<div align="center">
 
-Aplikasi ini membantu pemilik usaha menjawab tiga pertanyaan operasional utama:
-1. **Berapa HPP aktual** satu porsi makanan/minuman hari ini secara akurat?
-2. Jika target produksi berubah (misal katering pesanan 150 porsi), **berapa takaran bahan dapur** yang harus disiapkan?
-3. Jika harga bahan di pasar berfluktuasi, **menu mana saja yang marginnya terancam** dan bagaimana rekomendasi harga jual barunya?
+![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Render-46a35e?style=for-the-badge&logo=render&logoColor=white)
 
----
-
-## 🚀 Fitur Utama
-
-### 1. ⚙️ Kalkulator HPP Bertingkat & Konversi Otomatis
-* **Nested Recipe Support**: Mendukung bumbu dasar setengah jadi (saus, kaldu, bumbu halus) yang disisipkan ke dalam formula menu masakan utama.
-* **Smart Unit Conversion**: Konversi otomatis berat dan volume (`g` $\leftrightarrow$ `kg`, `ml` $\leftrightarrow$ `L`) sehingga harga modal bahan dihitung tepat secara proporsional.
-* **Cycle & Validation Guards**: Validasi backend untuk mendeteksi hubungan melingkar (*circular dependencies*) antar resep, validasi isolasi data antar workspace (*tenant guard*), serta validasi XOR referensi item.
-
-### 📊 2. Visual Cost Breakdown (Donut Chart) & Simulator Markup
-* **Cost Composition Pie Chart**: Diagram lingkaran interaktif (menggunakan Recharts) yang memetakan persentase kontribusi biaya komponen resep langsung di panel detail.
-* **Markup Simulator**: Kalkulator interaktif untuk menghitung harga jual rekomendasi, nett jual (+ Pajak PB1 10% & Service Charge 5%), keuntungan bersih per porsi, dan persentase gross margin.
-
-### 🚨 3. Real-Time Dashboard Alerts & Price History
-* **Price Change Timeline**: Melacak riwayat perubahan harga bahan baku di database setiap kali terjadi pembaruan harga beli, lengkap dengan visualisasi linimasa fluktuasi harga.
-* **Margin Threat Notification**: Panel peringatan reaktif di dashboard yang secara otomatis berbunyi/memicu alarm apabila harga bahan mentah melonjak tinggi dan menyebabkan Food Cost aktual melampaui batas aman Target Food Cost % yang disimpan di resep.
-
-### ⚖️ 4. Timbangan Dapur Instant (Batch Scaling Sheet)
-* Masukkan porsi saji target yang ingin diproduksi dapur Anda, dan sistem akan langsung menghasilkan **Daftar Timbangan Dapur** (kuantitas baru tiap bahan baku/bumbu dasar) secara instan.
+</div>
 
 ---
 
-## 🛠️ Stack Teknologi
+**RecipeScale** adalah platform SaaS *multi-tenant* kalkulator HPP (*Harga Pokok Penjualan*) bertingkat dan simulator porsi saji produksi dapur yang dirancang khusus untuk UMKM F&B, bakery, katering, dan bisnis kuliner. 
 
-* **Backend**: Go (Fiber v2), GORM (Object Relational Mapping), MySQL, JWT Auth (HttpOnly Cookie, Secure & SameSite).
-* **Frontend**: React, TypeScript, Vite 8, Tailwind CSS v4, Lucide Icons, Recharts (Data Visuals).
+Aplikasi ini memecahkan tiga masalah operasional utama F&B secara otomatis:
+1. **Berapa HPP aktual** satu porsi makanan/minuman hari ini setelah dihitung dengan modal bahan baku?
+2. Jika ada pesanan besar (misal 150 porsi katering), **berapa takaran bahan & bumbu dapur** yang harus ditimbang secara presisi?
+3. Jika harga bahan baku di pasar berfluktuasi, **menu mana saja yang margin profitnya terancam** di bawah target food cost?
+
+---
+
+## 🎨 Tampilan Arsitektur Sistem
+
+RecipeScale menggunakan arsitektur terpisah (*split-deployment*) untuk menjamin performa maksimal, keamanan data *multi-tenant*, dan skalabilitas tinggi:
+
+```mermaid
+graph TD
+    User([Browser Pengguna]) -->|Memuat HTML/JS| Vercel[Vercel Frontend]
+    User -->|Mengirim Kredensial & Request API| Render[Render Go Backend]
+    Render -->|Kueri & AutoMigrate| DB[(Database MySQL Aiven)]
+    
+    style Vercel fill:#000,stroke:#333,stroke-width:2px,color:#fff
+    style Render fill:#46a35e,stroke:#333,stroke-width:2px,color:#fff
+    style DB fill:#ff6600,stroke:#333,stroke-width:2px,color:#fff
+```
+
+---
+
+## 🚀 Fitur Utama & Keunggulan Rekayasa
+
+### 1. ⚙️ Kalkulator HPP Bertingkat & Validasi Anti-Loop
+* **Nested Recipe Support**: Mendukung integrasi bumbu dasar setengah jadi (saus, kaldu, bumbu halus) ke dalam formula menu masakan utama tanpa batas tingkat.
+* **XOR Component Validation**: Validasi cerdas yang mencegah bahan baku ganda atau *circular dependencies* (resep yang saling merujuk satu sama lain secara melingkar) di level backend.
+* **Workspace Isolation (Multi-Tenant)**: Proteksi data super ketat di mana setiap transaksi, bahan baku, dan resep diisolasi berdasarkan `workspace_id` pengguna yang login.
+
+### 2. 📊 Optimasi UI Menggunakan TanStack Table v8
+* Seluruh tabel data utama (Bahan Baku, Resep, Ketersediaan Stok, dan Ledger Analisis Menu) telah dimigrasikan menggunakan `@tanstack/react-table` v8.
+* **Keuntungan**:
+  * Pengurutan data (*sorting*) multi-kolom yang sangat cepat dan interaktif secara langsung di client browser.
+  * Fitur pencarian global instan dan sistem paginasi headless yang menjaga kestabilan tata letak tema gelap (dark mode) premium.
+  * Otomatis melakukan reset halaman kembali ke halaman pertama saat melakukan filter pencarian (`autoResetPageIndex: true`).
+
+### 3. ⚖️ Simulator Markup, PB1, & Timbangan Dapur Instan
+* **Markup Calculator**: Hitung harga rekomendasi jual berdasarkan target Food Cost %, lengkap dengan simulasi pajak PB1 (10%), Service Charge (5%), profit bersih, dan persentase gross margin.
+* **Visual Donut Cost Chart**: Diagram lingkaran interaktif (menggunakan Recharts) yang memetakan persentase kontribusi biaya komponen resep langsung di panel detail.
+* **Kitchen Scaling Sheet**: Masukkan porsi saji target yang ingin diproduksi, dan sistem akan langsung menghasilkan *Daftar Timbangan Dapur* baru secara instan secara real-time.
+
+### 🍪 4. Keamanan Auth Berbasis Sesi Lintas Domain
+* Menggunakan JWT Token yang disimpan dalam **HttpOnly Cookie** yang dilindungi properti `Secure` dan `SameSite: None` di lingkungan production.
+* Menjamin keamanan token dari serangan XSS (*Cross-Site Scripting*) sekaligus memungkinkan komunikasi kredensial yang lancar antara Vercel frontend dan Render backend.
 
 ---
 
@@ -43,56 +73,57 @@ recipe-scale/
 ├── backend/
 │   ├── cmd/api/main.go          # Entrypoint server Go Fiber
 │   ├── internal/
-│   │   ├── config/              # Konfigurasi database & migrasi
+│   │   ├── config/              # Konfigurasi database, TLS Aiven, & AutoMigrate
 │   │   ├── domain/              # Struktur data GORM model
-│   │   ├── handler/             # REST API Handlers & Routing
-│   │   ├── middleware/          # JWT Auth Middleware
-│   │   └── service/             # Logika Bisnis Utama (HPP, Cycle, Tenant validation)
+│   │   ├── handler/             # REST API Handlers & Routing (auth, custom unit, dll)
+│   │   ├── middleware/          # JWT Auth Session Guard
+│   │   └── service/             # Logika Bisnis Utama (HPP, kalkulasi, normalisasi unit)
 │   └── go.mod
 ├── frontend/
 │   ├── src/
-│   │   ├── components/          # Reusable UI Components
-│   │   ├── lib/                 # Konfigurasi Axios API Client & utilitas
-│   │   ├── pages/               # Halaman Dashboard, Bahan Baku, Resep & Bumbu
+│   │   ├── components/          # Reusable UI & Layout Components (DashboardLayout)
+│   │   ├── lib/                 # Konfigurasi Axios API Client & Interceptors
+│   │   ├── pages/               # Halaman Dashboard, Bahan Baku, Resep, Stok, & Analisis
 │   │   ├── types/               # TypeScript Definitions
-│   │   └── App.tsx              # Routing dan Guards
+│   │   └── App.tsx              # Routing dan Guard autentikasi
+│   ├── vercel.json              # Konfigurasi routing rewrite SPA Vercel
 │   └── package.json
-└── planning/
-    └── PLAN.md                  # Rencana Backlog & Product Roadmap
+└── render.yaml                  # Konfigurasi deklaratif deploy backend Render
 ```
 
 ---
 
-## 🏁 Memulai Pengoperasian
+## 🏁 Panduan Memulai (Lokal)
 
 ### 1. Prasyarat
-* Pasang **Go 1.21+**
-* Pasang **Node.js 18+**
-* Server **MySQL** (Default port `3306`)
+* Pasang **Go 1.21 atau lebih tinggi**
+* Pasang **Node.js 18 atau lebih tinggi**
+* Server **MySQL** aktif (Port default `3306`)
 
-### 2. Jalankan Backend
+### 2. Konfigurasi Backend
 1. Masuk ke direktori backend:
    ```bash
    cd backend
    ```
-2. Buat berkas `.env` dan konfigurasikan:
+2. Buat berkas `.env` dan masukkan konfigurasi berikut:
    ```env
    DB_DSN="user:password@tcp(127.0.0.1:3306)/recipescale?charset=utf8mb4&parseTime=True&loc=Local"
-   JWT_SECRET="ganti_dengan_secret_kunci_anda_yang_aman_123"
+   JWT_SECRET="masukkan_kunci_jwt_secret_acak_yang_aman_di_sini"
    PORT="8085"
    FRONTEND_URL="http://localhost:5173"
+   APP_ENV="development"
    ```
-3. Unduh dependensi dan jalankan server:
+3. Unduh modul dan jalankan server API:
    ```bash
    go run cmd/api/main.go
    ```
 
-### 3. Jalankan Frontend
+### 3. Konfigurasi Frontend
 1. Masuk ke direktori frontend:
    ```bash
    cd frontend
    ```
-2. Pasang dependensi:
+2. Pasang semua dependensi npm:
    ```bash
    npm install
    ```
@@ -100,4 +131,10 @@ recipe-scale/
    ```bash
    npm run dev
    ```
-4. Buka alamat `http://localhost:5173` pada peramban Anda.
+4. Buka peramban di alamat `http://localhost:5173`.
+
+---
+
+## 🚀 Panduan Deployment (Produksi)
+
+Detail perjalanan pemecahan masalah deployment lengkap dari awal hingga sukses dapat dibaca secara transparan pada dokumen **[DEPLOYMENT_STORY.md](file:///home/eunzoo/Documents/Project/Program%20Portofolio/recipe-scale/DEPLOYMENT_STORY.md)** di root repository ini.
