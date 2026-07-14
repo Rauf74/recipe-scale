@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
+import { CurrencyInput } from "../components/ui/CurrencyInput";
 import { ConfirmDeleteModal } from "../components/shared/ConfirmDeleteModal";
 import {
   Search,
@@ -51,6 +52,7 @@ const EMPTY_FORM: IngredientForm = {
 
 export const IngredientsPage: React.FC = () => {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [customUnits, setCustomUnits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -75,15 +77,70 @@ export const IngredientsPage: React.FC = () => {
     recordedAt: string;
   }[]>([]);
 
-  useEffect(() => { fetchIngredients(); }, []);
+  // Conversion Helper
+  const getConversionFactor = (purchaseUnit: string, recipeUnit: string, list: any[]): number => {
+    if (purchaseUnit === recipeUnit) return 1;
 
-  const fetchIngredients = async () => {
+    // Standard mass conversion:
+    if (recipeUnit === "g" && purchaseUnit === "kg") return 1000;
+    if (recipeUnit === "kg" && purchaseUnit === "g") return 0.001;
+
+    // Standard volume conversion:
+    if (recipeUnit === "ml" && purchaseUnit === "L") return 1000;
+    if (recipeUnit === "L" && purchaseUnit === "ml") return 0.001;
+
+    // Check custom unit:
+    const found = list.find((cu) => cu.name.toLowerCase() === purchaseUnit.toLowerCase());
+    if (found) {
+      const baseFactor = found.conversionFactor;
+      const baseToRecipe = getConversionFactor(found.baseUnit, recipeUnit, []);
+      return baseFactor * baseToRecipe;
+    }
+
+    return 1;
+  };
+
+  const getPurchaseUnitOptions = (recipeUnit: string) => {
+    const standard = PURCHASE_UNIT_OPTIONS[recipeUnit as RecipeUnit] || [recipeUnit];
+    
+    let familyUnits = [recipeUnit];
+    if (recipeUnit === "g" || recipeUnit === "kg") {
+      familyUnits = ["g", "kg"];
+    } else if (recipeUnit === "ml" || recipeUnit === "L") {
+      familyUnits = ["ml", "L"];
+    } else if (recipeUnit === "pcs") {
+      familyUnits = ["pcs"];
+    }
+
+    const custom = customUnits
+      .filter((cu) => familyUnits.includes(cu.baseUnit))
+      .map((cu) => cu.name);
+
+    return Array.from(new Set([...standard, ...custom]));
+  };
+
+  useEffect(() => {
+    void loadPageData();
+  }, []);
+
+  const loadPageData = async () => {
     setLoading(true);
     try {
-      const res = await apiClient.get<{ success: boolean; data: { ingredients: Ingredient[] } }>("/api/ingredients");
-      if (res.data.success) setIngredients(res.data.data.ingredients);
+      // Fetch custom units first
+      const cuRes = await apiClient.get<{ success: boolean; data: { customUnits: any[] } }>("/api/custom-units");
+      let list: any[] = [];
+      if (cuRes.data.success) {
+        list = cuRes.data.data.customUnits;
+        setCustomUnits(list);
+      }
+
+      // Fetch ingredients next
+      const ingRes = await apiClient.get<{ success: boolean; data: { ingredients: Ingredient[] } }>("/api/ingredients");
+      if (ingRes.data.success) {
+        setIngredients(ingRes.data.data.ingredients);
+      }
     } catch (err) {
-      console.error("Gagal memuat bahan baku:", err);
+      console.error("Gagal memuat data halaman:", err);
     } finally {
       setLoading(false);
     }
@@ -101,13 +158,17 @@ export const IngredientsPage: React.FC = () => {
   // --- Live preview: hitung costPerRecipeUnit langsung di client untuk feedback instan ---
   const previewCost = useMemo<number | null>(() => {
     const price = parseFloat(form.purchasePrice);
-    const qty = parseFloat(form.purchaseQuantity);
+    const qtyInput = parseFloat(form.purchaseQuantity);
     const yield_ = parseFloat(form.usableYield) || 100;
     if (!isFinite(price) || price < 0) return null;
-    if (!isFinite(qty) || qty <= 0) return null;
+    if (!isFinite(qtyInput) || qtyInput <= 0) return null;
+
+    const factor = getConversionFactor(form.purchaseUnit, form.unit, customUnits);
+    const qty = qtyInput * factor;
+
     const raw = price / qty;
     return raw / (yield_ / 100);
-  }, [form.purchasePrice, form.purchaseQuantity, form.usableYield]);
+  }, [form.purchasePrice, form.purchaseQuantity, form.usableYield, form.purchaseUnit, form.unit, customUnits]);
 
   // --- Handlers ---
   const openAddNew = () => {
@@ -120,17 +181,19 @@ export const IngredientsPage: React.FC = () => {
 
   const openEdit = (ing: Ingredient) => {
     setEditingId(ing.id);
-    // Pastikan purchaseUnit yang tersimpan masuk dalam daftar opsi unit resep saat ini.
-    // Jika tidak (misal data lama dari sebelum fitur ini), fallback ke opsi pertama.
-    const allowedUnits = PURCHASE_UNIT_OPTIONS[ing.unit] ?? [ing.unit];
+    const allowedUnits = getPurchaseUnitOptions(ing.unit);
     const savedUnit = ing.purchaseUnit && allowedUnits.includes(ing.purchaseUnit)
       ? ing.purchaseUnit
-      : allowedUnits[0];
+      : allowedUnits[0] || ing.unit;
+
+    const factor = getConversionFactor(savedUnit, ing.unit, customUnits);
+    const displayQty = ing.purchaseQuantity / factor;
+
     setForm({
       name: ing.name,
       unit: ing.unit,
       purchasePrice: ing.purchasePrice > 0 ? ing.purchasePrice.toString() : "",
-      purchaseQuantity: ing.purchaseQuantity > 0 ? ing.purchaseQuantity.toString() : "",
+      purchaseQuantity: ing.purchaseQuantity > 0 ? displayQty.toString() : "",
       purchaseUnit: savedUnit,
       usableYield: ing.usableYield > 0 ? ing.usableYield.toString() : "100",
     });
@@ -146,7 +209,7 @@ export const IngredientsPage: React.FC = () => {
     setActionLoading(true);
 
     const purchasePrice = parseFloat(form.purchasePrice);
-    const purchaseQuantity = parseFloat(form.purchaseQuantity);
+    const qtyInput = parseFloat(form.purchaseQuantity);
     const usableYield = parseFloat(form.usableYield) || 100;
 
     if (!isFinite(purchasePrice) || purchasePrice < 0) {
@@ -154,11 +217,14 @@ export const IngredientsPage: React.FC = () => {
       setActionLoading(false);
       return;
     }
-    if (!isFinite(purchaseQuantity) || purchaseQuantity <= 0) {
+    if (!isFinite(qtyInput) || qtyInput <= 0) {
       setError("Jumlah kemasan harus lebih dari nol");
       setActionLoading(false);
       return;
     }
+
+    const factor = getConversionFactor(form.purchaseUnit, form.unit, customUnits);
+    const purchaseQuantity = qtyInput * factor;
 
     const payload = {
       name: form.name.trim(),
@@ -206,8 +272,12 @@ export const IngredientsPage: React.FC = () => {
     }
   };
 
-  const setField = <K extends keyof IngredientForm>(key: K, value: IngredientForm[K]) =>
-    setForm(prev => ({ ...prev, [key]: value }));
+  const setField = <K extends keyof IngredientForm>(key: K, value: IngredientForm[K] | ((prev: IngredientForm[K]) => IngredientForm[K])) => {
+    setForm(prev => {
+      const nextValue = typeof value === "function" ? (value as Function)(prev[key]) : value;
+      return { ...prev, [key]: nextValue };
+    });
+  };
 
   const filteredIngredients = ingredients.filter(ing =>
     ing.name.toLowerCase().includes(search.toLowerCase())
@@ -371,12 +441,11 @@ export const IngredientsPage: React.FC = () => {
                       value={form.unit}
                       onChange={e => {
                         const newUnit = e.target.value as RecipeUnit;
-                        // Saat satuan resep berubah, reset purchaseUnit ke opsi pertama
-                        // dari keluarga unit yang baru agar selalu valid.
+                        const allowed = getPurchaseUnitOptions(newUnit);
                         setForm(prev => ({
                           ...prev,
                           unit: newUnit,
-                          purchaseUnit: PURCHASE_UNIT_OPTIONS[newUnit][0],
+                          purchaseUnit: allowed[0] || newUnit,
                         }));
                       }}
                       className="select"
@@ -403,15 +472,11 @@ export const IngredientsPage: React.FC = () => {
                     <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                       Harga Beli (Rp)
                     </label>
-                    <input
-                      type="number"
+                    <CurrencyInput
                       required
-                      min="0"
-                      step="any"
                       placeholder="Contoh: 75000"
                       value={form.purchasePrice}
-                      onChange={e => setField("purchasePrice", e.target.value)}
-                      className="input"
+                      onChange={val => setField("purchasePrice", val)}
                     />
                     <p className="mt-1 text-[10px] text-slate-600">Harga total satu kemasan saat dibeli.</p>
                   </div>
@@ -442,7 +507,7 @@ export const IngredientsPage: React.FC = () => {
                         onChange={e => setField("purchaseUnit", e.target.value)}
                         className="select"
                       >
-                        {PURCHASE_UNIT_OPTIONS[form.unit].map(u => (
+                        {getPurchaseUnitOptions(form.unit).map(u => (
                           <option key={u} value={u}>{u}</option>
                         ))}
                       </select>

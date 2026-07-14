@@ -40,6 +40,7 @@ func InitDB() *gorm.DB {
 		&domain.StockMovement{},
 		&domain.ProductionBatch{},
 		&domain.ProductionBatchItem{},
+		&domain.CustomUnit{},
 	)
 	if err != nil {
 		log.Fatalf("Failed to run database migrations: %v", err)

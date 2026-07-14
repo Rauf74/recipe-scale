@@ -15,6 +15,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	workspaceRepo := repository.NewWorkspaceRepository(db)
 	ingredientRepo := repository.NewIngredientRepository(db)
 	recipeRepo := repository.NewRecipeRepository(db)
+	customUnitRepo := repository.NewCustomUnitRepository(db)
 
 	// 2. Initialize Services
 	authService := service.NewAuthService(userRepo, workspaceRepo)
@@ -23,6 +24,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	productionRepo := repository.NewProductionRepository(db)
 	productionService := service.NewProductionService(productionRepo, recipeRepo, recipeService)
 	workspaceService := service.NewWorkspaceService(workspaceRepo)
+	customUnitService := service.NewCustomUnitService(customUnitRepo)
 
 	// 3. Initialize Handlers
 	authHandler := NewAuthHandler(authService)
@@ -32,6 +34,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	dashboardHandler := NewDashboardHandler(db, recipeService, ingredientService)
 	analyticsHandler := NewAnalyticsHandler(recipeService)
 	workspaceHandler := NewWorkspaceHandler(workspaceService)
+	customUnitHandler := NewCustomUnitHandler(customUnitService)
 
 	// 4. Setup CORS / API Groups
 	api := app.Group("/api")
@@ -81,4 +84,10 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	workspaces := api.Group("/workspace", middleware.RequireAuth)
 	workspaces.Get("/", workspaceHandler.Get)
 	workspaces.Put("/", workspaceHandler.Update)
+
+	// 11. Custom Unit Routes (Protected)
+	customUnits := api.Group("/custom-units", middleware.RequireAuth)
+	customUnits.Get("/", customUnitHandler.List)
+	customUnits.Post("/", customUnitHandler.Create)
+	customUnits.Delete("/:id", customUnitHandler.Delete)
 }

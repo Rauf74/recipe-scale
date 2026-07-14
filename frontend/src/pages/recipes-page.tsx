@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah } from "../lib/utils";
+import { CurrencyInput } from "../components/ui/CurrencyInput";
 import { ConfirmDeleteModal } from "../components/shared/ConfirmDeleteModal";
 import {
   ChefHat,
@@ -791,14 +792,11 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                         Harga Jual Menu (Rp)
                       </label>
-                      <input
-                        type="number"
+                      <CurrencyInput
                         required={!isBaseRecipe}
-                        min="0"
                         placeholder="Contoh: 45000"
                         value={sellingPrice}
-                        onChange={(e) => setSellingPrice(e.target.value)}
-                        className="input"
+                        onChange={(val) => setSellingPrice(val)}
                       />
                     </div>
 
@@ -824,14 +822,10 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                         Biaya Kemasan / Batch (Rp)
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        placeholder="Contoh: 5000 (untuk paperbox/cup/plastik)"
+                      <CurrencyInput
+                        placeholder="Contoh: 5000"
                         value={packagingCost}
-                        onChange={(e) => setPackagingCost(e.target.value)}
-                        className="input"
+                        onChange={(val) => setPackagingCost(val)}
                       />
                     </div>
 
@@ -839,14 +833,10 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                         Biaya Overhead / Batch (Rp)
                       </label>
-                      <input
-                        type="number"
-                        min="0"
-                        step="any"
-                        placeholder="Contoh: 5000 (untuk gas/listrik/air flat)"
+                      <CurrencyInput
+                        placeholder="Contoh: 5000"
                         value={overheadCost}
-                        onChange={(e) => setOverheadCost(e.target.value)}
-                        className="input"
+                        onChange={(val) => setOverheadCost(val)}
                       />
                     </div>
                   </div>
