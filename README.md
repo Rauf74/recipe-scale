@@ -137,4 +137,22 @@ recipe-scale/
 
 ## 🚀 Panduan Deployment (Produksi)
 
-Detail perjalanan pemecahan masalah deployment lengkap dari awal hingga sukses dapat dibaca secara transparan pada dokumen **[DEPLOYMENT_STORY.md](file:///home/eunzoo/Documents/Project/Program%20Portofolio/recipe-scale/DEPLOYMENT_STORY.md)** di root repository ini.
+Proyek ini dideploy menggunakan arsitektur terpisah untuk efisiensi biaya dan performa:
+
+### 1. Frontend (Vercel)
+*   Dihosting sebagai aplikasi statis Single Page Application (SPA).
+*   **Penting**: Memerlukan berkas `vercel.json` di dalam folder `frontend/` untuk mengarahkan ulang semua rute klien ke `index.html` agar rute seperti `/login` tidak memicu error 404 ketika di-refresh.
+*   Environment Variable wajib:
+    *   `VITE_API_URL`: Diarahkan ke alamat HTTPS dari Backend Render.
+
+### 2. Backend (Render)
+*   Dihosting sebagai Web Service persisten dengan lingkungan (environment) **Go**.
+*   Root directory diatur ke folder `backend/`.
+*   Perintah Build: `cd backend && go build -o main ./cmd/api/main.go`
+*   Perintah Start: `cd backend && ./main`
+*   Environment Variables wajib:
+    *   `APP_ENV`: `production`
+    *   `DB_DSN`: String koneksi database MySQL Aiven (mendukung TLS).
+    *   `JWT_SECRET`: Kunci rahasia pengaman token.
+    *   `FRONTEND_URL`: URL frontend Vercel (untuk konfigurasi CORS).
+    *   `PORT`: `10000` (Port default Render Web Service).
