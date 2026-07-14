@@ -11,6 +11,7 @@ import (
 
 	"recipe-scale/backend/internal/config"
 	"recipe-scale/backend/internal/handler"
+	"recipe-scale/backend/internal/apperror"
 )
 
 func main() {
@@ -23,7 +24,8 @@ func main() {
 	db := config.InitDB()
 
 	app := fiber.New(fiber.Config{
-		AppName: "RecipeScale API v1.0",
+		AppName:       "RecipeScale API v1.0",
+		ErrorHandler:  apperror.Handler,
 	})
 
 	// Add request logging middleware

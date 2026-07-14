@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/apperror"
 )
 
 type AuthHandler struct {
@@ -26,9 +27,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 
 	res, err := h.authService.RegisterWorkspace(req)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	// Set JWT as HttpOnly Cookie
@@ -59,9 +58,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 
 	res, err := h.authService.Login(req)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.Unauthorized(err.Error(), err)
 	}
 
 	// Set JWT as HttpOnly Cookie

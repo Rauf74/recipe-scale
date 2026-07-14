@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/apperror"
 )
 
 type RecipeHandler struct {
@@ -31,9 +32,7 @@ func (h *RecipeHandler) Create(c *fiber.Ctx) error {
 
 	recipe, err := h.recipeService.CreateRecipe(workspaceID, req)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -54,9 +53,7 @@ func (h *RecipeHandler) List(c *fiber.Ctx) error {
 
 	recipes, err := h.recipeService.ListRecipes(workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -84,9 +81,7 @@ func (h *RecipeHandler) Get(c *fiber.Ctx) error {
 
 	recipe, err := h.recipeService.GetRecipe(id, workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.NotFound(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -121,9 +116,7 @@ func (h *RecipeHandler) Update(c *fiber.Ctx) error {
 
 	recipe, err := h.recipeService.UpdateRecipe(id, workspaceID, req)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -151,9 +144,7 @@ func (h *RecipeHandler) Delete(c *fiber.Ctx) error {
 
 	err := h.recipeService.DeleteRecipe(id, workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -179,9 +170,7 @@ func (h *RecipeHandler) GetCost(c *fiber.Ctx) error {
 
 	costRes, err := h.recipeService.GetRecipeCost(id, workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

@@ -3,6 +3,7 @@ package handler
 import (
 	"math"
 	"recipe-scale/backend/internal/domain"
+	"recipe-scale/backend/internal/apperror"
 	"recipe-scale/backend/internal/service"
 	"time"
 
@@ -54,9 +55,7 @@ func (h *DashboardHandler) GetAlerts(c *fiber.Ctx) error {
 	// 1. Fetch Ingredients to compute Price Alerts
 	ingredients, err := h.ingredientService.ListIngredients(workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	var priceAlerts []PriceAlert
@@ -84,9 +83,7 @@ func (h *DashboardHandler) GetAlerts(c *fiber.Ctx) error {
 	// 2. Fetch Recipes to compute Margin Alerts
 	recipes, err := h.recipeService.ListRecipes(workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	var marginAlerts []MarginAlert

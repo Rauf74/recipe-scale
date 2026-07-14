@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/apperror"
 )
 
 type AnalyticsHandler struct {
@@ -19,11 +20,11 @@ func NewAnalyticsHandler(recipeService *service.RecipeService) *AnalyticsHandler
 func (h *AnalyticsHandler) MenuPerformance(c *fiber.Ctx) error {
 	workspaceID, ok := c.Locals("workspaceId").(string)
 	if !ok || workspaceID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "unauthorized"})
+	return apperror.Unauthorized("unauthorized", nil)
 	}
 	recipes, err := h.recipeService.ListRecipes(workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	performance := make([]fiber.Map, 0)

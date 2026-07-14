@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/apperror"
 )
 
 type CustomUnitHandler struct {
@@ -23,9 +24,7 @@ func (h *CustomUnitHandler) List(c *fiber.Ctx) error {
 
 	list, err := h.cuService.List(workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.Internal("terjadi kesalahan internal", err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -53,9 +52,7 @@ func (h *CustomUnitHandler) Create(c *fiber.Ctx) error {
 
 	cu, err := h.cuService.Create(workspaceID, req)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
@@ -82,9 +79,7 @@ func (h *CustomUnitHandler) Delete(c *fiber.Ctx) error {
 	}
 
 	if err := h.cuService.Delete(workspaceID, id); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

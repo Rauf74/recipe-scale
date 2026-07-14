@@ -3,6 +3,7 @@ package handler
 import (
 	"github.com/gofiber/fiber/v2"
 	"recipe-scale/backend/internal/service"
+	"recipe-scale/backend/internal/apperror"
 )
 
 type WorkspaceHandler struct {
@@ -25,9 +26,7 @@ func (h *WorkspaceHandler) Get(c *fiber.Ctx) error {
 
 	ws, err := h.workspaceService.GetWorkspace(workspaceID)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.NotFound(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -55,9 +54,7 @@ func (h *WorkspaceHandler) Update(c *fiber.Ctx) error {
 
 	ws, err := h.workspaceService.UpdateWorkspace(workspaceID, req)
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": err.Error(),
-		})
+	return apperror.BadRequest(err.Error(), err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
