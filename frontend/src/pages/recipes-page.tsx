@@ -113,6 +113,12 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
     fetchData();
   }, []);
 
+  useEffect(() => {
+    setSelectedRecipe(null);
+    setSelectedCost(null);
+    setSearchQuery("");
+  }, [mode]);
+
   const fetchData = async () => {
     setLoading(true);
     try {
