@@ -9,9 +9,10 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/joho/godotenv"
 
+	"recipe-scale/backend/internal/apperror"
 	"recipe-scale/backend/internal/config"
 	"recipe-scale/backend/internal/handler"
-	"recipe-scale/backend/internal/apperror"
+	"recipe-scale/backend/internal/jwtutil"
 )
 
 func main() {
@@ -23,9 +24,14 @@ func main() {
 	// Initialize Database
 	db := config.InitDB()
 
+	// Validate critical config at startup
+	if _, err := jwtutil.Secret(); err != nil {
+		log.Fatalf("FATAL: %v — aplikasi tidak bisa berjalan tanpa JWT_SECRET", err)
+	}
+
 	app := fiber.New(fiber.Config{
-		AppName:       "RecipeScale API v1.0",
-		ErrorHandler:  apperror.Handler,
+		AppName:      "RecipeScale API v1.0",
+		ErrorHandler: apperror.Handler,
 	})
 
 	// Add request logging middleware

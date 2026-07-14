@@ -1,7 +1,6 @@
 package service
 
 import (
-	"log"
 	"errors"
 	"time"
 
@@ -139,7 +138,7 @@ func (s *AuthService) GetUserByID(userID string) (*domain.User, error) {
 func (s *AuthService) generateJWT(user *domain.User) (string, error) {
 	jwtSecret, err := jwtutil.Secret()
 	if err != nil {
-		log.Fatal("JWT_SECRET not set: ", err)
+		return "", errors.New("konfigurasi server tidak lengkap")
 	}
 
 	claims := JWTCustomClaims{

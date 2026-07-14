@@ -1,7 +1,10 @@
 package handler
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"gorm.io/gorm"
 
 	"recipe-scale/backend/internal/middleware"
@@ -39,8 +42,20 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	// 4. Setup CORS / API Groups
 	api := app.Group("/api")
 
-	// 5. Auth Routes
+	// 5. Auth Routes (rate limited untuk proteksi brute-force)
 	auth := api.Group("/auth")
+	auth.Use(limiter.New(limiter.Config{
+		Max:        20,
+		Expiration: 1 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "terlalu banyak permintaan, coba lagi nanti",
+			})
+		},
+	}))
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
 	auth.Post("/logout", authHandler.Logout)

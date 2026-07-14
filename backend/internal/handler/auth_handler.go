@@ -1,12 +1,13 @@
 package handler
 
 import (
+	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 
-	"recipe-scale/backend/internal/service"
 	"recipe-scale/backend/internal/apperror"
+	"recipe-scale/backend/internal/service"
 )
 
 type AuthHandler struct {
@@ -20,14 +21,12 @@ func NewAuthHandler(authService *service.AuthService) *AuthHandler {
 func (h *AuthHandler) Register(c *fiber.Ctx) error {
 	var req service.RegisterRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid request body",
-		})
+		return apperror.BadRequest("invalid request body", err)
 	}
 
 	res, err := h.authService.RegisterWorkspace(req)
 	if err != nil {
-	return apperror.BadRequest(err.Error(), err)
+		return apperror.BadRequest(err.Error(), err)
 	}
 
 	// Set JWT as HttpOnly Cookie
@@ -36,7 +35,7 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 		Value:    res.Token,
 		Expires:  time.Now().Add(24 * 7 * time.Hour), // 7 days
 		HTTPOnly: true,
-		Secure:   false, // Set true in production with HTTPS
+		Secure:   os.Getenv("APP_ENV") == "production",
 		SameSite: "Lax",
 	})
 
@@ -51,14 +50,12 @@ func (h *AuthHandler) Register(c *fiber.Ctx) error {
 func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	var req service.LoginRequest
 	if err := c.BodyParser(&req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "invalid request body",
-		})
+		return apperror.BadRequest("invalid request body", err)
 	}
 
 	res, err := h.authService.Login(req)
 	if err != nil {
-	return apperror.Unauthorized(err.Error(), err)
+		return apperror.Unauthorized(err.Error(), err)
 	}
 
 	// Set JWT as HttpOnly Cookie
@@ -67,7 +64,7 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 		Value:    res.Token,
 		Expires:  time.Now().Add(24 * 7 * time.Hour), // 7 days
 		HTTPOnly: true,
-		Secure:   false,
+		Secure:   os.Getenv("APP_ENV") == "production",
 		SameSite: "Lax",
 	})
 
@@ -86,7 +83,7 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		Value:    "",
 		Expires:  time.Now().Add(-time.Hour),
 		HTTPOnly: true,
-		Secure:   false,
+		Secure:   os.Getenv("APP_ENV") == "production",
 		SameSite: "Lax",
 	})
 
@@ -100,16 +97,12 @@ func (h *AuthHandler) Me(c *fiber.Ctx) error {
 	// User ID is injected into the context by the Auth middleware
 	userID, ok := c.Locals("userId").(string)
 	if !ok || userID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	user, err := h.authService.GetUserByID(userID)
 	if err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"error": "user not found",
-		})
+		return apperror.NotFound("pengguna tidak ditemukan", err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
@@ -124,16 +117,12 @@ func (h *AuthHandler) CheckAuth(c *fiber.Ctx) error {
 	// Simple validation to check if the user is logged in
 	userID, ok := c.Locals("userId").(string)
 	if !ok || userID == "" {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", nil)
 	}
 
 	user, err := h.authService.GetUserByID(userID)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "unauthorized",
-		})
+		return apperror.Unauthorized("unauthorized", err)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{

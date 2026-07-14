@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -32,7 +31,9 @@ func RequireAuth(c *fiber.Ctx) error {
 	// 3. Parse and Validate Token
 	jwtSecret, err := jwtutil.Secret()
 	if err != nil {
-		log.Fatal("JWT_SECRET not set: ", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "internal server error",
+		})
 	}
 
 	token, err := jwt.ParseWithClaims(tokenString, &service.JWTCustomClaims{}, func(t *jwt.Token) (interface{}, error) {
@@ -60,5 +61,3 @@ func RequireAuth(c *fiber.Ctx) error {
 
 	return c.Next()
 }
-
-
