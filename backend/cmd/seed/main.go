@@ -10,7 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
@@ -27,15 +27,32 @@ func main() {
 		log.Fatal("DB_DSN environment variable is not set")
 	}
 
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Error),
 	})
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	log.Println("Seeder connected to MySQL. Clearing old tables...")
+	log.Println("Seeder connected to PostgreSQL. Running schema auto-migrations...")
+	err = db.AutoMigrate(
+		&domain.Workspace{},
+		&domain.User{},
+		&domain.Ingredient{},
+		&domain.Recipe{},
+		&domain.RecipeItem{},
+		&domain.PriceHistory{},
+		&domain.StockMovement{},
+		&domain.ProductionBatch{},
+		&domain.ProductionBatchItem{},
+		&domain.CustomUnit{},
+		&domain.BlacklistedToken{},
+	)
+	if err != nil {
+		log.Fatalf("Failed to run database migrations: %v", err)
+	}
 
+	log.Println("Clearing old tables...")
 	// Delete in order to avoid foreign key constraint errors
 	db.Exec("DELETE FROM production_batch_items")
 	db.Exec("DELETE FROM production_batches")
@@ -45,10 +62,22 @@ func main() {
 	db.Exec("DELETE FROM stock_movements")
 	db.Exec("DELETE FROM ingredients")
 
-	// Get first workspace ID
+	// Get or create first workspace
 	var ws domain.Workspace
 	if err := db.First(&ws).Error; err != nil {
-		log.Fatal("Please run the app first to initialize the default workspace")
+		log.Println("No workspace found, creating default workspace: Dapur Demo Utama...")
+		ws = domain.Workspace{
+			ID:                    uuid.New().String(),
+			Name:                  "Dapur Demo Utama",
+			DefaultTaxPercent:     10,
+			DefaultServicePercent: 5,
+			DefaultTargetFoodCost: 30,
+			RoundPriceTo:          100,
+			CreatedAt:             time.Now(),
+		}
+		if err := db.Create(&ws).Error; err != nil {
+			log.Fatalf("Failed to create default workspace: %v", err)
+		}
 	}
 	wsID := ws.ID
 	log.Printf("Using workspace: %s (%s)", ws.Name, wsID)
