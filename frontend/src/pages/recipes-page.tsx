@@ -10,6 +10,7 @@ import {
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah, formatNumber } from "../lib/utils";
+import { NumericInput } from "../components/ui/NumericInput";
 import { CurrencyInput } from "../components/ui/CurrencyInput";
 import Swal from "sweetalert2";
 
@@ -280,7 +281,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
     const payloadItems = items.map(item => ({
       ingredientId: item.type === "ingredient" ? item.id : null,
       subRecipeId: item.type === "sub-recipe" ? item.id : null,
-      quantity: item.quantity,
+      quantity: parseFloat(item.quantity.toString()) || 0,
       unit: item.unit
     }));
 
@@ -711,11 +712,9 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <input
-                        type="number"
-                        min="1"
+                      <NumericInput
                         value={scaleInput || ""}
-                        onChange={(e) => setScaleInput(Math.max(1, parseInt(e.target.value) || 1))}
+                        onChange={(val) => setScaleInput(parseFloat(val) || 0)}
                         className="w-20 px-2 py-1 bg-slate-950 border border-slate-800 rounded-lg text-slate-200 text-sm focus:outline-none focus:border-brand-500/50 text-center font-bold"
                       />
                       <span className="text-slate-400 text-xs truncate uppercase font-semibold">
@@ -921,15 +920,11 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                   <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                     Yield / Jumlah Porsi Asal
                   </label>
-                  <input
-                    type="number"
+                  <NumericInput
                     required
-                    min="0.1"
-                    step="any"
                     placeholder="Contoh: 10"
                     value={yieldQuantity}
-                    onChange={(e) => setYieldQuantity(e.target.value)}
-                    className="input"
+                    onChange={setYieldQuantity}
                   />
                 </div>
 
@@ -1072,14 +1067,11 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
 
                       {/* Quantity input */}
                       <div className="w-full sm:w-20">
-                        <input
-                          type="number"
+                        <NumericInput
                           required
-                          min="0.001"
-                          step="any"
                           placeholder="Jumlah"
                           value={item.quantity}
-                          onChange={(e) => handleItemChange(index, "quantity", parseFloat(e.target.value) || 0)}
+                          onChange={(val) => handleItemChange(index, "quantity", val)}
                           className="input-sm text-center font-bold"
                         />
                       </div>

@@ -25,6 +25,7 @@ import Swal from "sweetalert2";
 import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatNumber } from "../lib/utils";
+import { NumericInput } from "../components/ui/NumericInput";
 
 interface StockMovement {
   id: string;
@@ -625,16 +626,12 @@ export function StockPage() {
                       <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
                         Jumlah Masuk ({selectedIngredient.unit})
                       </label>
-                      <input
-                        className="input"
-                        type="number"
-                        min="0.0001"
-                        step="any"
+                      <NumericInput
                         required
                         value={quantity}
-                        onChange={e => setQuantity(e.target.value)}
-                        placeholder={`Contoh: 1000`}
-                        autoFocus
+                        onChange={setQuantity}
+                        placeholder="Contoh: 1.000"
+                        suffix={selectedIngredient.unit}
                       />
                     </div>
 
@@ -671,16 +668,12 @@ export function StockPage() {
                       <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400">
                         Batas Minimum Baru ({selectedIngredient.unit})
                       </label>
-                      <input
-                        className="input"
-                        type="number"
-                        min="0"
-                        step="any"
+                      <NumericInput
                         required
                         value={reorderValue}
-                        onChange={e => setReorderValue(e.target.value)}
+                        onChange={setReorderValue}
                         placeholder="Contoh: 500"
-                        autoFocus
+                        suffix={selectedIngredient.unit}
                       />
                       <p className="text-[10px] text-slate-600 leading-relaxed">
                         Jika stok turun menyentuh atau berada di bawah nilai ini, sistem akan memicu alarm berwarna kuning di dasbor utama.

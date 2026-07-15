@@ -14,6 +14,7 @@ import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
 import { formatRupiah, formatNumber } from "../lib/utils";
 import { CurrencyInput } from "../components/ui/CurrencyInput";
+import { NumericInput } from "../components/ui/NumericInput";
 import Swal from "sweetalert2";
 import {
   Search,
@@ -661,15 +662,11 @@ export const IngredientsPage: React.FC = () => {
                       <label className="block text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                         Isi Kemasan
                       </label>
-                      <input
-                        type="number"
+                      <NumericInput
                         required
-                        min="0.0001"
-                        step="any"
-                        placeholder={`Contoh: 5000`}
+                        placeholder="Contoh: 5.000"
                         value={form.purchaseQuantity}
-                        onChange={e => setField("purchaseQuantity", e.target.value)}
-                        className="input"
+                        onChange={val => setField("purchaseQuantity", val)}
                       />
                     </div>
                     <div>
@@ -715,14 +712,10 @@ export const IngredientsPage: React.FC = () => {
                         className="flex-1 accent-brand-500 cursor-pointer"
                       />
                       <div className="w-20 shrink-0">
-                        <input
-                          type="number"
-                          min="1"
-                          max="100"
-                          step="1"
+                        <NumericInput
+                          placeholder="100"
                           value={form.usableYield}
-                          onChange={e => setField("usableYield", e.target.value)}
-                          className="w-full px-2 py-1.5 bg-surface-950/40 border border-surface-700 rounded-lg text-slate-200 focus:outline-none focus:border-brand-500/50 text-sm text-center font-bold"
+                          onChange={val => setField("usableYield", val)}
                         />
                       </div>
                     </div>
