@@ -466,7 +466,7 @@ export function StockPage() {
         </section>
 
         {/* ── Riwayat Mutasi (Sidebar View - Stretches and Scrolls) ── */}
-        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col" style={{ height: isLargeScreen ? `${leftHeight}px` : "auto" }}>
+        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col" style={{ height: isLargeScreen ? `${leftHeight}px` : "auto", minHeight: isLargeScreen ? "450px" : "auto" }}>
           <div className="flex items-center gap-3 border-b border-surface-700/60 px-5 py-4 shrink-0">
             <History className="h-4 w-4 text-slate-500" />
             <h2 className="font-bold text-slate-100 font-sans">Riwayat Mutasi</h2>
