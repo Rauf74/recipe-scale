@@ -92,7 +92,7 @@ export function StockPage() {
       observer.disconnect();
       window.removeEventListener("resize", handleResize);
     };
-  }, [isLoading]);
+  }, [isLoading, ingredients]); // Run when loading completes or ingredients list is rendered
 
   // Bahan yang stoknya di bawah atau sama dengan reorder point (dan reorder point > 0)
   const lowStockIngredients = useMemo(
@@ -309,7 +309,7 @@ export function StockPage() {
       )}
 
       {/* Main Grid Layout */}
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-stretch">
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-start">
         
         {/* ── Ketersediaan Bahan (Table View) ── */}
         <section ref={leftCardRef} className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col lg:h-full">
@@ -466,7 +466,7 @@ export function StockPage() {
         </section>
 
         {/* ── Riwayat Mutasi (Sidebar View - Stretches and Scrolls) ── */}
-        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col lg:h-full">
+        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col" style={{ height: isLargeScreen ? `${leftHeight}px` : "auto" }}>
           <div className="flex items-center gap-3 border-b border-surface-700/60 px-5 py-4 shrink-0">
             <History className="h-4 w-4 text-slate-500" />
             <h2 className="font-bold text-slate-100 font-sans">Riwayat Mutasi</h2>
@@ -482,10 +482,7 @@ export function StockPage() {
                 Belum ada transaksi mutasi.
               </div>
             ) : (
-              <div 
-                className="space-y-2 overflow-y-auto pr-0.5 min-h-0 lg:flex-1"
-                style={{ maxHeight: isLargeScreen ? `${leftHeight - 120}px` : "500px" }}
-              >
+              <div className="space-y-2 max-h-[500px] lg:max-h-none overflow-y-auto pr-0.5 min-h-0 lg:flex-1">
                 {movements.map(m => {
                   const isIn = m.quantity > 0;
                   const typeLabel: Record<string, string> = {
