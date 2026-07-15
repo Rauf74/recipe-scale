@@ -11,7 +11,7 @@ import {
 } from "@tanstack/react-table";
 import type { Recipe } from "../types";
 import { apiClient } from "../lib/api-client";
-import { formatRupiah } from "../lib/utils";
+import { formatRupiah, formatNumber } from "../lib/utils";
 import {
   ResponsiveContainer,
   BarChart,
@@ -313,7 +313,7 @@ export function AnalysisPage() {
                     <YAxis
                       stroke="#64748b"
                       fontSize={10}
-                      tickFormatter={(value) => `Rp ${value.toLocaleString("id-ID")}`}
+                      tickFormatter={(value) => `Rp ${formatNumber(value, 0)}`}
                     />
                     <Tooltip
                       contentStyle={{
@@ -323,7 +323,7 @@ export function AnalysisPage() {
                         color: "#f1f5f9",
                         fontSize: "11px",
                       }}
-                      formatter={(value: any) => [`Rp ${value.toLocaleString("id-ID")}`]}
+                      formatter={(value: any) => [`Rp ${formatNumber(value, 0)}`]}
                     />
                     <Legend wrapperStyle={{ fontSize: "10px", paddingTop: "5px" }} />
                     <Bar dataKey="Biaya (HPP)" stackId="a" fill="#3b82f6" radius={[0, 0, 4, 4]} />

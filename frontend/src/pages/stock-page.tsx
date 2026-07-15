@@ -24,6 +24,7 @@ import {
 import Swal from "sweetalert2";
 import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
+import { formatNumber } from "../lib/utils";
 
 interface StockMovement {
   id: string;
@@ -311,7 +312,7 @@ export function StockPage() {
                 <AlertCircle className="h-3 w-3 text-warm-400" />
                 {ing.name}
                 <span className="text-warm-500 font-normal">
-                  ({Number(ing.currentStock).toLocaleString("id-ID", { maximumFractionDigits: 2 })} / min {ing.reorderPoint} {ing.unit})
+                  ({formatNumber(ing.currentStock, 2)} / min {formatNumber(ing.reorderPoint, 2)} {ing.unit})
                 </span>
               </span>
             ))}
@@ -381,7 +382,7 @@ export function StockPage() {
                             <p className="font-semibold text-slate-200 truncate">{ing.name}</p>
                             <p className="mt-0.5 text-xs text-slate-500">
                               {ing.reorderPoint > 0
-                                ? `Batas minimum: ${ing.reorderPoint} ${ing.unit}`
+                                ? `Batas minimum: ${formatNumber(ing.reorderPoint, 2)} ${ing.unit}`
                                 : <span className="text-slate-600 italic text-[10px]">Batas minimum belum diatur</span>
                               }
                             </p>
@@ -390,7 +391,7 @@ export function StockPage() {
                           {/* Current Stock Value */}
                           <div className="text-right shrink-0">
                             <span className={`font-mono text-sm font-bold ${isLow ? "text-warm-300" : "text-brand-300"}`}>
-                              {Number(ing.currentStock ?? 0).toLocaleString("id-ID", { maximumFractionDigits: 2 })} {ing.unit}
+                              {formatNumber(ing.currentStock ?? 0, 2)} {ing.unit}
                             </span>
                             {isLow && (
                               <p className="text-[10px] text-warm-500 font-semibold mt-0.5">⚠ Stok rendah</p>
@@ -514,7 +515,7 @@ export function StockPage() {
                             {ingredientNameMap[m.ingredientId] ?? "Bahan dihapus"}
                           </span>
                           <span className={`font-mono text-xs font-bold shrink-0 ${isIn ? "text-brand-400" : "text-warm-400"}`}>
-                            {isIn ? "+" : ""}{Number(m.quantity).toLocaleString("id-ID", { maximumFractionDigits: 2 })}
+                            {isIn ? "+" : ""}{formatNumber(m.quantity, 2)}
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-2 mt-0.5 text-[9px] text-slate-600">
@@ -604,14 +605,14 @@ export function StockPage() {
                   <div className="flex justify-between">
                     <span className="text-slate-500">Stok Saat Ini</span>
                     <span className="font-bold font-mono text-slate-200">
-                      {Number(selectedIngredient.currentStock).toLocaleString("id-ID", { maximumFractionDigits: 2 })} {selectedIngredient.unit}
+                      {formatNumber(selectedIngredient.currentStock, 2)} {selectedIngredient.unit}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-500">Batas Pengingat Saat Ini</span>
                     <span className="font-bold font-mono text-slate-400">
                       {selectedIngredient.reorderPoint > 0
-                        ? `${selectedIngredient.reorderPoint} ${selectedIngredient.unit}`
+                        ? `${formatNumber(selectedIngredient.reorderPoint, 2)} ${selectedIngredient.unit}`
                         : "Belum diatur"}
                     </span>
                   </div>

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Loader2, Plus, Printer, Search, ClipboardList } from "lucide-react";
 import type { Recipe } from "../types";
 import { apiClient } from "../lib/api-client";
-import { formatRupiah } from "../lib/utils";
+import { formatRupiah, formatNumber } from "../lib/utils";
 import Swal from "sweetalert2";
 
 const Toast = Swal.mixin({
@@ -400,7 +400,7 @@ export function ProductionPage() {
                     <div key={item.id} className="flex items-center justify-between gap-3 px-5 py-3.5 print:border-slate-200">
                       <span className="text-xs text-slate-300 print:text-slate-700 font-semibold">{item.ingredientName}</span>
                       <span className="font-mono text-xs font-bold text-slate-400 bg-surface-950/40 border border-surface-800 px-2 py-1 rounded-lg print:bg-slate-100 print:text-slate-800 print:border-slate-200">
-                        {item.quantity.toLocaleString("id-ID", { maximumFractionDigits: 2 })} {item.unit}
+                        {formatNumber(item.quantity, 2)} {item.unit}
                       </span>
                     </div>
                   ))}

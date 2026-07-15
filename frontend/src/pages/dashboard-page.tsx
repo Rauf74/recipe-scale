@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
-import { formatRupiah } from "../lib/utils";
+import { formatRupiah, formatNumber } from "../lib/utils";
 import {
   ChefHat,
   Package,
@@ -170,7 +170,7 @@ export const DashboardPage: React.FC = () => {
           <FlowNode
             icon={<Package className="w-4 h-4" />}
             label="Bahan"
-            value={String(ingredients.length)}
+            value={formatNumber(ingredients.length, 0)}
             tone="brand"
             onClick={() => navigate("/ingredients")}
           />
@@ -178,7 +178,7 @@ export const DashboardPage: React.FC = () => {
           <FlowNode
             icon={<Warehouse className="w-4 h-4" />}
             label="Stok"
-            value={`${ingredients.reduce((total, i) => total + i.currentStock, 0).toLocaleString("id-ID", { maximumFractionDigits: 1 })}`}
+            value={formatNumber(ingredients.reduce((total, i) => total + i.currentStock, 0), 1)}
             tone="brand"
             onClick={() => navigate("/stock")}
           />
@@ -186,7 +186,7 @@ export const DashboardPage: React.FC = () => {
           <FlowNode
             icon={<Layers className="w-4 h-4" />}
             label="Bumbu Dasar"
-            value={String(baseRecipes.length)}
+            value={formatNumber(baseRecipes.length, 0)}
             tone="violet"
             onClick={() => navigate("/preps")}
           />
@@ -194,7 +194,7 @@ export const DashboardPage: React.FC = () => {
           <FlowNode
             icon={<ChefHat className="w-4 h-4" />}
             label="Resep Jadi"
-            value={String(menuRecipes.length)}
+            value={formatNumber(menuRecipes.length, 0)}
             tone="warm"
             onClick={() => navigate("/recipes")}
           />

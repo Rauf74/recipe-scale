@@ -12,7 +12,7 @@ import {
 import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import type { Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
-import { formatRupiah } from "../lib/utils";
+import { formatRupiah, formatNumber } from "../lib/utils";
 import { CurrencyInput } from "../components/ui/CurrencyInput";
 import Swal from "sweetalert2";
 import {
@@ -347,8 +347,8 @@ export const IngredientsPage: React.FC = () => {
           <span className="text-slate-400 text-xs">
             {formatRupiah(ing.purchasePrice)}{" "}
             <span className="text-slate-500">
-              / {ing.purchaseQuantity} {ing.purchaseUnit || ing.unit}
-              {ing.usableYield < 100 && ` · susut ${100 - ing.usableYield}%`}
+              / {formatNumber(ing.purchaseQuantity, 4)} {ing.purchaseUnit || ing.unit}
+              {ing.usableYield < 100 && ` · susut ${formatNumber(100 - ing.usableYield, 2)}%`}
             </span>
           </span>
         ) : <span className="text-slate-600 italic">—</span>;
@@ -757,7 +757,7 @@ export const IngredientsPage: React.FC = () => {
                     </div>
                     {parseFloat(form.usableYield) < 100 && (
                       <p className="text-[10px] text-slate-500">
-                        Sudah memperhitungkan susut {100 - parseFloat(form.usableYield)}%
+                        Sudah memperhitungkan susut {formatNumber(100 - parseFloat(form.usableYield), 2)}%
                       </p>
                     )}
                     <p className="text-[10px] text-slate-500 pt-1 border-t border-surface-700/50">
@@ -786,8 +786,8 @@ export const IngredientsPage: React.FC = () => {
                           </span>
                           {h.purchasePrice > 0 && (
                             <span className="text-[9px] text-slate-600">
-                              {formatRupiah(h.purchasePrice)} / {h.purchaseQuantity} {h.purchaseUnit}
-                              {h.usableYield < 100 && ` · yield ${h.usableYield}%`}
+                              {formatRupiah(h.purchasePrice)} / {formatNumber(h.purchaseQuantity, 4)} {h.purchaseUnit}
+                              {h.usableYield < 100 && ` · yield ${formatNumber(h.usableYield, 2)}%`}
                             </span>
                           )}
                         </div>

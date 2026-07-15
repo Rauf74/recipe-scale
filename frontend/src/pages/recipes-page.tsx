@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-table";
 import type { Recipe, Ingredient } from "../types";
 import { apiClient } from "../lib/api-client";
-import { formatRupiah } from "../lib/utils";
+import { formatRupiah, formatNumber } from "../lib/utils";
 import { CurrencyInput } from "../components/ui/CurrencyInput";
 import Swal from "sweetalert2";
 
@@ -494,10 +494,10 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       </span>
                     </div>
                     <span className="nums text-right text-sm text-slate-300">
-                      {recipe.yieldQuantity} {recipe.yieldUnit === "portions" ? "porsi" : (recipe.yieldUnit === "grams" ? "gram" : recipe.yieldUnit)}
+                      {formatNumber(recipe.yieldQuantity, 2)} {recipe.yieldUnit === "portions" ? "porsi" : (recipe.yieldUnit === "grams" ? "gram" : recipe.yieldUnit)}
                     </span>
                     <span className="nums text-right text-sm text-slate-400">
-                      {recipe.items.length}
+                      {formatNumber(recipe.items.length, 0)}
                     </span>
                     <span className="text-right">
                       <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-full border tracking-wide uppercase ${
@@ -603,7 +603,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                       <p className="text-base font-black text-brand-400 mt-1 leading-none">
                         {formatRupiah(selectedCost.totalCost)}
                       </p>
-                      <p className="text-[9px] text-slate-500 mt-1 leading-none">porsi asal ({selectedRecipe.yieldQuantity} {selectedRecipe.yieldUnit === "portions" ? "porsi" : (selectedRecipe.yieldUnit === "grams" ? "gram" : selectedRecipe.yieldUnit)})</p>
+                      <p className="text-[9px] text-slate-500 mt-1 leading-none">porsi asal ({formatNumber(selectedRecipe.yieldQuantity, 2)} {selectedRecipe.yieldUnit === "portions" ? "porsi" : (selectedRecipe.yieldUnit === "grams" ? "gram" : selectedRecipe.yieldUnit)})</p>
                     </div>
 
                     <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800/80 text-left">
@@ -847,7 +847,7 @@ export const RecipesPage: React.FC<RecipesPageProps> = ({ mode = "menu" }) => {
                               </span>
                             </div>
                             <span className="font-bold text-slate-200 shrink-0 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
-                              {scaledQty.toFixed(1)} {item.unit}
+                              {formatNumber(scaledQty, 2)} {item.unit}
                             </span>
                           </div>
                         );
