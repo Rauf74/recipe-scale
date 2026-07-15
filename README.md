@@ -5,7 +5,7 @@
 ![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
 ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![MySQL](https://img.shields.io/badge/MySQL-005C84?style=for-the-badge&logo=mysql&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
@@ -32,11 +32,11 @@ RecipeScale menggunakan arsitektur terpisah (*split-deployment*) untuk menjamin 
 graph TD
     User([Browser Pengguna]) -->|Memuat HTML/JS| Vercel[Vercel Frontend]
     User -->|Mengirim Kredensial & Request API| Render[Render Go Backend]
-    Render -->|Kueri & AutoMigrate| DB[(Database MySQL Aiven)]
+    Render -->|Kueri & AutoMigrate| DB[(Database PostgreSQL Aiven)]
     
     style Vercel fill:#000,stroke:#333,stroke-width:2px,color:#fff
     style Render fill:#46a35e,stroke:#333,stroke-width:2px,color:#fff
-    style DB fill:#ff6600,stroke:#333,stroke-width:2px,color:#fff
+    style DB fill:#336791,stroke:#333,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -78,7 +78,7 @@ recipe-scale/
 ├── backend/
 │   ├── cmd/api/main.go          # Entrypoint server Go Fiber
 │   ├── internal/
-│   │   ├── config/              # Konfigurasi database, TLS Aiven, & AutoMigrate
+│   │   ├── config/              # Konfigurasi database (PostgreSQL) & AutoMigrate
 │   │   ├── domain/              # Struktur data GORM model
 │   │   ├── handler/             # REST API Handlers & Routing (auth, custom unit, dll)
 │   │   ├── middleware/          # JWT Auth Session Guard
@@ -103,7 +103,7 @@ recipe-scale/
 ### 1. Prasyarat
 * Pasang **Go 1.21 atau lebih tinggi**
 * Pasang **Node.js 18 atau lebih tinggi**
-* Server **MySQL** aktif (Port default `3306`)
+* Server **PostgreSQL** aktif (Port default `5432`)
 
 ### 2. Konfigurasi Backend
 1. Masuk ke direktori backend:
@@ -112,7 +112,7 @@ recipe-scale/
    ```
 2. Buat berkas `.env` dan masukkan konfigurasi berikut:
    ```env
-   DB_DSN="user:password@tcp(127.0.0.1:3306)/recipescale?charset=utf8mb4&parseTime=True&loc=Local"
+   DB_DSN="postgres://user:password@127.0.0.1:5432/recipescale?sslmode=disable"
    JWT_SECRET="masukkan_kunci_jwt_secret_acak_yang_aman_di_sini"
    PORT="8085"
    FRONTEND_URL="http://localhost:5173"
@@ -157,7 +157,7 @@ Proyek ini dideploy menggunakan arsitektur terpisah untuk efisiensi biaya dan pe
 *   Perintah Start: `cd backend && ./main`
 *   Environment Variables wajib:
     *   `APP_ENV`: `production`
-    *   `DB_DSN`: String koneksi database MySQL Aiven (mendukung TLS).
+    *   `DB_DSN`: String koneksi database PostgreSQL Aiven (mendukung TLS/SSL).
     *   `JWT_SECRET`: Kunci rahasia pengaman token.
     *   `FRONTEND_URL`: URL frontend Vercel (untuk konfigurasi CORS).
     *   `PORT`: `10000` (Port default Render Web Service).
