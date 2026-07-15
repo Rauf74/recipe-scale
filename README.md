@@ -46,14 +46,14 @@ graph TD
 ### 1. ⚙️ Kalkulator HPP Bertingkat & Validasi Anti-Loop
 * **Nested Recipe Support**: Mendukung integrasi bumbu dasar setengah jadi (saus, kaldu, bumbu halus) ke dalam formula menu masakan utama tanpa batas tingkat.
 * **XOR Component Validation**: Validasi cerdas yang mencegah bahan baku ganda atau *circular dependencies* (resep yang saling merujuk satu sama lain secara melingkar) di level backend.
-* **Workspace Isolation (Multi-Tenant)**: Proteksi data super ketat di mana setiap transaksi, bahan baku, dan resep diisolasi berdasarkan `workspace_id` pengguna yang login.
+* **Workspace Isolation & Composite Index (Multi-Tenant)**: Proteksi data super ketat di mana data diisolasi berdasarkan `workspace_id`. Dioptimalkan di level database dengan indeks gabungan (*composite index*) B-Tree `idx_workspace_ing` pada tabel transaksi cepat (`StockMovement`) untuk mempercepat performa kueri multi-tenant.
 
-### 2. 📊 Optimasi UI Menggunakan TanStack Table v8
-* Seluruh tabel data utama (Bahan Baku, Resep, Ketersediaan Stok, dan Ledger Analisis Menu) telah dimigrasikan menggunakan `@tanstack/react-table` v8.
-* **Keuntungan**:
+### 2. 📊 Optimasi UI & Tata Letak Responsif
+* **TanStack Table v8 Migration**: Seluruh tabel data utama (Bahan Baku, Resep, Ketersediaan Stok, dan Ledger Analisis Menu) telah dimigrasikan menggunakan `@tanstack/react-table` v8.
   * Pengurutan data (*sorting*) multi-kolom yang sangat cepat dan interaktif secara langsung di client browser.
   * Fitur pencarian global instan dan sistem paginasi headless yang menjaga kestabilan tata letak tema gelap (dark mode) premium.
   * Otomatis melakukan reset halaman kembali ke halaman pertama saat melakukan filter pencarian (`autoResetPageIndex: true`).
+* **Adaptive Scroll & Layout Equal Height**: Sinkronisasi tinggi kolom kustom (*equal height*) secara dinamis menggunakan `getBoundingClientRect` dalam daur hidup `useLayoutEffect` React untuk menyelaraskan daftar bahan baku dan riwayat mutasi stok. Menggunakan taktik decoupling CSS grid (`lg:items-start`) untuk mencegah konflik ResizeObserver (*loop loop limit exceeded*) yang berpotensi membekukan web browser.
 
 ### 3. ⚖️ Simulator Markup, PB1, & Timbangan Dapur Instan
 * **Markup Calculator**: Hitung harga rekomendasi jual berdasarkan target Food Cost %, lengkap dengan simulasi pajak PB1 (10%), Service Charge (5%), profit bersih, dan persentase gross margin.
