@@ -81,9 +81,20 @@ export function StockPage() {
     window.addEventListener("resize", handleResize);
 
     if (!leftCardRef.current) return () => window.removeEventListener("resize", handleResize);
+
+    // 1. Measure synchronously before paint to avoid 1-frame layout jumps
+    const currentHeight = leftCardRef.current.getBoundingClientRect().height;
+    if (currentHeight > 0) {
+      setLeftHeight(currentHeight);
+    }
+
+    // 2. Observe subsequent size changes (like searching or filtering) using outer border-box height
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setLeftHeight(entry.contentRect.height);
+        const height = entry.target.getBoundingClientRect().height;
+        if (height > 0) {
+          setLeftHeight(height);
+        }
       }
     });
     observer.observe(leftCardRef.current);
