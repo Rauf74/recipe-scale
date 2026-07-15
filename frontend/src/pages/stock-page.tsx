@@ -92,7 +92,7 @@ export function StockPage() {
       observer.disconnect();
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isLoading]);
 
   // Bahan yang stoknya di bawah atau sama dengan reorder point (dan reorder point > 0)
   const lowStockIngredients = useMemo(
