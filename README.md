@@ -60,9 +60,14 @@ graph TD
 * **Visual Donut Cost Chart**: Diagram lingkaran interaktif (menggunakan Recharts) yang memetakan persentase kontribusi biaya komponen resep langsung di panel detail.
 * **Kitchen Scaling Sheet**: Masukkan porsi saji target yang ingin diproduksi, dan sistem akan langsung menghasilkan *Daftar Timbangan Dapur* baru secara instan secara real-time.
 
-### 🍪 4. Keamanan Auth Berbasis Sesi Lintas Domain
-* Menggunakan JWT Token yang disimpan dalam **HttpOnly Cookie** yang dilindungi properti `Secure` dan `SameSite: None` di lingkungan production.
-* Menjamin keamanan token dari serangan XSS (*Cross-Site Scripting*) sekaligus memungkinkan komunikasi kredensial yang lancar antara Vercel frontend dan Render backend.
+### 🇮🇩 4. Pemformatan Ribuan & Desimal Lokalisasi Indonesia Real-Time
+* **Universal Localization**: Semua visualisasi angka kuantitas, yield resep, sisa stok, HPP, dan angka rupiah terformat rapi menggunakan pemisah ribuan titik (`.`) dan koma desimal (`,`) standar locale `id-ID` (contoh: `12.500,75`).
+* **Real-time NumericInput Masking**: Input form angka dilengkapi dengan komponen kustom `NumericInput` yang memformat ribuan secara instan saat mengetik, menyaring input secara aman, dan mengonversi tombol titik numpad menjadi koma secara otomatis tanpa bug kedipan kursor.
+
+### 🔒 5. Keamanan Auth & Database-Backed JWT Blacklist
+* **HttpOnly Cookie Session**: Menggunakan JWT Token yang disimpan dalam HttpOnly Cookie dengan perlindungan properti `Secure` dan `SameSite: None` di lingkungan production untuk mencegah serangan XSS.
+* **Logout Blacklist Guard**: Saat pengguna logout, backend memverifikasi tanda tangan (*signature*) JWT aktif dan mendaftarkannya ke dalam tabel blacklist database (`blacklisted_tokens`) untuk memblokir penggunaan ulang token stateless secara absolut sebelum masa kedaluwarsanya berakhir.
+* **Automated Cleanup Worker**: Dapur backend Go dilengkapi goroutine *cleanup worker* mandiri yang berjalan setiap jam untuk menghapus token cekal kedaluwarsa secara otomatis, menjaga performa indeks pencarian database agar tetap cepat dan optimal.
 
 ---
 
