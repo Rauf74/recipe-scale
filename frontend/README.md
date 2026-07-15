@@ -1,32 +1,49 @@
-# React + TypeScript + Vite
+# RecipeScale Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React + TypeScript + Vite SPA for the RecipeScale F&B costing platform.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **React 19** — UI library
+- **TypeScript** — Static type safety
+- **Vite 8** — Build tooling and dev server
+- **Tailwind CSS v4** — Utility-first styling
+- **React Router v7** — Client-side routing
+- **TanStack Table v8** — Advanced data tables
+- **Recharts** — Cost visualization
+- **Axios** — HTTP client with interceptors
+- **Oxlint** — Fast linting
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+The dev server will start at `http://localhost:5173`.
+
+## Environment Variables
+
+Create a `.env` file:
+
+```env
+VITE_API_URL=http://localhost:8085
+```
+
+> **Important:** Vite injects environment variables at build time. If you change this value in production (e.g., Vercel dashboard), you must trigger a redeploy.
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Type-check and build for production |
+| `npm run preview` | Preview the production build locally |
+| `npm run lint` | Run Oxlint |
+
+## Deployment Notes
+
+This frontend is deployed as a static SPA on **Vercel**. The `vercel.json` file ensures all routes are rewritten to `index.html` so client-side routing works correctly on refresh.
+
+For the full deployment guide, see the root [`README.md`](../README.md).

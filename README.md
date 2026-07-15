@@ -1,163 +1,270 @@
-# 🍳 RecipeScale — SaaS Multi-Tenant Costing & Scale Simulator for F&B
+# RecipeScale — SaaS Multi-Tenant F&B Costing & Kitchen Scaling Platform
 
 <div align="center">
 
-![Go](https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white)
-![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)
-![Render](https://img.shields.io/badge/Render-46a35e?style=for-the-badge&logo=render&logoColor=white)
+[![Go](https://img.shields.io/badge/Go_1.26-00ADD8?logo=go&logoColor=white&style=for-the-badge)](https://go.dev/)
+[![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB&style=for-the-badge)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=for-the-badge)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite_8-646CFF?logo=vite&logoColor=white&style=for-the-badge)](https://vitejs.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white&style=for-the-badge)](https://www.postgresql.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?logo=tailwind-css&logoColor=white&style=for-the-badge)](https://tailwindcss.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white&style=for-the-badge)](https://vercel.com/)
+[![Render](https://img.shields.io/badge/Render-46E3B7?logo=render&logoColor=black&style=for-the-badge)](https://render.com/)
 
 </div>
 
+**RecipeScale** is a production-oriented SaaS platform for F&B micro, small, and medium enterprises (MSMEs). It solves three core operational problems in one integrated tool:
+
+1. **What is the real COGS per portion?** — Accurate recipe costing built from raw ingredients.
+2. **How do I scale production?** — Instant kitchen scaling sheets for bulk orders.
+3. **Which menus are at risk?** — Margin analysis when ingredient prices fluctuate.
+
+Built with a **Go Fiber** backend and a **React + TypeScript + Vite** frontend, RecipeScale demonstrates multi-tenant SaaS architecture, secure authentication with JWT blacklisting, advanced UI performance optimizations, and real-world deployment on Vercel + Render.
+
 ---
 
-**RecipeScale** adalah platform SaaS *multi-tenant* kalkulator HPP (*Harga Pokok Penjualan*) bertingkat dan simulator porsi saji produksi dapur yang dirancang khusus untuk UMKM F&B, bakery, katering, dan bisnis kuliner. 
+## ✨ Key Features
 
-Aplikasi ini memecahkan tiga masalah operasional utama F&B secara otomatis:
-1. **Berapa HPP aktual** satu porsi makanan/minuman hari ini setelah dihitung dengan modal bahan baku?
-2. Jika ada pesanan besar (misal 150 porsi katering), **berapa takaran bahan & bumbu dapur** yang harus ditimbang secara presisi?
-3. Jika harga bahan baku di pasar berfluktuasi, **menu mana saja yang margin profitnya terancam** di bawah target food cost?
+### 1. Nested Recipe Costing Engine
+- **Unlimited nesting** — half-finished bases (sauces, broths, spice pastes) can be ingredients in main recipes.
+- **XOR validation** — prevents duplicate raw materials and **circular dependencies** at the backend level.
+- Automatic roll-up of component costs into the final Cost of Goods Sold (COGS / HPP).
+
+### 2. Multi-Tenant Workspace Isolation
+- Every team works inside its own workspace; all data is scoped by `workspace_id`.
+- Composite index `idx_workspace_ing` on high-frequency tables (`StockMovement`) keeps multi-tenant queries fast even as data grows.
+
+### 3. Production & Margin Simulator
+- **Markup calculator** — set target food cost % and instantly get recommended selling price.
+- **Tax & service simulation** — PB1 (10%), service charge (5%), net profit, and gross margin.
+- **Kitchen scaling sheet** — enter target portions and get precise weighing lists in real time.
+- **Donut cost chart** — Recharts-powered breakdown of recipe cost components.
+
+### 4. Indonesia Locale & UX
+- Universal formatting with thousand separators and comma decimals (`12.500,75`).
+- Custom `NumericInput` component formats thousands while typing and maps numpad dot to comma without cursor flicker.
+
+### 5. High-Performance Data Tables
+- Migrated to **TanStack Table v8** for ingredients, recipes, stock availability, and menu analysis.
+- Multi-column sorting, instant global search, and headless pagination with dark-mode stability.
+
+### 6. Secure Authentication
+- **HttpOnly cookie sessions** with `Secure` and dynamic `SameSite` policy for cross-domain production.
+- **JWT blacklist** stored in PostgreSQL — logged-out tokens are blocked until expiry.
+- **Automated cleanup worker** — hourly goroutine purges expired blacklisted tokens to keep indexes healthy.
 
 ---
 
-## 🎨 Tampilan Arsitektur Sistem
+## 🛠️ Tech Stack
 
-RecipeScale menggunakan arsitektur terpisah (*split-deployment*) untuk menjamin performa maksimal, keamanan data *multi-tenant*, dan skalabilitas tinggi:
+### Backend
+| Technology | Purpose |
+|------------|---------|
+| Go 1.26 | High-performance backend language |
+| Fiber v2 | Fast HTTP web framework |
+| GORM | ORM for PostgreSQL |
+| golang-jwt/jwt/v5 | JWT signing and validation |
+| bcrypt | Password hashing |
+| go-playground/validator | Request validation |
+| godotenv | Environment configuration |
+
+### Frontend
+| Technology | Purpose |
+|------------|---------|
+| React 19 | UI library |
+| TypeScript | Static type safety |
+| Vite 8 | Build tooling and dev server |
+| Tailwind CSS v4 | Utility-first styling |
+| React Router v7 | Client-side routing |
+| TanStack Table v8 | Advanced data tables |
+| Recharts | Cost visualization |
+| Axios | HTTP client with interceptors |
+| SweetAlert2 | Confirmation dialogs |
+| Oxlint | Fast linting |
+
+### Infrastructure
+| Technology | Purpose |
+|------------|---------|
+| Vercel | Static SPA frontend hosting |
+| Render | Persistent Go backend hosting |
+| Aiven PostgreSQL | Managed production database |
+| Docker | Containerized local development |
+
+---
+
+## 🏗️ Architecture
+
+RecipeScale uses a **split-deployment architecture** optimized for cost and performance: the frontend is a static Single Page Application (SPA) on Vercel, while the backend is a persistent Go service on Render.
 
 ```mermaid
-graph TD
-    User([Browser Pengguna]) -->|Memuat HTML/JS| Vercel[Vercel Frontend]
-    User -->|Mengirim Kredensial & Request API| Render[Render Go Backend]
-    Render -->|Kueri & AutoMigrate| DB[(Database PostgreSQL Aiven)]
-    
-    style Vercel fill:#000,stroke:#333,stroke-width:2px,color:#fff
-    style Render fill:#46a35e,stroke:#333,stroke-width:2px,color:#fff
-    style DB fill:#336791,stroke:#333,stroke-width:2px,color:#fff
+graph LR
+    Browser[Browser / Mobile] -->|Static Assets| Vercel[React SPA<br/>Vercel]
+    Browser -->|REST API / Auth| Render[Go Fiber Backend<br/>Render]
+    Render -->|GORM + AutoMigrate| DB[(PostgreSQL<br/>Aiven)]
+    Render -->|Blacklist Cleanup| Worker[Hourly Goroutine]
+```
+
+### Backend Clean Architecture
+```text
+recipe-scale/backend/
+├── cmd/api/main.go             # Server entrypoint
+├── internal/
+│   ├── config/                 # Database configuration & AutoMigrate
+│   ├── domain/                 # GORM models
+│   ├── handler/                # REST handlers & router
+│   ├── middleware/             # JWT auth session guard
+│   ├── service/                # Business logic (HPP, scaling, units)
+│   ├── repository/             # Data access layer
+│   ├── apperror/               # Application error types
+│   ├── jwtutil/                # JWT utilities
+│   └── validation/             # Input validators
+└── go.mod
 ```
 
 ---
 
-## 🚀 Fitur Utama & Keunggulan Rekayasa
-
-### 1. ⚙️ Kalkulator HPP Bertingkat & Validasi Anti-Loop
-* **Nested Recipe Support**: Mendukung integrasi bumbu dasar setengah jadi (saus, kaldu, bumbu halus) ke dalam formula menu masakan utama tanpa batas tingkat.
-* **XOR Component Validation**: Validasi cerdas yang mencegah bahan baku ganda atau *circular dependencies* (resep yang saling merujuk satu sama lain secara melingkar) di level backend.
-* **Workspace Isolation & Composite Index (Multi-Tenant)**: Proteksi data super ketat di mana data diisolasi berdasarkan `workspace_id`. Dioptimalkan di level database dengan indeks gabungan (*composite index*) B-Tree `idx_workspace_ing` pada tabel transaksi cepat (`StockMovement`) untuk mempercepat performa kueri multi-tenant.
-
-### 2. 📊 Optimasi UI & Tata Letak Responsif
-* **TanStack Table v8 Migration**: Seluruh tabel data utama (Bahan Baku, Resep, Ketersediaan Stok, dan Ledger Analisis Menu) telah dimigrasikan menggunakan `@tanstack/react-table` v8.
-  * Pengurutan data (*sorting*) multi-kolom yang sangat cepat dan interaktif secara langsung di client browser.
-  * Fitur pencarian global instan dan sistem paginasi headless yang menjaga kestabilan tata letak tema gelap (dark mode) premium.
-  * Otomatis melakukan reset halaman kembali ke halaman pertama saat melakukan filter pencarian (`autoResetPageIndex: true`).
-* **Adaptive Scroll & Layout Equal Height**: Sinkronisasi tinggi kolom kustom (*equal height*) secara dinamis menggunakan `getBoundingClientRect` dalam daur hidup `useLayoutEffect` React untuk menyelaraskan daftar bahan baku dan riwayat mutasi stok. Menggunakan taktik decoupling CSS grid (`lg:items-start`) untuk mencegah konflik ResizeObserver (*loop loop limit exceeded*) yang berpotensi membekukan web browser.
-
-### 3. ⚖️ Simulator Markup, PB1, & Timbangan Dapur Instan
-* **Markup Calculator**: Hitung harga rekomendasi jual berdasarkan target Food Cost %, lengkap dengan simulasi pajak PB1 (10%), Service Charge (5%), profit bersih, dan persentase gross margin.
-* **Visual Donut Cost Chart**: Diagram lingkaran interaktif (menggunakan Recharts) yang memetakan persentase kontribusi biaya komponen resep langsung di panel detail.
-* **Kitchen Scaling Sheet**: Masukkan porsi saji target yang ingin diproduksi, dan sistem akan langsung menghasilkan *Daftar Timbangan Dapur* baru secara instan secara real-time.
-
-### 🇮🇩 4. Pemformatan Ribuan & Desimal Lokalisasi Indonesia Real-Time
-* **Universal Localization**: Semua visualisasi angka kuantitas, yield resep, sisa stok, HPP, dan angka rupiah terformat rapi menggunakan pemisah ribuan titik (`.`) dan koma desimal (`,`) standar locale `id-ID` (contoh: `12.500,75`).
-* **Real-time NumericInput Masking**: Input form angka dilengkapi dengan komponen kustom `NumericInput` yang memformat ribuan secara instan saat mengetik, menyaring input secara aman, dan mengonversi tombol titik numpad menjadi koma secara otomatis tanpa bug kedipan kursor.
-
-### 🔒 5. Keamanan Auth & Database-Backed JWT Blacklist
-* **HttpOnly Cookie Session**: Menggunakan JWT Token yang disimpan dalam HttpOnly Cookie dengan perlindungan properti `Secure` dan `SameSite: None` di lingkungan production untuk mencegah serangan XSS.
-* **Logout Blacklist Guard**: Saat pengguna logout, backend memverifikasi tanda tangan (*signature*) JWT aktif dan mendaftarkannya ke dalam tabel blacklist database (`blacklisted_tokens`) untuk memblokir penggunaan ulang token stateless secara absolut sebelum masa kedaluwarsanya berakhir.
-* **Automated Cleanup Worker**: Dapur backend Go dilengkapi goroutine *cleanup worker* mandiri yang berjalan setiap jam untuk menghapus token cekal kedaluwarsa secara otomatis, menjaga performa indeks pencarian database agar tetap cepat dan optimal.
-
----
-
-## 📁 Struktur Folder Proyek
+## 📁 Project Structure
 
 ```text
 recipe-scale/
 ├── backend/
-│   ├── cmd/api/main.go          # Entrypoint server Go Fiber
+│   ├── cmd/api/main.go
 │   ├── internal/
-│   │   ├── config/              # Konfigurasi database (PostgreSQL) & AutoMigrate
-│   │   ├── domain/              # Struktur data GORM model
-│   │   ├── handler/             # REST API Handlers & Routing (auth, custom unit, dll)
-│   │   ├── middleware/          # JWT Auth Session Guard
-│   │   └── service/             # Logika Bisnis Utama (HPP, kalkulasi, normalisasi unit)
-│   └── go.mod
+│   │   ├── config/
+│   │   ├── domain/
+│   │   ├── handler/
+│   │   ├── middleware/
+│   │   ├── repository/
+│   │   ├── service/
+│   │   ├── apperror/
+│   │   ├── jwtutil/
+│   │   └── validation/
+│   ├── go.mod
+│   └── .env
 ├── frontend/
 │   ├── src/
-│   │   ├── components/          # Reusable UI & Layout Components (DashboardLayout)
-│   │   ├── lib/                 # Konfigurasi Axios API Client & Interceptors
-│   │   ├── pages/               # Halaman Dashboard, Bahan Baku, Resep, Stok, & Analisis
-│   │   ├── types/               # TypeScript Definitions
-│   │   └── App.tsx              # Routing dan Guard autentikasi
-│   ├── vercel.json              # Konfigurasi routing rewrite SPA Vercel
+│   │   ├── components/
+│   │   ├── lib/
+│   │   ├── pages/
+│   │   ├── types/
+│   │   └── App.tsx
+│   ├── vercel.json             # SPA rewrite rules
 │   └── package.json
-└── render.yaml                  # Konfigurasi deklaratif deploy backend Render
+├── render.yaml                 # Render backend specification
+├── .env.render                 # Render environment template
+├── .env.vercel                 # Vercel environment template
+└── README.md
 ```
 
 ---
 
-## 🏁 Panduan Memulai (Lokal)
+## 🚀 Getting Started
 
-### 1. Prasyarat
-* Pasang **Go 1.21 atau lebih tinggi**
-* Pasang **Node.js 18 atau lebih tinggi**
-* Server **PostgreSQL** aktif (Port default `5432`)
+### Prerequisites
+- Go 1.26+
+- Node.js 20+
+- PostgreSQL server running locally (default port `5432`)
 
-### 2. Konfigurasi Backend
-1. Masuk ke direktori backend:
-   ```bash
-   cd backend
-   ```
-2. Buat berkas `.env` dan masukkan konfigurasi berikut:
-   ```env
-   DB_DSN="postgres://user:password@127.0.0.1:5432/recipescale?sslmode=disable"
-   JWT_SECRET="masukkan_kunci_jwt_secret_acak_yang_aman_di_sini"
-   PORT="8085"
-   FRONTEND_URL="http://localhost:5173"
-   APP_ENV="development"
-   ```
-3. Unduh modul dan jalankan server API:
-   ```bash
-   go run cmd/api/main.go
-   ```
+### 1. Clone the repository
+```bash
+git clone https://github.com/Rauf74/recipe-scale.git
+cd recipe-scale
+```
 
-### 3. Konfigurasi Frontend
-1. Masuk ke direktori frontend:
-   ```bash
-   cd frontend
-   ```
-2. Pasang semua dependensi npm:
-   ```bash
-   npm install
-   ```
-3. Jalankan server pengembangan Vite:
-   ```bash
-   npm run dev
-   ```
-4. Buka peramban di alamat `http://localhost:5173`.
+### 2. Backend setup
+```bash
+cd backend
+```
+Create a `.env` file:
+```env
+DB_DSN="postgres://user:password@127.0.0.1:5432/recipescale?sslmode=disable"
+JWT_SECRET="your_random_secure_jwt_secret"
+PORT="8085"
+FRONTEND_URL="http://localhost:5173"
+APP_ENV="development"
+```
+Run the server:
+```bash
+go run cmd/api/main.go
+```
+Backend will be available at `http://localhost:8085`.
+
+### 3. Frontend setup
+```bash
+cd ../frontend
+cp .env.example .env
+# Set VITE_API_URL=http://localhost:8085
+npm install
+npm run dev
+```
+Open [http://localhost:5173](http://localhost:5173).
 
 ---
 
-## 🚀 Panduan Deployment (Produksi)
+## 🧪 Testing
 
-Proyek ini dideploy menggunakan arsitektur terpisah untuk efisiensi biaya dan performa:
+Run Go unit tests for services and validators:
 
-### 1. Frontend (Vercel)
-*   Dihosting sebagai aplikasi statis Single Page Application (SPA).
-*   **Penting**: Memerlukan berkas `vercel.json` di dalam folder `frontend/` untuk mengarahkan ulang semua rute klien ke `index.html` agar rute seperti `/login` tidak memicu error 404 ketika di-refresh.
-*   Environment Variable wajib:
-    *   `VITE_API_URL`: Diarahkan ke alamat HTTPS dari Backend Render.
+```bash
+cd backend
+go test ./...
+```
 
-### 2. Backend (Render)
-*   Dihosting sebagai Web Service persisten dengan lingkungan (environment) **Go**.
-*   Root directory diatur ke folder `backend/`.
-*   Perintah Build: `cd backend && go build -o main ./cmd/api/main.go`
-*   Perintah Start: `cd backend && ./main`
-*   Environment Variables wajib:
-    *   `APP_ENV`: `production`
-    *   `DB_DSN`: String koneksi database PostgreSQL Aiven (mendukung TLS/SSL).
-    *   `JWT_SECRET`: Kunci rahasia pengaman token.
-    *   `FRONTEND_URL`: URL frontend Vercel (untuk konfigurasi CORS).
-    *   `PORT`: `10000` (Port default Render Web Service).
+---
+
+## 🌍 Deployment
+
+### Frontend — Vercel
+1. Import the repository and set **Root Directory** to `frontend/`.
+2. Ensure `vercel.json` is present inside `frontend/` for SPA rewrite rules.
+3. Add environment variable:
+   - `VITE_API_URL=https://your-backend.onrender.com`
+4. Trigger a redeploy after any environment variable change (Vite variables are injected at build time).
+
+### Backend — Render
+1. Create a new **Web Service** and connect the repository.
+2. Set **Root Directory** to `backend/`.
+3. Use the Go runtime with:
+   - Build command: `cd backend && go build -o main ./cmd/api/main.go`
+   - Start command: `cd backend && ./main`
+4. Add environment variables:
+   - `APP_ENV=production`
+   - `DB_DSN=your_postgres_connection_string`
+   - `JWT_SECRET=your_random_secret`
+   - `FRONTEND_URL=https://your-frontend.vercel.app`
+   - `PORT=10000`
+
+See [`DEPLOYMENT_STORY.md`](./DEPLOYMENT_STORY.md) for a detailed post-mortem of the deployment journey, including serverless pitfalls, SPA routing, Vite build-time variables, and cross-domain cookie fixes.
+
+---
+
+## 🔒 Security Highlights
+
+- **HttpOnly JWT cookies** protect tokens from XSS.
+- **Dynamic SameSite policy** switches to `None` + `Secure` in production for cross-domain auth.
+- **JWT blacklist** in PostgreSQL prevents reuse of logged-out tokens.
+- **Hourly cleanup worker** removes expired blacklisted tokens.
+- **CORS** configured to allow only the registered frontend origin.
+- **Request validation** via `go-playground/validator`.
+
+---
+
+## 📈 Roadmap
+
+- Inventory stock movement ledger
+- Purchase order and supplier management
+- Menu profit-margin alerts and notifications
+- Multi-unit conversion engine expansion
+- Mobile-responsive PWA support
+
+---
+
+## 🙋‍♂️ Author
+
+**Abdur Rauf Al Farras**
+- GitHub: [@Rauf74](https://github.com/Rauf74)
+- LinkedIn: *(add your profile link)*
+
+---
+
+*Built as a portfolio project to demonstrate SaaS architecture, multi-tenant backend engineering, advanced React UX, and production deployment discipline for the F&B industry.*
