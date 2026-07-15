@@ -105,8 +105,10 @@ export function StockPage() {
     }),
   ], []);
 
+  const tableData = useMemo(() => ingredients, [ingredients]);
+
   const table = useReactTable({
-    data: ingredients,
+    data: tableData,
     columns,
     state: { sorting, globalFilter: searchQuery },
     onSortingChange: setSorting,

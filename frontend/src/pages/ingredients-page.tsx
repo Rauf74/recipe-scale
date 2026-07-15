@@ -397,8 +397,10 @@ export const IngredientsPage: React.FC = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   ], []);
 
+  const tableData = useMemo(() => ingredients, [ingredients]);
+
   const table = useReactTable({
-    data: ingredients,
+    data: tableData,
     columns,
     state: { sorting, globalFilter: search },
     onSortingChange: setSorting,

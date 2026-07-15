@@ -33,8 +33,8 @@ type Ingredient struct {
 
 type StockMovement struct {
 	ID           string    `json:"id" gorm:"type:varchar(191);primaryKey"`
-	IngredientID string    `json:"ingredientId" gorm:"type:varchar(191);index"`
-	WorkspaceID  string    `json:"workspaceId" gorm:"type:varchar(191);index"`
+	IngredientID string    `json:"ingredientId" gorm:"type:varchar(191);index:idx_workspace_ing"`
+	WorkspaceID  string    `json:"workspaceId" gorm:"type:varchar(191);index:idx_workspace_ing"`
 	Quantity     float64   `json:"quantity"`
 	Type         string    `json:"type" gorm:"type:varchar(32)"` // IN, ADJUSTMENT, PRODUCTION_OUT
 	Note         string    `json:"note"`
