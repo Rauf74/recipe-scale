@@ -13,6 +13,9 @@ import (
 )
 
 func SetupRoutes(app *fiber.App, db *gorm.DB) {
+	// Initialize Middleware DB dependency
+	middleware.Init(db)
+
 	// 1. Initialize Repositories
 	userRepo := repository.NewUserRepository(db)
 	workspaceRepo := repository.NewWorkspaceRepository(db)

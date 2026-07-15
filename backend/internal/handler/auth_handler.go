@@ -2,11 +2,17 @@ package handler
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 
 	"recipe-scale/backend/internal/apperror"
+	"recipe-scale/backend/internal/domain"
+	"recipe-scale/backend/internal/jwtutil"
+	"recipe-scale/backend/internal/middleware"
 	"recipe-scale/backend/internal/service"
 	"recipe-scale/backend/internal/validation"
 )
@@ -99,7 +105,16 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		sameSite = "None"
 	}
 
-	// Clear the JWT Cookie
+	// 1. Get the token string before clearing cookie
+	tokenString := c.Cookies("jwt")
+	if tokenString == "" {
+		authHeader := c.Get("Authorization")
+		if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
+		}
+	}
+
+	// 2. Clear the JWT Cookie in browser
 	c.Cookie(&fiber.Cookie{
 		Name:     "jwt",
 		Value:    "",
@@ -108,6 +123,39 @@ func (h *AuthHandler) Logout(c *fiber.Ctx) error {
 		Secure:   os.Getenv("APP_ENV") == "production",
 		SameSite: sameSite,
 	})
+
+	// 3. Register valid token signature to database blacklist
+	if tokenString != "" && middleware.DB != nil {
+		parts := strings.Split(tokenString, ".")
+		if len(parts) == 3 {
+			signature := parts[2]
+
+			jwtSecret, err := jwtutil.Secret()
+			if err == nil {
+				// Parse and verify token signature
+				token, err := jwt.ParseWithClaims(tokenString, &service.JWTCustomClaims{}, func(t *jwt.Token) (interface{}, error) {
+					return []byte(jwtSecret), nil
+				}, jwt.WithValidMethods([]string{"HS256"}))
+
+				if err == nil && token != nil && token.Valid {
+					claims, ok := token.Claims.(*service.JWTCustomClaims)
+					expiresAt := time.Now().Add(7 * 24 * time.Hour)
+					if ok && claims.ExpiresAt != nil {
+						expiresAt = claims.ExpiresAt.Time
+					}
+
+					// Insert blacklist record to DB
+					blacklisted := domain.BlacklistedToken{
+						ID:        uuid.New().String(),
+						Signature: signature,
+						ExpiresAt: expiresAt,
+						CreatedAt: time.Now(),
+					}
+					middleware.DB.Create(&blacklisted)
+				}
+			}
+		}
+	}
 
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"success": true,
