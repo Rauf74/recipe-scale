@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 interface NumericInputProps {
   value: string | number;
@@ -19,30 +19,37 @@ export const NumericInput: React.FC<NumericInputProps> = ({
   disabled = false,
   suffix,
 }) => {
+  const [isFocused, setIsFocused] = useState(false);
+
   const formatValueForDisplay = (val: string | number) => {
     if (val === undefined || val === null || val === "") return "";
     
-    // Standardize input string (convert dots to commas for display format parsing)
-    const str = val.toString().replace(/\./g, ",");
-    
-    const parts = str.split(",");
-    const integerPart = parts[0].replace(/\D/g, "");
-    const decimalPart = parts.slice(1).join("").replace(/\D/g, "");
-    
-    const formattedInteger = integerPart 
-      ? new Intl.NumberFormat("id-ID").format(parseInt(integerPart, 10)) 
-      : "";
+    if (isFocused) {
+      // While focused, show clean decimal with comma (no thousands dots) to prevent typing bugs/glitches
+      // e.g. "1250.5" -> "1250,5"
+      return val.toString().replace(/\./g, ",");
+    } else {
+      // While blurred, show formatted number with thousands dots
+      // e.g. "1250.5" -> "1.250,5"
+      const str = val.toString().replace(/\./g, ",");
+      const parts = str.split(",");
+      const integerPart = parts[0].replace(/\D/g, "");
+      const decimalPart = parts.slice(1).join("").replace(/\D/g, "");
       
-    if (str.includes(",")) {
-      return `${formattedInteger},${decimalPart}`;
+      const formattedInteger = integerPart 
+        ? new Intl.NumberFormat("id-ID").format(parseInt(integerPart, 10)) 
+        : "";
+        
+      if (str.includes(",")) {
+        return `${formattedInteger},${decimalPart}`;
+      }
+      return formattedInteger;
     }
-    return formattedInteger;
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Treat typed dots as commas (decimal separators in Indonesian formatting)
-    let inputVal = e.target.value.replace(/\./g, ",");
-    let clean = inputVal.replace(/[^0-9,]/g, "");
+    let raw = e.target.value.replace(/\./g, ","); // treat typed dot as comma decimal separator
+    let clean = raw.replace(/[^0-9,]/g, ""); // allow only digits and comma
     
     // Restrict to at most one comma
     const parts = clean.split(",");
@@ -50,7 +57,6 @@ export const NumericInput: React.FC<NumericInputProps> = ({
       clean = `${parts[0]},${parts.slice(1).join("")}`;
     }
     
-    // Convert comma back to dot for standard float-parseable string in parent state
     const rawFloatStr = clean.replace(/,/g, ".");
     onChange(rawFloatStr);
   };
@@ -66,6 +72,8 @@ export const NumericInput: React.FC<NumericInputProps> = ({
         placeholder={placeholder}
         value={displayVal}
         onChange={handleTextChange}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         className={`${className} w-full ${suffix ? "pr-12" : ""}`}
       />
       {suffix && (
