@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownToLine,
   Loader2,
@@ -67,6 +67,32 @@ export function StockPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  // Refs & layout measurements for adaptive sidebar height
+  const leftCardRef = useRef<HTMLDivElement>(null);
+  const [leftHeight, setLeftHeight] = useState<number>(500);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+
+  useLayoutEffect(() => {
+    setIsLargeScreen(window.innerWidth >= 1024);
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024);
+    };
+    window.addEventListener("resize", handleResize);
+
+    if (!leftCardRef.current) return () => window.removeEventListener("resize", handleResize);
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setLeftHeight(entry.contentRect.height);
+      }
+    });
+    observer.observe(leftCardRef.current);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   // Bahan yang stoknya di bawah atau sama dengan reorder point (dan reorder point > 0)
   const lowStockIngredients = useMemo(
@@ -286,7 +312,7 @@ export function StockPage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_380px] lg:items-stretch">
         
         {/* ── Ketersediaan Bahan (Table View) ── */}
-        <section className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col lg:h-full">
+        <section ref={leftCardRef} className="overflow-hidden rounded-3xl border border-surface-700/60 bg-surface-900/40 lg:flex lg:flex-col lg:h-full">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-700/60 px-5 py-4 gap-3 bg-surface-900/20 shrink-0">
             <div className="flex items-center gap-3">
               <Package className="h-4 w-4 text-slate-500" />
@@ -456,7 +482,10 @@ export function StockPage() {
                 Belum ada transaksi mutasi.
               </div>
             ) : (
-              <div className="space-y-2 max-h-[500px] lg:max-h-none lg:flex-1 lg:overflow-y-auto pr-0.5 min-h-0">
+              <div 
+                className="space-y-2 overflow-y-auto pr-0.5 min-h-0 lg:flex-1"
+                style={{ maxHeight: isLargeScreen ? `${leftHeight - 120}px` : "500px" }}
+              >
                 {movements.map(m => {
                   const isIn = m.quantity > 0;
                   const typeLabel: Record<string, string> = {
