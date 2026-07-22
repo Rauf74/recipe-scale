@@ -49,7 +49,7 @@ func (s *DemoService) GenerateQuickDemoUser() (*QuickDemoResponse, error) {
 	randomNum := fmt.Sprintf("%03d", rng.Intn(1000))
 
 	rawPassword := fmt.Sprintf("demo%s", randomSuffix)
-	email := fmt.Sprintf("owner_%s_%s@demo.recipescale.com", randomSuffix, randomNum)
+	email := fmt.Sprintf("demo_%s@recipescale.com", randomSuffix)
 	restoName := fmt.Sprintf("Dapur Resto Demo #%s", randomNum)
 	userName := "Pemilik Resto (Demo)"
 

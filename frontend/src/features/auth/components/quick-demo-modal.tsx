@@ -192,44 +192,56 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
             {/* Credentials Display Box */}
             <div className="p-4 rounded-2xl bg-surface-950/90 border border-surface-800 space-y-3">
               {/* Username / Email Field */}
-              <div className="flex items-center justify-between gap-2 border-b border-surface-800/80 pb-2.5">
-                <span className="text-xs font-semibold text-slate-400">Username / Email</span>
-                <div className="flex items-center gap-2 min-w-0">
-                  <code className="text-xs font-bold text-brand-300 bg-brand-500/10 px-2 py-1 rounded-lg font-mono truncate max-w-[200px] border border-brand-500/20 nums">
+              <div className="space-y-1 border-b border-surface-800/80 pb-3">
+                <span className="text-[11px] font-semibold text-slate-400">Username / Email</span>
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-900 border border-surface-700/80">
+                  <code className="text-xs font-bold text-brand-300 font-mono select-all break-all nums">
                     {credentials.email}
                   </code>
                   <button
                     type="button"
-                    onClick={() => copyToClipboard(credentials.email, "Username")}
-                    className="p-1.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
-                    title="Salin Username"
+                    onClick={() => copyToClipboard(credentials.email, "Email")}
+                    className="px-2.5 py-1 rounded-lg bg-surface-800 hover:bg-surface-700 text-brand-400 text-[11px] font-semibold flex items-center gap-1 transition-all shrink-0 cursor-pointer"
+                    title="Salin Email"
                   >
-                    {copiedField === "Username" ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" weight="bold" />
+                    {copiedField === "Email" ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" weight="bold" />
+                        <span className="text-emerald-400">Tersalin!</span>
+                      </>
                     ) : (
-                      <Copy className="w-3.5 h-3.5" weight="bold" />
+                      <>
+                        <Copy className="w-3.5 h-3.5" weight="bold" />
+                        <span>Salin Email</span>
+                      </>
                     )}
                   </button>
                 </div>
               </div>
 
               {/* Password Field */}
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-slate-400">Password</span>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg font-mono border border-emerald-500/20 nums">
+              <div className="space-y-1">
+                <span className="text-[11px] font-semibold text-slate-400">Password</span>
+                <div className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-surface-900 border border-surface-700/80">
+                  <code className="text-xs font-bold text-emerald-400 font-mono select-all nums">
                     {credentials.password}
                   </code>
                   <button
                     type="button"
                     onClick={() => copyToClipboard(credentials.password, "Password")}
-                    className="p-1.5 rounded-lg bg-surface-800 hover:bg-surface-700 text-slate-300 hover:text-white transition-colors cursor-pointer shrink-0"
+                    className="px-2.5 py-1 rounded-lg bg-surface-800 hover:bg-surface-700 text-emerald-400 text-[11px] font-semibold flex items-center gap-1 transition-all shrink-0 cursor-pointer"
                     title="Salin Password"
                   >
                     {copiedField === "Password" ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" weight="bold" />
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" weight="bold" />
+                        <span className="text-emerald-400">Tersalin!</span>
+                      </>
                     ) : (
-                      <Copy className="w-3.5 h-3.5" weight="bold" />
+                      <>
+                        <Copy className="w-3.5 h-3.5" weight="bold" />
+                        <span>Salin Password</span>
+                      </>
                     )}
                   </button>
                 </div>
