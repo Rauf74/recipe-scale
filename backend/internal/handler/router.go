@@ -25,6 +25,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 
 	// 2. Initialize Services
 	authService := service.NewAuthService(userRepo, workspaceRepo)
+	demoService := service.NewDemoService(db, userRepo, workspaceRepo)
 	ingredientService := service.NewIngredientService(ingredientRepo)
 	recipeService := service.NewRecipeService(recipeRepo, ingredientRepo)
 	productionRepo := repository.NewProductionRepository(db)
@@ -37,6 +38,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 
 	// 4. Initialize Handlers
 	authHandler := NewAuthHandler(authService)
+	demoHandler := NewDemoHandler(demoService)
 	ingredientHandler := NewIngredientHandler(ingredientService)
 	recipeHandler := NewRecipeHandler(recipeService)
 	productionHandler := NewProductionHandler(productionService)
@@ -44,6 +46,15 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	analyticsHandler := NewAnalyticsHandler(recipeService)
 	workspaceHandler := NewWorkspaceHandler(workspaceService)
 	customUnitHandler := NewCustomUnitHandler(customUnitService)
+
+	// Start Background Demo Cleanup Worker (every 6 hours)
+	go func() {
+		ticker := time.NewTicker(6 * time.Hour)
+		defer ticker.Stop()
+		for range ticker.C {
+			_ = service.CleanupExpiredDemoData(db)
+		}
+	}()
 
 	// 4. Setup CORS / API Groups
 	api := app.Group("/api")
@@ -64,6 +75,7 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	}))
 	auth.Post("/register", authHandler.Register)
 	auth.Post("/login", authHandler.Login)
+	auth.Post("/quick-demo", demoHandler.QuickDemo)
 	auth.Post("/logout", authHandler.Logout)
 	auth.Get("/me", middleware.RequireAuth, authHandler.Me)
 

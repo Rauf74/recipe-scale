@@ -27,5 +27,6 @@ type User struct {
 	Password    string    `json:"-"`
 	Role        UserRole  `json:"role"`
 	WorkspaceID string    `json:"workspaceId" gorm:"type:varchar(191)"`
+	IsDemo      bool      `json:"isDemo" gorm:"default:false"`
 	CreatedAt   time.Time `json:"createdAt"`
 }
