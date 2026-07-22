@@ -70,7 +70,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ isOpen, onClose 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-md p-6 rounded-2xl bg-surface-900/95 border border-surface-700/80 shadow-2xl backdrop-blur-md text-slate-100">
+      <div className="relative w-full max-w-lg p-6 rounded-2xl bg-surface-900/95 border border-surface-700/80 shadow-2xl backdrop-blur-md text-slate-100">
         
         {/* Header */}
         <div className="flex items-center gap-3 mb-5 border-b border-dashed border-surface-700/60 pb-4">
@@ -167,12 +167,12 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ isOpen, onClose 
 
               <div>
                 <span className="text-slate-400 text-[10px] uppercase font-semibold">Email Demo</span>
-                <div className="flex items-center justify-between mt-1 p-2 rounded-lg bg-surface-900 border border-surface-700 font-mono text-brand-300 text-xs">
-                  <span className="select-all">{creds.email}</span>
+                <div className="flex items-center justify-between gap-2 mt-1 p-2 rounded-lg bg-surface-900 border border-surface-700 font-mono text-xs overflow-hidden">
+                  <span className="select-all truncate flex-1 min-w-0 text-brand-300">{creds.email}</span>
                   <button
                     type="button"
                     onClick={() => handleCopy(creds.email, "email")}
-                    className="p-1.5 hover:text-white hover:bg-surface-800 rounded transition-all cursor-pointer flex items-center gap-1 text-[11px]"
+                    className="shrink-0 p-1.5 hover:text-white hover:bg-surface-800 rounded transition-all cursor-pointer flex items-center gap-1 text-[11px]"
                   >
                     {copiedField === "email" ? (
                       <span className="text-emerald-400 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Tersalin</span>
@@ -185,12 +185,12 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ isOpen, onClose 
 
               <div>
                 <span className="text-slate-400 text-[10px] uppercase font-semibold">Password Demo</span>
-                <div className="flex items-center justify-between mt-1 p-2 rounded-lg bg-surface-900 border border-surface-700 font-mono text-red-400 text-xs">
-                  <span className="select-all">{creds.password}</span>
+                <div className="flex items-center justify-between gap-2 mt-1 p-2 rounded-lg bg-surface-900 border border-surface-700 font-mono text-xs overflow-hidden">
+                  <span className="select-all truncate flex-1 min-w-0 text-red-400">{creds.password}</span>
                   <button
                     type="button"
                     onClick={() => handleCopy(creds.password, "password")}
-                    className="p-1.5 hover:text-white hover:bg-surface-800 rounded transition-all cursor-pointer flex items-center gap-1 text-[11px]"
+                    className="shrink-0 p-1.5 hover:text-white hover:bg-surface-800 rounded transition-all cursor-pointer flex items-center gap-1 text-[11px]"
                   >
                     {copiedField === "password" ? (
                       <span className="text-emerald-400 flex items-center gap-1"><Check className="w-3.5 h-3.5" /> Tersalin</span>

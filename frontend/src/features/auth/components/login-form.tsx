@@ -30,14 +30,16 @@ export const LoginForm: React.FC = () => {
 
   return (
     <>
-      <div className="w-full max-w-md p-8 rounded-2xl bg-surface-900/40 border border-surface-700 backdrop-blur-md shadow-2xl">
-        <div className="flex flex-col items-center mb-6">
-          <div className="p-3 bg-brand-500/10 text-brand-400 rounded-xl mb-3 border border-brand-500/20">
-            <ChefHat className="w-8 h-8" />
+      <div className="w-full p-8 sm:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
+        <div className="flex flex-col items-center mb-8">
+          <div className="p-3.5 bg-gradient-to-br from-brand-500/20 to-emerald-500/20 text-brand-400 rounded-2xl mb-4 border border-brand-500/30 shadow-lg shadow-brand-500/10">
+            <ChefHat className="w-9 h-9" />
           </div>
-          <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Selamat Datang Kembali</h2>
-          <p className="text-slate-400 text-sm mt-1 text-center">
-            Masuk ke RecipeScale untuk mengelola resep dan memantau HPP
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight text-center">
+            Selamat Datang Kembali
+          </h2>
+          <p className="text-slate-400 text-xs sm:text-sm mt-1.5 text-center leading-relaxed max-w-sm">
+            Masuk ke RecipeScale untuk mengelola resep dan memantau HPP dapur Anda
           </p>
         </div>
 
