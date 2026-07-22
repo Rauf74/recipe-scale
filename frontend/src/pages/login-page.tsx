@@ -110,7 +110,7 @@ export const LoginPage: React.FC = () => {
                       key={p}
                       type="button"
                       onClick={() => setPortions(p)}
-                      className={`py-1.5 px-2 rounded-xl text-xs font-bold font-mono transition-all duration-200 cursor-pointer border active:scale-[0.98] ${
+                      className={`py-1.5 px-2 rounded-xl text-xs font-bold font-mono transition-all duration-200 cursor-pointer border hover:-translate-y-[0.5px] active:scale-[0.98] ${
                         portions === p
                           ? "bg-brand-500 text-surface-950 border-brand-400 shadow-brand"
                           : "bg-surface-950/60 text-slate-300 border-surface-800 hover:border-brand-500/40"

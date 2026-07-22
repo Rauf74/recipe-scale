@@ -87,7 +87,7 @@ export const LoginForm: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand active:scale-[0.98] cursor-pointer disabled:opacity-50 text-sm"
+            className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand hover:-translate-y-[1px] active:scale-[0.98] cursor-pointer disabled:opacity-50 text-xs whitespace-nowrap"
           >
             {loading ? (
               <>
@@ -114,7 +114,7 @@ export const LoginForm: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsDemoModalOpen(true)}
-          className="w-full py-2.5 bg-gradient-to-r from-brand-500/15 via-emerald-500/15 to-brand-500/15 hover:from-brand-500/25 hover:to-emerald-500/25 border border-brand-500/40 text-brand-300 font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-brand-500/10 active:scale-[0.98] cursor-pointer"
+          className="w-full py-2.5 bg-gradient-to-r from-brand-500/15 via-emerald-500/15 to-brand-500/15 hover:from-brand-500/25 hover:to-emerald-500/25 border border-brand-500/40 text-brand-300 font-bold text-xs rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-brand-500/10 hover:-translate-y-[1px] active:scale-[0.98] cursor-pointer whitespace-nowrap"
         >
           <Sparkles className="w-4 h-4 text-brand-400" />
           ⚡ Akses Cepat Dapur Demo
