@@ -29,15 +29,15 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
-      <div className="flex flex-col items-center mb-8">
-        <div className="p-3.5 bg-gradient-to-br from-emerald-500/20 to-brand-500/20 text-emerald-400 rounded-2xl mb-4 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
-          <ChefHat className="w-9 h-9" />
+    <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/80 border border-emerald-500/25 backdrop-blur-2xl shadow-[0_0_50px_rgba(16,185,129,0.06)]">
+      <div className="flex flex-col items-center mb-6">
+        <div className="p-3 bg-gradient-to-br from-emerald-500/20 via-brand-500/20 to-amber-500/20 text-emerald-400 rounded-2xl mb-3 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+          <ChefHat className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight text-center">
+        <h2 className="text-2xl sm:text-3xl font-black text-slate-100 tracking-tight text-center">
           Daftar Workspace Baru
         </h2>
-        <p className="text-slate-400 text-xs sm:text-sm mt-1.5 text-center leading-relaxed max-w-sm">
+        <p className="text-slate-400 text-xs sm:text-sm mt-1 text-center leading-relaxed max-w-sm">
           Buat ruang kerja digital baru untuk bisnis kuliner F&B Anda
         </p>
       </div>
