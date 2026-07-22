@@ -10,6 +10,7 @@ import { ProductionPage } from "../pages/production-page";
 import { AnalysisPage } from "../pages/analysis-page";
 import { StockPage } from "../pages/stock-page";
 import { SettingsPage } from "../pages/settings-page";
+import { GuidePage } from "../pages/guide-page";
 import { DashboardLayout } from "../components/layout/dashboard-layout";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
@@ -90,6 +91,7 @@ export const AppRoutes = () => {
           <Route path="production" element={<ProductionPage />} />
           <Route path="analysis" element={<AnalysisPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="guide" element={<GuidePage />} />
         </Route>
 
         {/* Catch All Redirect */}

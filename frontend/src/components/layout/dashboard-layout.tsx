@@ -15,6 +15,7 @@ import {
   Settings,
   Menu,
   X,
+  HelpCircle,
 } from "lucide-react";
 
 const NAV = [
@@ -25,6 +26,7 @@ const NAV = [
   { to: "/recipes", label: "Resep", icon: BookOpen, end: false },
   { to: "/production", label: "Produksi", icon: ClipboardList, end: false },
   { to: "/analysis", label: "Analisis", icon: TrendingUp, end: false },
+  { to: "/guide", label: "Panduan", icon: HelpCircle, end: false },
 ];
 
 export const DashboardLayout: React.FC = () => {
