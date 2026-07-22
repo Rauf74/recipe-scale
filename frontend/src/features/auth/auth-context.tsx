@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (workspaceName: string, name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,27 +18,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const checkSession = async () => {
+    try {
+      const response = await apiClient.get<{ success: boolean; data: { user: User } }>("/api/auth/me");
+      if (response.data.success) {
+        setUser(response.data.data.user);
+      }
+    } catch (err) {
+      if (isAxiosError(err) && err.response?.status === 401) {
+        setUser(null);
+      } else {
+        console.warn("[auth] session check failed (transient); keeping last user state", err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch current user session on load
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const response = await apiClient.get<{ success: boolean; data: { user: User } }>("/api/auth/me");
-        if (response.data.success) {
-          setUser(response.data.data.user);
-        }
-      } catch (err) {
-        // Per audit recommendation: distinguish 401 (real unauth) from 5xx/network (transient).
-        // Only null the user on confirmed 401; otherwise keep last known user state and
-        // surface a small reconnecting indicator via console warning.
-        if (isAxiosError(err) && err.response?.status === 401) {
-          setUser(null);
-        } else {
-          console.warn("[auth] session check failed (transient); keeping last user state", err);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
     checkSession();
   }, []);
 
@@ -90,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, refreshUser: checkSession }}>
       {children}
     </AuthContext.Provider>
   );
