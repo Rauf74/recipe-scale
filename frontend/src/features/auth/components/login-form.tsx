@@ -30,7 +30,7 @@ export const LoginForm: React.FC = () => {
 
   return (
     <>
-      <div className="w-full p-8 sm:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
+      <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
         <div className="flex flex-col items-center mb-8">
           <div className="p-3.5 bg-gradient-to-br from-brand-500/20 to-emerald-500/20 text-brand-400 rounded-2xl mb-4 border border-brand-500/30 shadow-lg shadow-brand-500/10">
             <ChefHat className="w-9 h-9" />

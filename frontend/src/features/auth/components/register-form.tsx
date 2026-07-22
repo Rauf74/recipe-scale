@@ -29,7 +29,7 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full p-8 sm:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
+    <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
       <div className="flex flex-col items-center mb-8">
         <div className="p-3.5 bg-gradient-to-br from-emerald-500/20 to-brand-500/20 text-emerald-400 rounded-2xl mb-4 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
           <ChefHat className="w-9 h-9" />
