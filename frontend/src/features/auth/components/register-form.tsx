@@ -1,7 +1,15 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth-context";
-import { Mail, Lock, Loader2, ChefHat, User, Store } from "lucide-react";
+import {
+  CookingPot,
+  Storefront,
+  User,
+  EnvelopeSimple,
+  LockKey,
+  CircleNotch,
+  ArrowRight,
+} from "@phosphor-icons/react";
 
 export const RegisterForm: React.FC = () => {
   const { register } = useAuth();
@@ -29,10 +37,10 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
+    <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/70 border border-emerald-500/25 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
       <div className="flex flex-col items-center mb-6">
         <div className="p-3 bg-brand-500/10 text-brand-400 rounded-2xl mb-3 border border-brand-500/20 shadow-lg shadow-brand-500/10">
-          <ChefHat className="w-8 h-8" />
+          <CookingPot className="w-8 h-8" weight="bold" />
         </div>
         <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight text-center">
           Daftar Workspace Baru
@@ -43,7 +51,7 @@ export const RegisterForm: React.FC = () => {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
           {error}
         </div>
       )}
@@ -54,14 +62,14 @@ export const RegisterForm: React.FC = () => {
             Nama Bisnis / Restoran
           </label>
           <div className="relative">
-            <Store className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            <Storefront className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" weight="bold" />
             <input
               type="text"
               required
               placeholder="Contoh: RM Padang Sederhana, Lim Bakery"
               value={workspaceName}
               onChange={(e) => setWorkspaceName(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/60 border border-surface-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 transition-all text-sm"
             />
           </div>
         </div>
@@ -71,14 +79,14 @@ export const RegisterForm: React.FC = () => {
             Nama Pemilik / Manajer Dapur
           </label>
           <div className="relative">
-            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" weight="bold" />
             <input
               type="text"
               required
               placeholder="Chef Ahmad, Budi Santoso"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/60 border border-surface-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 transition-all text-sm"
             />
           </div>
         </div>
@@ -88,14 +96,14 @@ export const RegisterForm: React.FC = () => {
             Email Bisnis
           </label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            <EnvelopeSimple className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" weight="bold" />
             <input
               type="email"
               required
               placeholder="nama@perusahaan.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/60 border border-surface-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 transition-all text-sm font-mono nums"
             />
           </div>
         </div>
@@ -105,7 +113,7 @@ export const RegisterForm: React.FC = () => {
             Kata Sandi
           </label>
           <div className="relative">
-            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            <LockKey className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" weight="bold" />
             <input
               type="password"
               required
@@ -113,7 +121,7 @@ export const RegisterForm: React.FC = () => {
               placeholder="Minimal 6 karakter"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
+              className="w-full pl-11 pr-4 py-2.5 bg-surface-950/60 border border-surface-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/60 focus:ring-2 focus:ring-brand-500/20 transition-all text-sm font-mono nums"
             />
           </div>
         </div>
@@ -125,11 +133,14 @@ export const RegisterForm: React.FC = () => {
         >
           {loading ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <CircleNotch className="w-4 h-4 animate-spin" weight="bold" />
               Mendaftarkan...
             </>
           ) : (
-            "Daftar Workspace Baru"
+            <>
+              Daftar Workspace Baru
+              <ArrowRight className="w-4 h-4" weight="bold" />
+            </>
           )}
         </button>
       </form>
