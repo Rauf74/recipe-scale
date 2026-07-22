@@ -29,12 +29,12 @@ export const RegisterForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/80 border border-emerald-500/25 backdrop-blur-2xl shadow-[0_0_50px_rgba(16,185,129,0.06)]">
+    <div className="w-full p-6 sm:p-8 lg:p-10 rounded-3xl bg-surface-900/60 border border-surface-700/80 backdrop-blur-xl shadow-2xl">
       <div className="flex flex-col items-center mb-6">
-        <div className="p-3 bg-gradient-to-br from-emerald-500/20 via-brand-500/20 to-amber-500/20 text-emerald-400 rounded-2xl mb-3 border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+        <div className="p-3 bg-brand-500/10 text-brand-400 rounded-2xl mb-3 border border-brand-500/20 shadow-lg shadow-brand-500/10">
           <ChefHat className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl sm:text-3xl font-black text-slate-100 tracking-tight text-center">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight text-center">
           Daftar Workspace Baru
         </h2>
         <p className="text-slate-400 text-xs sm:text-sm mt-1 text-center leading-relaxed max-w-sm">
@@ -68,14 +68,14 @@ export const RegisterForm: React.FC = () => {
 
         <div>
           <label className="block text-slate-300 text-xs font-semibold uppercase tracking-wider mb-1.5">
-            Nama Lengkap Anda
+            Nama Pemilik / Manajer Dapur
           </label>
           <div className="relative">
             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
             <input
               type="text"
               required
-              placeholder="Contoh: Abdur Rauf"
+              placeholder="Chef Ahmad, Budi Santoso"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full pl-11 pr-4 py-2.5 bg-surface-950/50 border border-slate-800 rounded-xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/30 transition-all text-sm"
@@ -109,6 +109,7 @@ export const RegisterForm: React.FC = () => {
             <input
               type="password"
               required
+              minLength={6}
               placeholder="Minimal 6 karakter"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -120,7 +121,7 @@ export const RegisterForm: React.FC = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand active:scale-[0.98] cursor-pointer disabled:opacity-50"
+          className="w-full py-2.5 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold rounded-xl transition-all flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-brand active:scale-[0.98] cursor-pointer disabled:opacity-50 text-sm"
         >
           {loading ? (
             <>
@@ -128,15 +129,15 @@ export const RegisterForm: React.FC = () => {
               Mendaftarkan...
             </>
           ) : (
-            "Daftar Workspace"
+            "Daftar Workspace Baru"
           )}
         </button>
       </form>
 
       <div className="mt-6 text-center text-slate-400 text-xs">
-        Sudah punya akun workspace?{" "}
+        Sudah memiliki akun workspace?{" "}
         <Link to="/login" className="text-brand-400 hover:underline font-semibold transition-all">
-          Masuk Sekarang
+          Masuk ke Akun
         </Link>
       </div>
     </div>

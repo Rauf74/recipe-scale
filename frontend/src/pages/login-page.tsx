@@ -36,19 +36,19 @@ export const LoginPage: React.FC = () => {
         {/* LEFT PANEL: Interactive Culinary Scale Studio Hero (Desktop Only) */}
         <div className="hidden lg:flex lg:col-span-7 xl:col-span-7 flex-col justify-between p-8 xl:p-12 relative overflow-hidden bg-gradient-to-br from-surface-950 via-surface-900/95 to-surface-950 border-r border-surface-800/80 h-full">
           
-          {/* Gourmet Ambient Glow Effect inside panel */}
-          <div className="absolute top-10 left-10 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Subtle Ambient Glow Effect matching index.css */}
+          <div className="absolute top-10 left-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Branding */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-br from-amber-500/20 via-brand-500/20 to-emerald-500/20 text-amber-400 rounded-2xl border border-amber-500/30 shadow-lg shadow-amber-500/10">
+              <div className="p-2.5 bg-brand-500/10 text-brand-400 rounded-2xl border border-brand-500/20 shadow-lg shadow-brand-500/10">
                 <ChefHat className="w-7 h-7" />
               </div>
               <div>
                 <span className="font-black text-2xl tracking-tight text-slate-100">
-                  Recipe<span className="text-amber-400">Scale</span>
+                  Recipe<span className="text-brand-400">Scale</span>
                 </span>
                 <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
                   Culinary Gastronomy Studio
@@ -56,8 +56,8 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] font-semibold tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-[11px] font-semibold tracking-wide">
+              <Sparkles className="w-3.5 h-3.5 text-brand-400 animate-pulse" />
               Interactive Kitchen Simulator
             </div>
           </div>
@@ -74,16 +74,16 @@ export const LoginPage: React.FC = () => {
             </div>
 
             {/* LIVE INTERACTIVE CULINARY SCALE CARD WIDGET */}
-            <div className="p-5 rounded-2xl bg-surface-900/80 border border-amber-500/30 backdrop-blur-xl shadow-[0_0_50px_rgba(245,158,11,0.08)] space-y-4 max-w-xl">
+            <div className="p-5 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl shadow-soft space-y-4 max-w-xl">
               
               {/* Recipe Header */}
               <div className="flex items-center justify-between border-b border-surface-800 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  <div className="p-2 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20">
                     <UtensilsCrossed className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-amber-400 font-bold">
+                    <span className="text-[10px] uppercase font-mono tracking-wider text-brand-400 font-bold">
                       Resep Sampel Dapur Utama
                     </span>
                     <h2 className="text-sm font-bold text-slate-100">Rendang Sapi Prime Batch #04</h2>
@@ -101,7 +101,7 @@ export const LoginPage: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400 font-medium">Ubah Porsi Saji Katering:</span>
-                  <span className="font-bold text-amber-400 font-mono text-sm">{portions} Porsi Saji</span>
+                  <span className="font-bold text-brand-400 font-mono text-sm">{portions} Porsi Saji</span>
                 </div>
                 
                 <div className="grid grid-cols-4 gap-2">
@@ -112,8 +112,8 @@ export const LoginPage: React.FC = () => {
                       onClick={() => setPortions(p)}
                       className={`py-1.5 px-2 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
                         portions === p
-                          ? "bg-amber-500 text-surface-950 border-amber-400 shadow-md shadow-amber-500/20"
-                          : "bg-surface-950/60 text-slate-300 border-surface-800 hover:border-amber-500/40"
+                          ? "bg-brand-500 text-surface-950 border-brand-400 shadow-brand"
+                          : "bg-surface-950/60 text-slate-300 border-surface-800 hover:border-brand-500/40"
                       }`}
                     >
                       {p === 1 ? "1 Porsi" : `${p} Porsi`}
@@ -133,7 +133,7 @@ export const LoginPage: React.FC = () => {
 
                 <div className="p-3 rounded-xl bg-surface-950/80 border border-surface-800 space-y-1">
                   <span className="text-[10px] text-slate-400 uppercase font-semibold">Bumbu Halus Merah</span>
-                  <p className="font-bold text-slate-100 font-mono text-sm text-amber-400">
+                  <p className="font-bold text-slate-100 font-mono text-sm text-warm-400">
                     {totalSpiceKg} <span className="text-[10px] font-sans text-slate-400">kg</span>
                   </p>
                 </div>
@@ -152,7 +152,7 @@ export const LoginPage: React.FC = () => {
           {/* Bottom Footer Trust Features */}
           <div className="relative z-10 grid grid-cols-3 gap-4 pt-4 border-t border-surface-800/80 text-xs text-slate-400">
             <div className="flex items-center gap-2">
-              <Scale className="w-4 h-4 text-amber-400 shrink-0" />
+              <Scale className="w-4 h-4 text-brand-400 shrink-0" />
               <span className="text-[11px]">Precision Portion Scale</span>
             </div>
             <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ export const LoginPage: React.FC = () => {
               <span className="text-[11px]">Real-Time Yield Loss</span>
             </div>
             <div className="flex items-center gap-2">
-              <Flame className="w-4 h-4 text-brand-400 shrink-0" />
+              <Flame className="w-4 h-4 text-warm-400 shrink-0" />
               <span className="text-[11px]">Sub-Recipe Batching</span>
             </div>
           </div>

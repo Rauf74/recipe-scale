@@ -14,19 +14,19 @@ export const RegisterPage: React.FC = () => {
         {/* LEFT PANEL: Culinary Studio Workspace Onboarding (Desktop Only) */}
         <div className="hidden lg:flex lg:col-span-7 xl:col-span-7 flex-col justify-between p-8 xl:p-12 relative overflow-hidden bg-gradient-to-br from-surface-950 via-surface-900/95 to-surface-950 border-r border-surface-800/80 h-full">
           
-          {/* Gourmet Ambient Glow Effect */}
-          <div className="absolute top-10 left-10 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          {/* Subtle Ambient Glow Effect matching index.css */}
+          <div className="absolute top-10 left-10 w-80 h-80 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Branding */}
           <div className="relative z-10 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-gradient-to-br from-emerald-500/20 via-brand-500/20 to-amber-500/20 text-emerald-400 rounded-2xl border border-emerald-500/30 shadow-lg shadow-emerald-500/10">
+              <div className="p-2.5 bg-brand-500/10 text-brand-400 rounded-2xl border border-brand-500/20 shadow-lg shadow-brand-500/10">
                 <ChefHat className="w-7 h-7" />
               </div>
               <div>
                 <span className="font-black text-2xl tracking-tight text-slate-100">
-                  Recipe<span className="text-emerald-400">Scale</span>
+                  Recipe<span className="text-brand-400">Scale</span>
                 </span>
                 <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
                   Workspace Initialization
@@ -34,8 +34,8 @@ export const RegisterPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[11px] font-semibold tracking-wide">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-[11px] font-semibold tracking-wide">
+              <Sparkles className="w-3.5 h-3.5 text-brand-400 animate-pulse" />
               Multi-Outlet F&B Isolation
             </div>
           </div>
@@ -54,8 +54,8 @@ export const RegisterPage: React.FC = () => {
             {/* 3 Feature Cards */}
             <div className="grid grid-cols-1 gap-3 max-w-xl">
               
-              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-800 backdrop-blur-xl flex items-start gap-3.5 hover:border-emerald-500/40 transition-all">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0 border border-emerald-500/20">
+              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-brand-500/40 transition-all">
+                <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-400 shrink-0 border border-brand-500/20">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -66,8 +66,8 @@ export const RegisterPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-800 backdrop-blur-xl flex items-start gap-3.5 hover:border-amber-500/40 transition-all">
-                <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400 shrink-0 border border-amber-500/20">
+              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-warm-500/40 transition-all">
+                <div className="p-2.5 rounded-xl bg-warm-500/10 text-warm-400 shrink-0 border border-warm-500/20">
                   <Utensils className="w-5 h-5" />
                 </div>
                 <div>
@@ -78,8 +78,8 @@ export const RegisterPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-800 backdrop-blur-xl flex items-start gap-3.5 hover:border-brand-500/40 transition-all">
-                <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-400 shrink-0 border border-brand-500/20">
+              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-emerald-500/40 transition-all">
+                <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0 border border-emerald-500/20">
                   <Award className="w-5 h-5" />
                 </div>
                 <div>
