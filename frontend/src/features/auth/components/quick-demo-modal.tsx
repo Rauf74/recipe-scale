@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useAuth } from "../auth-context";
-import { useNavigate } from "react-router-dom";
 import { apiClient } from "../../../lib/api-client";
 import {
   Sparkle,
@@ -31,7 +30,6 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
   onClose,
 }) => {
   const { refreshUser } = useAuth();
-  const navigate = useNavigate();
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -52,8 +50,9 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
       }>("/api/auth/quick-demo");
 
       if (res.data.status === "success" || res.data.data?.credentials) {
+        // IMPORTANT: Set credentials in modal state FIRST so user can view/copy them.
+        // DO NOT call refreshUser() here, otherwise PublicRoute will immediately unmount LoginPage!
         setCredentials(res.data.data.credentials);
-        await refreshUser();
       }
     } catch (err: any) {
       setError(
@@ -67,10 +66,16 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
     }
   }
 
-  function handleEnterDashboard() {
-    onClose();
-    navigate("/");
-    window.location.reload();
+  async function handleEnterDashboard() {
+    setIsLoading(true);
+    try {
+      // NOW update auth session and navigate to dashboard
+      await refreshUser();
+      onClose();
+      window.location.href = "/";
+    } catch (err) {
+      window.location.href = "/";
+    }
   }
 
   function copyToClipboard(text: string, field: string) {
@@ -81,11 +86,16 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
 
   function handleCloseModal() {
     if (!isLoading) {
-      onClose();
-      setTimeout(() => {
-        setCredentials(null);
-        setError("");
-      }, 300);
+      if (credentials) {
+        // If credentials were generated, enter dashboard on close
+        handleEnterDashboard();
+      } else {
+        onClose();
+        setTimeout(() => {
+          setCredentials(null);
+          setError("");
+        }, 300);
+      }
     }
   }
 
@@ -163,7 +173,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
             </div>
           </div>
         ) : (
-          /* STEP 2: GENERATED CREDENTIALS SUCCESS SCREEN */
+          /* STEP 2: GENERATED CREDENTIALS SUCCESS DISPLAY SCREEN */
           <div className="space-y-4 animate-fadeIn">
             <div className="flex items-center gap-3 border-b border-surface-800 pb-4">
               <div className="p-3 bg-emerald-500/15 text-emerald-400 rounded-2xl border border-emerald-500/30 shrink-0">
@@ -179,7 +189,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
               </div>
             </div>
 
-            {/* Credentials Card Box */}
+            {/* Credentials Display Box */}
             <div className="p-4 rounded-2xl bg-surface-950/90 border border-surface-800 space-y-3">
               {/* Username / Email Field */}
               <div className="flex items-center justify-between gap-2 border-b border-surface-800/80 pb-2.5">
@@ -233,10 +243,20 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({
             <button
               type="button"
               onClick={handleEnterDashboard}
-              className="w-full py-3 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold text-xs rounded-xl shadow-brand transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-[0.5px] active:scale-[0.98] group"
+              disabled={isLoading}
+              className="w-full py-3 bg-brand-500 hover:bg-brand-400 text-surface-950 font-bold text-xs rounded-xl shadow-brand transition-all flex items-center justify-center gap-2 cursor-pointer hover:-translate-y-[0.5px] active:scale-[0.98] group disabled:opacity-50"
             >
-              <span>Masuk ke Dashboard</span>
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" weight="bold" />
+              {isLoading ? (
+                <>
+                  <CircleNotch className="w-4 h-4 animate-spin" weight="bold" />
+                  <span>Membuka Dashboard...</span>
+                </>
+              ) : (
+                <>
+                  <span>Masuk ke Dashboard</span>
+                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" weight="bold" />
+                </>
+              )}
             </button>
           </div>
         )}
