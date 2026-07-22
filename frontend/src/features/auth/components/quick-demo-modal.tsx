@@ -70,7 +70,7 @@ export const QuickDemoModal: React.FC<QuickDemoModalProps> = ({ isOpen, onClose 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-lg p-5 sm:p-6 rounded-2xl bg-surface-900/95 border border-surface-700/80 shadow-2xl backdrop-blur-md text-slate-100 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg p-5 sm:p-6 rounded-2xl bg-surface-900/95 border border-surface-700/80 shadow-2xl backdrop-blur-md text-slate-100 max-h-[90dvh] overflow-y-auto">
         
         {/* Header */}
         <div className="flex items-center gap-3 mb-5 border-b border-dashed border-surface-700/60 pb-4">

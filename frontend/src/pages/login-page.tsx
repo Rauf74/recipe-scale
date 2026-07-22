@@ -26,12 +26,12 @@ export const LoginPage: React.FC = () => {
   const foodCostPercentage = ((baseHppRupiah / targetSellingPrice) * 100).toFixed(1);
 
   return (
-    <div className="relative min-h-screen lg:h-screen w-full font-sans bg-surface-950 text-slate-200 overflow-x-hidden lg:overflow-hidden flex items-center justify-center">
+    <div className="relative min-h-[100dvh] lg:h-screen w-full font-sans bg-surface-950 text-slate-200 overflow-x-hidden lg:overflow-hidden flex items-center justify-center">
       <div className="app-glow" />
       <div className="app-grain" />
 
-      {/* Grid container: 1-col on mobile, 12-col split-screen on desktop (Exact 100vh height on desktop) */}
-      <div className="relative z-10 w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+      {/* Grid container: 1-col on mobile (min-h-100dvh), 12-col split-screen on desktop (Exact 100vh height on desktop) */}
+      <div className="relative z-10 w-full min-h-[100dvh] lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         
         {/* LEFT PANEL: Interactive Culinary Scale Studio Hero (Desktop Only) */}
         <div className="hidden lg:flex lg:col-span-7 xl:col-span-7 flex-col justify-between p-8 xl:p-12 relative overflow-hidden bg-gradient-to-br from-surface-950 via-surface-900/95 to-surface-950 border-r border-surface-800/80 h-full">
@@ -66,10 +66,10 @@ export const LoginPage: React.FC = () => {
           <div className="relative z-10 my-auto py-6 space-y-6">
             <div className="space-y-2 max-w-xl">
               <h1 className="text-3xl xl:text-4xl font-black text-slate-100 tracking-tight leading-tight">
-                Simulasi Resep Dapur & Kalkulasi HPP Real-Time
+                Kalkulasi Modal Resep & Timbangan Dapur F&B
               </h1>
               <p className="text-slate-400 text-xs xl:text-sm leading-relaxed">
-                Coba simulasi penimbangan porsi saji di bawah ini. Geser porsi saji katering dan lihat bagaimana RecipeScale menghitung takaran bumbu serta HPP secara instan.
+                Coba simulasi penimbangan porsi saji di bawah ini. Uji penimbangan porsi saji katering dan amati bagaimana RecipeScale menghitung takaran bumbu serta HPP secara presisi.
               </p>
             </div>
 
@@ -91,7 +91,7 @@ export const LoginPage: React.FC = () => {
                 </div>
 
                 <div className="text-right">
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase">
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase nums font-mono">
                     Food Cost: {foodCostPercentage}% (SAFE)
                   </span>
                 </div>
@@ -101,7 +101,7 @@ export const LoginPage: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-slate-400 font-medium">Ubah Porsi Saji Katering:</span>
-                  <span className="font-bold text-brand-400 font-mono text-sm">{portions} Porsi Saji</span>
+                  <span className="font-bold text-brand-400 font-mono text-sm nums">{portions} Porsi Saji</span>
                 </div>
                 
                 <div className="grid grid-cols-4 gap-2">
@@ -110,7 +110,7 @@ export const LoginPage: React.FC = () => {
                       key={p}
                       type="button"
                       onClick={() => setPortions(p)}
-                      className={`py-1.5 px-2 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer border ${
+                      className={`py-1.5 px-2 rounded-xl text-xs font-bold font-mono transition-all duration-200 cursor-pointer border active:scale-[0.98] ${
                         portions === p
                           ? "bg-brand-500 text-surface-950 border-brand-400 shadow-brand"
                           : "bg-surface-950/60 text-slate-300 border-surface-800 hover:border-brand-500/40"
@@ -122,25 +122,25 @@ export const LoginPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Dynamic Ingredient Weights Display */}
+              {/* Dynamic Ingredient Weights Display (Tabular Figures to prevent layout shift) */}
               <div className="grid grid-cols-3 gap-2.5 pt-1 text-xs">
                 <div className="p-3 rounded-xl bg-surface-950/80 border border-surface-800 space-y-1">
                   <span className="text-[10px] text-slate-400 uppercase font-semibold">Daging Sapi Clean</span>
-                  <p className="font-bold text-slate-100 font-mono text-sm text-brand-300">
+                  <p className="font-bold text-slate-100 font-mono text-sm text-brand-300 nums">
                     {totalBeefKg} <span className="text-[10px] font-sans text-slate-400">kg</span>
                   </p>
                 </div>
 
                 <div className="p-3 rounded-xl bg-surface-950/80 border border-surface-800 space-y-1">
                   <span className="text-[10px] text-slate-400 uppercase font-semibold">Bumbu Halus Merah</span>
-                  <p className="font-bold text-slate-100 font-mono text-sm text-warm-400">
+                  <p className="font-bold text-slate-100 font-mono text-sm text-warm-400 nums">
                     {totalSpiceKg} <span className="text-[10px] font-sans text-slate-400">kg</span>
                   </p>
                 </div>
 
                 <div className="p-3 rounded-xl bg-surface-950/80 border border-surface-800 space-y-1">
                   <span className="text-[10px] text-slate-400 uppercase font-semibold">HPP Total Resep</span>
-                  <p className="font-bold text-emerald-400 font-mono text-sm">
+                  <p className="font-bold text-emerald-400 font-mono text-sm nums">
                     Rp {totalHppFormatted}
                   </p>
                 </div>

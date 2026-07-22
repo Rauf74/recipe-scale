@@ -4,12 +4,12 @@ import { ChefHat, ShieldCheck, Sparkles, CheckCircle2, Utensils, Award } from "l
 
 export const RegisterPage: React.FC = () => {
   return (
-    <div className="relative min-h-screen lg:h-screen w-full font-sans bg-surface-950 text-slate-200 overflow-x-hidden lg:overflow-hidden flex items-center justify-center">
+    <div className="relative min-h-[100dvh] lg:h-screen w-full font-sans bg-surface-950 text-slate-200 overflow-x-hidden lg:overflow-hidden flex items-center justify-center">
       <div className="app-glow" />
       <div className="app-grain" />
 
       {/* Grid container: 1-col on mobile, 12-col split-screen on desktop */}
-      <div className="relative z-10 w-full min-h-screen lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+      <div className="relative z-10 w-full min-h-[100dvh] lg:h-screen grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
         
         {/* LEFT PANEL: Culinary Studio Workspace Onboarding (Desktop Only) */}
         <div className="hidden lg:flex lg:col-span-7 xl:col-span-7 flex-col justify-between p-8 xl:p-12 relative overflow-hidden bg-gradient-to-br from-surface-950 via-surface-900/95 to-surface-950 border-r border-surface-800/80 h-full">
@@ -44,7 +44,7 @@ export const RegisterPage: React.FC = () => {
           <div className="relative z-10 my-auto py-6 space-y-6">
             <div className="space-y-2 max-w-xl">
               <h1 className="text-3xl xl:text-4xl font-black text-slate-100 tracking-tight leading-tight">
-                Mulai Digitalisasi Standardisasi Resep & HPP Dapur
+                Standardisasi Resep & Kalkulasi HPP Dapur
               </h1>
               <p className="text-slate-400 text-xs xl:text-sm leading-relaxed">
                 Buat workspace baru untuk usaha kuliner F&B, resto, bakery, atau katering Anda. Kelola stok bahan baku, racik formula bumbu dasar, dan bagikan resep standar secara aman.
@@ -54,7 +54,7 @@ export const RegisterPage: React.FC = () => {
             {/* 3 Feature Cards */}
             <div className="grid grid-cols-1 gap-3 max-w-xl">
               
-              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-brand-500/40 transition-all">
+              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-brand-500/40 transition-all duration-200">
                 <div className="p-2.5 rounded-xl bg-brand-500/10 text-brand-400 shrink-0 border border-brand-500/20">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
@@ -66,7 +66,7 @@ export const RegisterPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-warm-500/40 transition-all">
+              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-warm-500/40 transition-all duration-200">
                 <div className="p-2.5 rounded-xl bg-warm-500/10 text-warm-400 shrink-0 border border-warm-500/20">
                   <Utensils className="w-5 h-5" />
                 </div>
@@ -78,7 +78,7 @@ export const RegisterPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-emerald-500/40 transition-all">
+              <div className="p-4 rounded-2xl bg-surface-900/80 border border-surface-700/80 backdrop-blur-xl flex items-start gap-3.5 hover:border-emerald-500/40 transition-all duration-200">
                 <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 shrink-0 border border-emerald-500/20">
                   <Award className="w-5 h-5" />
                 </div>
