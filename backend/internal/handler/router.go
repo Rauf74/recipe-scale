@@ -59,23 +59,40 @@ func SetupRoutes(app *fiber.App, db *gorm.DB) {
 	// 4. Setup CORS / API Groups
 	api := app.Group("/api")
 
-	// 5. Auth Routes (rate limited untuk proteksi brute-force)
+	// 5. Auth Routes (terpisah dengan dedicated rate limiters untuk proteksi brute-force & spam)
 	auth := api.Group("/auth")
-	auth.Use(limiter.New(limiter.Config{
-		Max:        20,
+
+	// Rate limiter khusus untuk login & register (mencegah brute-force password)
+	loginRegisterLimiter := limiter.New(limiter.Config{
+		Max:        10,
 		Expiration: 1 * time.Minute,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP()
 		},
 		LimitReached: func(c *fiber.Ctx) error {
 			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
-				"error": "terlalu banyak permintaan, coba lagi nanti",
+				"error": "Terlalu banyak percobaan masuk/daftar, silakan tunggu 1 menit lagi.",
 			})
 		},
-	}))
-	auth.Post("/register", authHandler.Register)
-	auth.Post("/login", authHandler.Login)
-	auth.Post("/quick-demo", demoHandler.QuickDemo)
+	})
+
+	// Rate limiter ketat khusus untuk quick-demo (mencegah bot menspam pembuatan workspace DB)
+	quickDemoLimiter := limiter.New(limiter.Config{
+		Max:        3,
+		Expiration: 15 * time.Minute,
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP()
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).JSON(fiber.Map{
+				"error": "Batas pembuatan dapur demo tercapai (maksimal 3 kali per 15 menit). Silakan tunggu beberapa saat.",
+			})
+		},
+	})
+
+	auth.Post("/register", loginRegisterLimiter, authHandler.Register)
+	auth.Post("/login", loginRegisterLimiter, authHandler.Login)
+	auth.Post("/quick-demo", quickDemoLimiter, demoHandler.QuickDemo)
 	auth.Post("/logout", authHandler.Logout)
 	auth.Get("/me", middleware.RequireAuth, authHandler.Me)
 
